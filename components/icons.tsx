@@ -1,0 +1,18 @@
+type P = { s?: number };
+const base = (s: number, sw = 1.6) => ({ width: s, height: s, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: sw, 'aria-hidden': true as const });
+export const Arrow = ({ s = 16 }: P) => <svg {...base(s, 1.8)}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+export const ArrowLeft = ({ s = 16 }: P) => <svg {...base(s, 1.8)}><path d="M19 12H5M11 6l-6 6 6 6" /></svg>;
+export const ChevL = ({ s = 18 }: P) => <svg {...base(s)}><path d="M15 5l-7 7 7 7" /></svg>;
+export const ChevR = ({ s = 18 }: P) => <svg {...base(s)}><path d="M9 5l7 7-7 7" /></svg>;
+export const Down = ({ s = 16 }: P) => <svg {...base(s)}><path d="M12 5v14M6 13l6 6 6-6" /></svg>;
+export const Ext = ({ s = 16 }: P) => <svg {...base(s)}><path d="M7 17L17 7M9 7h8v8" /></svg>;
+export const BookIc = ({ s = 17 }: P) => <svg {...base(s)}><path d="M2 5c3-1.5 7-1.5 10 1 3-2.5 7-2.5 10-1v14c-3-1.5-7-1.5-10 1-3-2.5-7-2.5-10-1z" /><path d="M12 6v14" /></svg>;
+export const Headphones = ({ s = 18 }: P) => <svg {...base(s)}><path d="M3 14v-2a9 9 0 0 1 18 0v2" /><rect x="3" y="14" width="4" height="7" rx="1" /><rect x="17" y="14" width="4" height="7" rx="1" /></svg>;
+export const Shield = ({ s = 14 }: P) => <svg {...base(s, 1.8)}><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /></svg>;
+export const Play = ({ s = 20 }: P) => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M8 5v14l11-7z" /></svg>;
+export const Menu = ({ s = 22 }: P) => <svg {...base(s, 1.5)}><path d="M4 8h16M4 16h16" /></svg>;
+export const Close = ({ s = 22 }: P) => <svg {...base(s, 1.5)}><path d="M6 6l12 12M18 6L6 18" /></svg>;
+export const Check = ({ s = 30 }: P) => <svg {...base(s, 2)} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
+export const Warn = ({ s = 14 }: P) => <svg {...base(s, 2)} strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5v.01" /></svg>;
+export const Person = ({ s = 56 }: P) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#6e6457" strokeWidth={1} aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>;
+export const YouTube = ({ s = 18 }: P) => <svg {...base(s)}><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" /><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" /></svg>;

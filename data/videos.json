@@ -1,0 +1,26 @@
+[
+  {
+    "id": "v1",
+    "youtubeId": "",
+    "title": "[Featured video title]",
+    "type": "Trailer",
+    "duration": "",
+    "order": 1
+  },
+  {
+    "id": "v2",
+    "youtubeId": "",
+    "title": "[Video title]",
+    "type": "Reading",
+    "duration": "",
+    "order": 2
+  },
+  {
+    "id": "v3",
+    "youtubeId": "",
+    "title": "[Video title]",
+    "type": "Interview",
+    "duration": "",
+    "order": 3
+  }
+]

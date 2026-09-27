@@ -1,0 +1,33 @@
+[
+  {
+    "id": "site",
+    "pullQuote": "What will I do when the pressure falls on me?",
+    "bio": "Sooner or later, life puts each of us in a vise. We may have to choose between people we love, protect something we could lose, or find a way forward when every choice has a cost.\n\nThat is the moment I write toward. My stories may begin with a watchful landlord, a sentence of treason, or a secret buried beneath a river. But beneath the suspense is a question I think we all know: What will I do when the pressure falls on me?",
+    "photo": null,
+    "amazonAuthorUrl": "",
+    "youtubeUrl": "",
+    "notifyEmail": "",
+    "homeQuotes": [
+      {
+        "text": "Sooner or later, life puts each of us in a vise.",
+        "sub": "That is the moment I write toward.",
+        "who": "Ken Merrell"
+      },
+      {
+        "text": "“What will I do when the pressure falls on me?”",
+        "sub": "The question beneath every one of my stories.",
+        "who": "Ken Merrell"
+      },
+      {
+        "text": "“[Reader or reviewer quote about Ken’s books.]”",
+        "sub": "[Book title]",
+        "who": "[Name · Source]"
+      },
+      {
+        "text": "“[Second reader or reviewer quote.]”",
+        "sub": "[Book title]",
+        "who": "[Name · Source]"
+      }
+    ]
+  }
+]
