@@ -232,7 +232,7 @@ const ALLOWED_EXTENSIONS = new Map([
   ['image/webp', 'webp']
 ]);
 
-const ALLOWED_UPLOAD_FOLDERS = new Set(['covers', 'banners', 'author']);
+const ALLOWED_UPLOAD_FOLDERS = new Set(['covers', 'banners', 'author', 'videos']);
 
 export async function uploadImage(file: File, folder: string): Promise<string> {
   if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
