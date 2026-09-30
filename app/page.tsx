@@ -18,12 +18,8 @@ export default async function Home() {
   const [books, videos, site] = await Promise.all([getBooks(), getVideos(), getSite()]);
   const available = books.filter((b) => b.status === 'available');
   const coming = books.find((b) => b.status === 'coming');
-  // Newest book appears first in hero section, shelf, and throughout the site
-  const newest = available[0];
-  const otherFeatured = available.slice(1).filter((b) => b.featured);
-  const hero = newest
-    ? [newest, ...otherFeatured.filter((b) => b.id !== newest.id)].slice(0, 5)
-    : available.slice(0, 3);
+  const featured = available.filter((b) => b.featured).slice(0, 5);
+  const hero = featured.length ? featured : available.slice(0, 3);
   const shelf = available.slice(0, 7);
   const roman = coming ? ['I.', 'II.', 'III.', 'IV.'] : ['I.', '', 'II.', 'III.'];
 

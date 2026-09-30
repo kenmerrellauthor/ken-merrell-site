@@ -119,7 +119,7 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 type="button"
-                className="sq-btn gold"
+                className="sq-btn"
                 onClick={() => move(-1)}
                 aria-label="Previous book"
               >
