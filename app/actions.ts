@@ -56,8 +56,11 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
   const res = await addReader({ id: newId(), name, email, format, agreed, createdAt: new Date().toISOString() });
   if (!res.duplicate) {
     const site = await getSite();
+    const toEmail = site.notifyEmail || process.env.ADMIN_EMAIL || 'upcometrends@gmail.com';
+    if (!toEmail) return { ok: true, errors: {}, name: name.split(' ')[0], format };
+
     await sendMail({
-      to: site.notifyEmail,
+      to: toEmail,
       subject: `New advance reader: ${name}`,
       html: readerEmail({ name, email, format }, `${await origin()}/admin/readers`),
       replyTo: email
@@ -82,8 +85,11 @@ export async function submitContact(_prev: FormState, form: FormData): Promise<F
     return { ok: true, errors: {}, name: name.split(' ')[0], values: { email } };
   }
   const site = await getSite();
+  const toEmail = site.notifyEmail || process.env.ADMIN_EMAIL || 'upcometrends@gmail.com';
+  if (!toEmail) return { ok: true, errors: {}, name: name.split(' ')[0], values: { email } };
+
   const sent = await sendMail({
-    to: site.notifyEmail,
+    to: toEmail,
     subject: `New message from ${name}`,
     html: contactEmail({ name, email, message }),
     replyTo: email
