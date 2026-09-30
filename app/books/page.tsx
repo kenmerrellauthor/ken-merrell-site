@@ -18,7 +18,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
   const page = Math.min(pages, Math.max(1, Number((await searchParams).page) || 1));
   const start = (page - 1) * PER_PAGE;
   const onPage = books.slice(start, start + PER_PAGE);
-  const shelves: (typeof books[number] | null)[][] = [];
+  const shelves: (typeof books[number])[][] = [];
   for (let s = 0; s < Math.max(1, Math.ceil(onPage.length / PER_SHELF)); s++) {
     const row = onPage.slice(s * PER_SHELF, s * PER_SHELF + PER_SHELF);
     shelves.push(row);
