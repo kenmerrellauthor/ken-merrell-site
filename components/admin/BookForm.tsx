@@ -343,6 +343,9 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
                   <input type="hidden" name="hasAudible" value={audible ? 'on' : ''} />
                 </div>
                 {audible && <Field label="AUDIBLE LINK" name="audibleUrl" value={book.audibleUrl} placeholder="https://www.audible.com/pd/…" type="url" />}
+                <div style={{ paddingTop: 16, borderTop: '1px solid rgba(239,231,214,.06)' }}>
+                  <Field label="BOOK TRAILER / VIDEO (YOUTUBE LINK)" name="videoUrl" value={book.videoUrl} placeholder="https://www.youtube.com/watch?v=…" help="If set, this video appears first in the reader section on the book page before the book swipe reader." type="url" />
+                </div>
               </section>
 
               <section className="ad-card">

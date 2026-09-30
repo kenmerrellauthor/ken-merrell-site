@@ -7,7 +7,8 @@ import Flipbook from '@/components/Flipbook';
 import { Book3D, DisplayTitle } from '@/components/Bits';
 import { Case, Cubby } from '@/components/Shelf';
 import { Arrow, Down, Headphones } from '@/components/icons';
-import { getBookBySlug, getBooks, getSite } from '@/lib/store';
+import { getBookBySlug, getBooks, getSite, getVideos } from '@/lib/store';
+import { parseYouTubeId } from '@/lib/youtube';
 import ReviewSection from '@/components/ReviewSection';
 
 export const revalidate = 60;
@@ -29,8 +30,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [book, all, site] = await Promise.all([getBookBySlug(slug), getBooks(), getSite()]);
+  const [book, all, site, videos] = await Promise.all([getBookBySlug(slug), getBooks(), getSite(), getVideos()]);
   if (!book) notFound();
+
+  // Check if book has a video present (its own videoUrl or a matching title in videos)
+  let bookVideoId = book.videoUrl ? parseYouTubeId(book.videoUrl) : '';
+  let bookVideoTitle = book.videoUrl ? `${book.title} — Video` : '';
+
+  if (!bookVideoId) {
+    const match = videos.find((v) => {
+      if (!v.youtubeId) return false;
+      const vt = v.title.toLowerCase();
+      const bt = book.title.toLowerCase();
+      return vt.includes(bt) || bt.includes(vt);
+    });
+    if (match) {
+      bookVideoId = match.youtubeId;
+      bookVideoTitle = match.title;
+    }
+  }
+
   const others = all.filter((b) => b.id !== book.id && b.status === 'available').slice(0, 4);
   const idx = all.filter((b) => b.status === 'available').findIndex((b) => b.id === book.id);
   const quotes = book.quotes.filter((q) => q.text.trim());
@@ -83,7 +102,11 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 6, flexWrap: 'wrap', justifyContent: 'inherit' }}>
                 {book.amazonUrl && <a href={book.amazonUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold">BUY ON AMAZON <Arrow /></a>}
                 {book.audibleUrl && <a href={book.audibleUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Headphones />LISTEN ON AUDIBLE</a>}
-                {book.sample.trim() && <a href="#sample" className="btn btn-text">READ THE SAMPLE <Down /></a>}
+                {(bookVideoId || book.sample.trim()) && (
+                  <a href="#sample" className="btn btn-text">
+                    {bookVideoId ? 'WATCH & READ' : 'READ THE SAMPLE'} <Down />
+                  </a>
+                )}
               </div>
               {facts.length > 0 && (
                 <div className="facts" style={{ ['--cols' as string]: Math.min(4, facts.length) } as React.CSSProperties}>
@@ -107,24 +130,61 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      {book.sample.trim() && (
+      {(bookVideoId || book.sample.trim()) && (
         <section id="sample" className="sample">
           <div className="km-paper abs" />
-          <div className="head">
-            <div className="eyebrow dark"><span className="line" /><span className="txt">READ A SAMPLE</span><span className="line" /></div>
-            <h2>Open the <em>first chapter</em></h2>
-            <p className="hint">Swipe the page or use the arrows to turn it.</p>
-          </div>
-          <Flipbook
-            title={book.title}
-            cover={book.cover}
-            clothColor={book.clothColor}
-            tagline={book.tagline}
-            chapterTitle={book.chapterTitle}
-            sample={book.sample}
-            amazonUrl={book.amazonUrl}
-            audibleUrl={book.audibleUrl}
-          />
+
+          {/* 1. First: Video present if any */}
+          {bookVideoId && (
+            <div className="book-video-wrap" style={{ maxWidth: 860, margin: '0 auto 60px', padding: '0 24px' }}>
+              <div className="head" style={{ marginBottom: 24, textAlign: 'center' }}>
+                <div className="eyebrow dark"><span className="line" /><span className="txt">WATCH</span><span className="line" /></div>
+                <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', margin: '8px 0 10px', color: '#1b1814' }}>
+                  {bookVideoTitle || `${book.title} — Official Trailer`}
+                </h2>
+                <p className="hint">Watch the trailer or reading before opening the manuscript below.</p>
+              </div>
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                paddingBottom: '56.25%',
+                borderRadius: 8,
+                overflow: 'hidden',
+                boxShadow: '0 20px 48px rgba(0,0,0,0.3)',
+                border: '1px solid rgba(201,168,96,0.35)',
+                background: '#0a0908'
+              }}>
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${bookVideoId}?rel=0`}
+                  title={bookVideoTitle || `${book.title} Video`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 2. Then: Reading the book (mean swipe the book to read it) */}
+          {book.sample.trim() && (
+            <>
+              <div className="head">
+                <div className="eyebrow dark"><span className="line" /><span className="txt">READ A SAMPLE</span><span className="line" /></div>
+                <h2>Open the <em>first chapter</em></h2>
+                <p className="hint">Swipe the page or use the arrows to turn it.</p>
+              </div>
+              <Flipbook
+                title={book.title}
+                cover={book.cover}
+                clothColor={book.clothColor}
+                tagline={book.tagline}
+                chapterTitle={book.chapterTitle}
+                sample={book.sample}
+                amazonUrl={book.amazonUrl}
+                audibleUrl={book.audibleUrl}
+              />
+            </>
+          )}
         </section>
       )}
 

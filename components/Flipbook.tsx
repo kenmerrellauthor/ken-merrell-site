@@ -28,20 +28,27 @@ function Blocks({ blocks, firstPage, mobile }: { blocks: Block[]; firstPage: boo
       {blocks.map((b, k) => {
         if (b.kind === 'break') {
           seenP = false;
-          return <div key={k} className="brk" aria-hidden style={mobile ? { display: 'flex', justifyContent: 'center', gap: 16, padding: '8px 0' } : undefined}><span /><span /><span /></div>;
+          return (
+            <div key={k} className="brk" aria-hidden style={mobile ? { display: 'flex', justifyContent: 'center', gap: 14, padding: '12px 0' } : undefined}>
+              <span /><span /><span />
+            </div>
+          );
         }
         const isFirstOfPage = !seenP;
         seenP = true;
         if (firstPage && k === 0 && !b.cont) {
           const text = b.text;
-          const m = text.match(/^(\S)(\S*)\s?(\S*\s?\S*\s?\S*)(.*)$/s);
+          const m = text.match(/^([“"‘']?[A-Za-z0-9])(\S*)\s*([^\s]+(?:\s+[^\s]+){0,2})?(.*)$/s);
           const drop = m ? m[1] : text[0];
-          const lead = m ? (m[2] + ' ' + m[3]).trim() : '';
-          const rest = m ? m[4] : text.slice(1);
+          const secondWord = m && m[2] ? m[2] : '';
+          const nextWords = m && m[3] ? m[3] : '';
+          const lead = (secondWord ? secondWord + (nextWords ? ' ' + nextWords : '') : nextWords).trim();
+          const rest = m && m[4] ? m[4] : text.slice(drop.length);
           return (
             <p key={k} className="first">
               <span className="drop">{drop}</span>
-              <span style={{ fontFamily: 'var(--serif-c)', fontSize: mobile ? 13 : 15, letterSpacing: '.12em', textTransform: 'uppercase' }}>{lead}</span>{' '}{rest.trim()}
+              {lead && <span className="lead-words">{lead}</span>}{' '}
+              {rest.trim()}
             </p>
           );
         }

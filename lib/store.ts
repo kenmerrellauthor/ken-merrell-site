@@ -127,7 +127,12 @@ export function isBookNew(book: Book): boolean {
 /* ---------------- Books ---------------- */
 export async function getBooks(): Promise<Book[]> {
   const rows = await all<Book>('books');
-  return rows.sort((a, b) => a.order - b.order);
+  return rows.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    const tA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+    const tB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+    return tB - tA;
+  });
 }
 export async function getBook(id: string) {
   const b = (await getBooks()).find((b) => b.id === id) ?? null;
@@ -143,6 +148,9 @@ export async function saveBook(book: Book) {
   // Ensure reviews array always exists
   const safe: Book = { reviews: [], ...book };
   return upsert('books', safe);
+}
+export async function saveBooks(books: Book[]) {
+  return upsertMany('books', books);
 }
 export async function deleteBook(id: string) {
   return remove('books', id);

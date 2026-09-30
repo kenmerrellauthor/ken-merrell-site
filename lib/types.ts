@@ -36,6 +36,7 @@ export interface Book {
   clothColor: string;
   amazonUrl: string;
   audibleUrl: string;
+  videoUrl?: string;
   published: string;
   pages: string;
   formats: string;

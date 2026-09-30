@@ -13,7 +13,7 @@ import {
 } from '@/lib/auth';
 import {
   deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
-  saveBook, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReview, uploadImage
+  saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReview, uploadImage
 } from '@/lib/store';
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
@@ -115,7 +115,15 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     if (bf) banner = await uploadImage(bf, 'banners');
     if (form.get('removeBanner') === 'on') banner = null;
 
+    const isNewBook = !existing;
+    if (isNewBook && books.length > 0) {
+      // Shift all other books down so the new book is always #1
+      const shifted = books.map((b) => ({ ...b, order: (b.order ?? 1) + 1 }));
+      await saveBooks(shifted);
+    }
+
     const hasAudible = form.get('hasAudible') === 'on';
+    const videoUrl = str(form, 'videoUrl', 300);
     const book: Book = {
       id,
       slug,
@@ -125,14 +133,15 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       description: str(form, 'description', 6000),
       genre: str(form, 'genre', 80),
       status: form.get('status') === 'coming' ? 'coming' : 'available',
-      featured: form.get('featured') === 'on',
-      isNew: form.get('isNew') === 'on',
-      order: existing?.order ?? (books.length ? Math.max(...books.map((b) => b.order)) + 1 : 1),
+      featured: isNewBook ? true : form.get('featured') === 'on',
+      isNew: isNewBook ? true : form.get('isNew') === 'on',
+      order: isNewBook ? 1 : (existing?.order ?? 1),
       cover,
       banner,
       clothColor: /^#[0-9a-f]{6}$/i.test(str(form, 'clothColor')) ? str(form, 'clothColor') : existing?.clothColor || '#1c1712',
       amazonUrl: str(form, 'amazonUrl', 500),
       audibleUrl: hasAudible ? str(form, 'audibleUrl', 500) : '',
+      videoUrl,
       published: str(form, 'published', 60),
       pages: str(form, 'pages', 20),
       formats: str(form, 'formats', 80),

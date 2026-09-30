@@ -32,6 +32,7 @@ function book(p: Partial<Book> & Pick<Book, 'id' | 'slug' | 'title' | 'order'>):
     clothColor: '#1c1712',
     amazonUrl: '',
     audibleUrl: '',
+    videoUrl: '',
     published: '[Month Year]',
     pages: '[000]',
     formats: 'Print, Ebook',

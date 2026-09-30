@@ -51,7 +51,8 @@ function Card({ v, featured, fallback }: { v: Video; featured?: boolean; fallbac
 }
 
 export default function VideoGrid({ videos }: { videos: Video[] }) {
-  const [first, ...rest] = videos;
+  const display = videos.slice(0, 3);
+  const [first, ...rest] = display;
   if (!first) return null;
   const fb = ['url(/img/banners/traitor.jpg)', 'url(/img/banners/ash.jpg)', 'url(/img/textures/linen.png)', 'url(/img/banners/craven.jpg)'];
   return (
@@ -59,7 +60,7 @@ export default function VideoGrid({ videos }: { videos: Video[] }) {
       <Card v={first} featured fallback={fb[0]} />
       {rest.length > 0 && (
         <div className="video-side">
-          {rest.slice(0, 4).map((v, k) => <Card key={v.id} v={v} fallback={fb[(k + 1) % fb.length]} />)}
+          {rest.slice(0, 2).map((v, k) => <Card key={v.id} v={v} fallback={fb[(k + 1) % fb.length]} />)}
         </div>
       )}
     </div>
