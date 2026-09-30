@@ -14,8 +14,8 @@ export default function Footer({ site }: { site: SiteSettings }) {
           <Link href="/books">BOOKS</Link>
           <Link href="/#coming">COMING SOON</Link>
           <Link href="/#videos">VIDEOS</Link>
-          <Link href="/#advance">ADVANCE READERS</Link>
-          <Link href="/#about">ABOUT</Link>
+          <Link href="/advance-readers">ADVANCE READERS</Link>
+          <Link href="/author">ABOUT KEN</Link>
           <Link href="/#contact">CONTACT</Link>
         </nav>
         {(site.amazonAuthorUrl || site.youtubeUrl) && (

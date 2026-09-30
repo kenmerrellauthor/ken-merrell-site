@@ -4,10 +4,11 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitContact, submitReader, type FormState } from '@/app/actions';
 import Turnstile, { Traps } from './Turnstile';
-import { Arrow, Check, Shield, Warn } from './icons';
-import { Seal } from './Bits';
+import { Arrow, Check, Warn } from './icons';
 
 const initial: FormState = { ok: false, errors: {} };
+
+
 
 function Submit({ children, className }: { children: React.ReactNode; className: string }) {
   const { pending } = useFormStatus();
@@ -75,7 +76,6 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
       <Traps />
       <Turnstile theme="light" />
       <Submit className="btn btn-dark" >JOIN THE ADVANCE READERS <Arrow /></Submit>
-      <div className="fine"><Shield />Spam protected. Your email is never shared.</div>
     </form>
   );
 }
@@ -115,8 +115,7 @@ export function ContactForm() {
       </div>
       <Traps />
       <Turnstile theme="dark" />
-      <div className="foot">
-        <div className="fine"><Shield />Invisible spam protection. No puzzles.</div>
+      <div className="foot" style={{ justifyContent: 'flex-end' }}>
         <Submit className="btn btn-gold">SEND MESSAGE <Arrow /></Submit>
       </div>
     </form>

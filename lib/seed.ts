@@ -37,6 +37,7 @@ function book(p: Partial<Book> & Pick<Book, 'id' | 'slug' | 'title' | 'order'>):
     formats: 'Print, Ebook',
     isbn: '[000-0-000]',
     quotes: [],
+    reviews: [],
     chapterTitle: '[Chapter title]',
     sample: SAMPLE_PLACEHOLDER,
     releaseDate: '',

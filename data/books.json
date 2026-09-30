@@ -1,5 +1,40 @@
 [
   {
+    "reviews": [
+      {
+        "id": "rev-1790772856732",
+        "name": "Charlotte Bronte",
+        "rating": 5,
+        "text": "A thoroughly captivating historical thriller. Highly recommended!",
+        "createdAt": "2026-09-30T12:54:16.732Z",
+        "approved": true,
+        "adminComment": "Thank you kindly, Charlotte! - Ken"
+      },
+      {
+        "id": "eca59e24130b",
+        "name": "yasir ord",
+        "rating": 5,
+        "text": "hi",
+        "createdAt": "2026-09-30T16:11:38.047Z",
+        "approved": true
+      },
+      {
+        "id": "1a0421ab0ba6",
+        "name": "hi",
+        "rating": 5,
+        "text": "hi my name is yasir you can check",
+        "createdAt": "2026-09-30T16:12:15.125Z",
+        "approved": true
+      },
+      {
+        "id": "470a7a6b3ae1",
+        "name": "djsdjks",
+        "rating": 5,
+        "text": "dsanfnjkjlda;",
+        "createdAt": "2026-09-30T16:12:47.431Z",
+        "approved": true
+      }
+    ],
     "displayTitle": "Petticoats|*and* Ash",
     "tagline": "[One-line hook for Petticoats and Ash]",
     "description": "[Book description from Ken. A short paragraph or two that sets up the story, the stakes and the choice the main character has to make.]",
@@ -166,34 +201,6 @@
     "slug": "book-six",
     "title": "[Book six title]",
     "order": 6
-  },
-  {
-    "displayTitle": "[Book seven title]",
-    "tagline": "",
-    "description": "[Book description from Ken. A short paragraph or two that sets up the story, the stakes and the choice the main character has to make.]",
-    "genre": "[Genre] · A novel",
-    "status": "available",
-    "featured": false,
-    "isNew": false,
-    "cover": null,
-    "banner": null,
-    "clothColor": "#1b2332",
-    "amazonUrl": "",
-    "audibleUrl": "",
-    "published": "[Month Year]",
-    "pages": "[000]",
-    "formats": "Print, Ebook",
-    "isbn": "[000-0-000]",
-    "quotes": [],
-    "chapterTitle": "[Chapter title]",
-    "sample": "Sample chapter text from Ken's manuscript sits here, set at a comfortable reading size so readers can settle in and keep going.\n\n[Second paragraph of the sample chapter. Replace this text in the admin panel by pasting the chapter or uploading the Word file.]\n\n[Third paragraph. Each spread holds roughly two pages of the printed book.]\n\n[The chapter continues here.]\n\n[Dialogue and description keep the same rhythm from page to page.]\n\n***\n\n[A new scene begins after the break.]\n\n[Closing paragraph of the sample, ideally ending on a hook.]",
-    "releaseDate": "",
-    "releaseLabel": "",
-    "updatedAt": "2026-09-26T19:24:40.557Z",
-    "id": "b7",
-    "slug": "book-seven",
-    "title": "[Book seven title]",
-    "order": 7
   },
   {
     "displayTitle": "[Upcoming title]",

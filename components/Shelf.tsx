@@ -2,21 +2,24 @@ import Link from 'next/link';
 import type { Book } from '@/lib/types';
 import { Cover } from './Bits';
 
-export function Cubby({ book, no, small }: { book: Book; no: number; small?: boolean }) {
+export function Cubby({ book, no, small, isNew }: { book: Book; no: number; small?: boolean; isNew?: boolean }) {
   return (
     <Link href={`/books/${book.slug}`} className={`cubby km-cubby${small ? ' sm' : ''}`} aria-label={book.title}>
       <div className="km-lamp abs" />
       <div className="lamp-fix" />
+      <div className="cubby-head">
+        <span className="cubby-no">NO. {String(no).padStart(2, '0')}</span>
+        <span className="cubby-title">{book.title}</span>
+      </div>
       <div className="shadow" />
       <div className="bk">
         <Cover book={book} w={small ? 140 : 176} h={small ? 210 : 264} title={small ? 19 : 23} author={small ? 9 : 11} />
         <div className="km-spine abs" />
-        {book.isNew && <span className="ribbon">NEW</span>}
+        {isNew && <span className="ribbon">NEW</span>}
       </div>
       <div className="lip km-wood km-lip">
         <div className="plate km-brass">
-          <span className="no">NO. {String(no).padStart(2, '0')}</span>
-          <span className="nm">{book.title}</span>
+          <span className="plate-btn">BOOK DETAILS →</span>
         </div>
       </div>
     </Link>
@@ -39,6 +42,10 @@ export function SoonCubby({ href, label = 'More to come' }: { href: string; labe
     <Link href={href} className="cubby km-cubby" aria-label="Coming soon">
       <div className="km-lamp abs" />
       <div className="lamp-fix" />
+      <div className="cubby-head">
+        <span className="cubby-no">COMING SOON</span>
+        <span className="cubby-title">{label}</span>
+      </div>
       <div className="shadow" />
       <div className="soon-stack">
         <div style={{ position: 'relative', width: 150, height: 190, background: '#120f0c', boxShadow: '10px 4px 18px rgba(0,0,0,.7)' }}>
@@ -62,8 +69,7 @@ export function SoonCubby({ href, label = 'More to come' }: { href: string; labe
       </div>
       <div className="lip km-wood km-lip">
         <div className="plate km-brass">
-          <span className="no">ON THE WAY</span>
-          <span className="nm">{label}</span>
+          <span className="plate-btn">VIEW DETAILS →</span>
         </div>
       </div>
     </Link>

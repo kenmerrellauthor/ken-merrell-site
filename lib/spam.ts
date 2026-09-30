@@ -1,16 +1,50 @@
 import 'server-only';
 
 /*
- * Three layers, all invisible to real visitors:
- * 1. Cloudflare Turnstile (when keys are set) - no puzzles, runs in the background.
- * 2. Honeypot field that people never see but bots fill in.
- * 3. Time trap: a form submitted less than 3 seconds after it loaded is a bot.
+ * Multi-layer spam & bot defense:
+ * 1. IP rate limiting (prevents flooding / email bombing)
+ * 2. Honeypot field (hidden from visitors, filled by automated crawlers)
+ * 3. Time trap (forms submitted in under 1.5s are bots)
+ * 4. Cloudflare Turnstile verification (managed CAPTCHA alternative)
  */
-export async function isSpam(form: FormData, ip?: string | null): Promise<string | null> {
-  if (String(form.get('website') || '').trim() !== '') return 'honeypot';
-  const started = Number(form.get('_t') || 0);
-  if (!started || Date.now() - started < 3000) return 'too-fast';
 
+const formSubmissions = new Map<string, { count: number; resetAt: number }>();
+const MAX_SUBMISSIONS_PER_WINDOW = 8;
+const SUBMISSION_WINDOW_MS = 60 * 1000; // 8 submissions per minute per IP
+
+export function checkFormRateLimit(ip: string | null): boolean {
+  if (!ip) return true;
+  const now = Date.now();
+  const record = formSubmissions.get(ip);
+  if (!record || record.resetAt <= now) {
+    formSubmissions.set(ip, { count: 1, resetAt: now + SUBMISSION_WINDOW_MS });
+    return true;
+  }
+  if (record.count >= MAX_SUBMISSIONS_PER_WINDOW) {
+    return false;
+  }
+  record.count += 1;
+  return true;
+}
+
+export async function isSpam(form: FormData, ip?: string | null): Promise<string | null> {
+  // Rate limiting check per IP
+  if (ip && !checkFormRateLimit(ip)) {
+    return 'rate-limited';
+  }
+
+  // Honeypot check
+  if (String(form.get('website') || '').trim() !== '') {
+    return 'honeypot';
+  }
+
+  // Time trap check
+  const started = Number(form.get('_t') || 0);
+  if (started > 0 && Date.now() - started < 1500) {
+    return 'too-fast';
+  }
+
+  // Cloudflare Turnstile verification
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (secret) {
     const token = String(form.get('cf-turnstile-response') || '');
@@ -25,7 +59,18 @@ export async function isSpam(form: FormData, ip?: string | null): Promise<string
       return 'turnstile-unreachable';
     }
   }
+
   return null;
 }
 
-export const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
+/** Standard email validation with length and newline protection */
+export function isEmail(s: string): boolean {
+  if (!s || s.length > 254 || /[\r\n\t]/.test(s)) return false;
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(s);
+}
+
+/** Strips all carriage returns, newlines, and tabs to prevent email header injection attacks */
+export function sanitizeSingleLine(str: string): string {
+  return str.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+

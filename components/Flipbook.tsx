@@ -186,8 +186,8 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
           {idle && (
             <>
               <div className="fb-idle">
-                <span className="a">Open the book</span>
-                <span className="b">SWIPE OR TAP THE COVER <Arrow /></span>
+                <span className="a">Click here to open the book</span>
+                <span className="b">SWIPE OR CLICK TO TURN PAGES <Arrow /></span>
               </div>
               <button type="button" className="fb-hit" style={{ left: 560 }} aria-label="Open the book" onClick={() => turn('next')} />
             </>

@@ -1,23 +1,39 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-export const config = { matcher: ['/admin/:path*'] };
+export const config = {
+  matcher: ['/admin/:path*']
+};
 
 export async function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname.startsWith('/admin/login')) return NextResponse.next();
+  // Allow login page without authentication
+  if (req.nextUrl.pathname.startsWith('/admin/login')) {
+    return NextResponse.next();
+  }
+
   const token = req.cookies.get('km_admin')?.value;
-  const s = process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 16 ? process.env.SESSION_SECRET : 'dev-only-secret-change-me-please';
+  const secretEnv = process.env.SESSION_SECRET;
+
+  // In production, reject access if secret is missing or too short
+  if (process.env.NODE_ENV === 'production' && (!secretEnv || secretEnv.length < 16)) {
+    return NextResponse.redirect(new URL('/admin/login', req.url));
+  }
+
+  const secretKey = new TextEncoder().encode(secretEnv || 'dev-only-secret-change-me-please-min-32-chars');
+
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(s));
+      const { payload } = await jwtVerify(token, secretKey);
       if (payload.role === 'admin') {
         const res = NextResponse.next();
-        res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+        res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
         return res;
       }
     } catch {
-      /* fall through */
+      // Invalid or expired token: proceed to redirect below
     }
   }
+
   return NextResponse.redirect(new URL('/admin/login', req.url));
 }
+

@@ -4,6 +4,7 @@ import { useFormStatus } from 'react-dom';
 import type { HomeQuote, SiteSettings } from '@/lib/types';
 import { saveSiteAction, type AdminState } from '@/app/admin/actions';
 import { Ic } from './AdIcons';
+import { ImagePick } from './ImagePick';
 
 function Save() {
   const { pending } = useFormStatus();
@@ -13,7 +14,6 @@ function Save() {
 export default function SiteForm({ site }: { site: SiteSettings }) {
   const [state, action] = useActionState<AdminState, FormData>(saveSiteAction, {});
   const [quotes, setQuotes] = useState<HomeQuote[]>(site.homeQuotes);
-  const [preview, setPreview] = useState<string | null>(site.photo);
   const set = (k: number, key: keyof HomeQuote, v: string) => setQuotes(quotes.map((q, j) => (j === k ? { ...q, [key]: v } : q)));
   return (
     <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
@@ -27,17 +27,14 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
       <div className="ad-editor" style={{ gridTemplateColumns: '340px minmax(0,1fr)' }}>
         <section className="ad-card">
           <h2>Author photo</h2>
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="" style={{ width: '100%', aspectRatio: '44 / 58', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ aspectRatio: '44 / 58', background: '#1f1a15', border: '1px dashed #4a4137', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6e6457', fontFamily: 'var(--serif-c)', fontSize: 11, letterSpacing: '.24em' }}>[AUTHOR PHOTO]</div>
-          )}
-          <label className="drop" style={{ position: 'relative', justifyContent: 'center' }}>
-            <Ic k="up" s={16} />Upload a photo
-            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) setPreview(URL.createObjectURL(f)); }} />
-          </label>
-          {site.photo && <label className="chk" style={{ fontSize: 13 }}><input type="checkbox" name="removePhoto" />Remove the current photo</label>}
+          <ImagePick 
+            name="photo" 
+            current={site.photo} 
+            label="Upload a photo" 
+            aspect="44 / 58" 
+            removeName="removePhoto" 
+            sizeHint="Recommended: 880 × 1160"
+          />
         </section>
         <div className="col">
           <section className="ad-card">

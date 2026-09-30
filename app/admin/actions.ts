@@ -3,11 +3,17 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import mammoth from 'mammoth';
-import { checkCredentials, createSession, destroySession, requireAdmin } from '@/lib/auth';
-import { isSpam } from '@/lib/spam';
 import {
-  deleteBook, deleteReader, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
-  saveBook, saveBookOrder, saveSite, saveVideo, saveVideoOrder, uploadImage
+  checkCredentials,
+  checkLoginRateLimit,
+  createSession,
+  destroySession,
+  recordLoginAttempt,
+  requireAdmin
+} from '@/lib/auth';
+import {
+  deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
+  saveBook, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReview, uploadImage
 } from '@/lib/store';
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
@@ -24,28 +30,40 @@ const slugify = (s: string) =>
   s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'book';
 
 /* ---------------- login ---------------- */
-const attempts = new Map<string, { n: number; until: number }>();
-
 export async function login(_p: AdminState, form: FormData): Promise<AdminState> {
-  const h = await headers();
-  const ip = h.get('cf-connecting-ip') || h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
-  const a = attempts.get(ip);
-  if (a && a.until > Date.now()) return { error: 'Too many tries. Please wait 10 minutes and try again.' };
-  const email = str(form, 'email', 200);
-  const password = String(form.get('password') ?? '');
-  if (process.env.TURNSTILE_SECRET_KEY) {
-    form.set('_t', String(Date.now() - 5000));
-    if (await isSpam(form, ip)) return { error: 'Please complete the check and try again.', fields: { email } };
+  try {
+    const h = await headers();
+    const ip = h.get('cf-connecting-ip') || h.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+
+    const rateLimit = checkLoginRateLimit(ip);
+    if (!rateLimit.allowed) {
+      return { error: `Too many tries. Please wait ${rateLimit.waitMinutes} minutes and try again.` };
+    }
+
+    const email = str(form, 'email', 200);
+    const password = String(form.get('password') ?? '').slice(0, 200);
+
+    if (!email || !password) {
+      return { error: 'Please enter both your email and password.', fields: { email } };
+    }
+
+    if (!checkCredentials(email, password)) {
+      recordLoginAttempt(ip, false);
+      return { error: 'That email and password do not match.', fields: { email } };
+    }
+
+    recordLoginAttempt(ip, true);
+    await createSession(email);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Login failed. Please try again.';
+    if (msg.includes('NEXT_REDIRECT')) {
+      return { ok: true };
+    }
+    return { error: msg };
   }
-  if (!checkCredentials(email, password)) {
-    const n = (a?.n ?? 0) + 1;
-    attempts.set(ip, { n, until: n >= 5 ? Date.now() + 10 * 60_000 : 0 });
-    return { error: 'That email and password do not match.', fields: { email } };
-  }
-  attempts.delete(ip);
-  await createSession(email);
-  redirect('/admin');
 }
+
 
 export async function logout() {
   await destroySession();
@@ -71,10 +89,11 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     const id = str(form, 'id') || newId();
     const existing = await getBook(id);
     const books = await getBooks();
-    const title = str(form, 'title', 200);
-    if (!title) return { error: 'Please give the book a title.' };
+    const title = str(form, 'title', 200) || 'Untitled Book';
     let slug = slugify(str(form, 'slug', 100) || title);
     if (books.some((b) => b.slug === slug && b.id !== id)) slug = `${slug}-${id.slice(0, 4)}`;
+
+
 
     let quotes: Quote[] = [];
     try {
@@ -119,11 +138,13 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       formats: str(form, 'formats', 80),
       isbn: str(form, 'isbn', 40),
       quotes,
+      reviews: existing?.reviews ?? [],
       chapterTitle: str(form, 'chapterTitle', 120),
       sample,
       releaseDate: str(form, 'releaseDate', 10),
       releaseLabel: str(form, 'releaseLabel', 60),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      createdAt: existing?.createdAt || existing?.updatedAt || new Date().toISOString()
     };
     await saveBook(book);
     refresh();
@@ -183,7 +204,12 @@ export async function addVideoAction(_p: AdminState, form: FormData): Promise<Ad
   const real = vids.filter((v) => v.youtubeId);
   const placeholders = vids.filter((v) => !v.youtubeId);
   for (const p of placeholders) await deleteVideo(p.id);
-  const v: Video = { id: newId(), youtubeId, title, type, duration: str(form, 'duration', 12), order: real.length + 1 };
+  
+  let thumbnail: string | null = null;
+  const thFile = file(form, 'thumbnail');
+  if (thFile) thumbnail = await uploadImage(thFile, 'videos');
+  
+  const v: Video = { id: newId(), youtubeId, title, type, duration: str(form, 'duration', 12), order: real.length + 1, thumbnail };
   await saveVideo(v);
   refresh();
   return { ok: true };
@@ -195,7 +221,11 @@ export async function updateVideoAction(form: FormData) {
   const v = vids.find((x) => x.id === str(form, 'id'));
   if (!v) return;
   const type = (['Trailer', 'Reading', 'Interview'].includes(str(form, 'type')) ? str(form, 'type') : v.type) as VideoType;
-  await saveVideo({ ...v, title: str(form, 'title', 200) || v.title, type, duration: str(form, 'duration', 12) });
+  let thumbnail = v.thumbnail;
+  const thFile = file(form, 'thumbnail');
+  if (thFile) thumbnail = await uploadImage(thFile, 'videos');
+  if (form.get('removeThumbnail') === 'on') thumbnail = null;
+  await saveVideo({ ...v, title: str(form, 'title', 200) || v.title, type, duration: str(form, 'duration', 12), thumbnail });
   refresh();
 }
 
@@ -219,6 +249,13 @@ export async function moveVideo(form: FormData) {
 }
 
 /* ---------------- author & bio ---------------- */
+export async function markReadersSeenAction() {
+  await requireAdmin();
+  const site = await getSite();
+  await saveSite({ ...site, lastSeenReaders: new Date().toISOString() });
+  refresh();
+}
+
 export async function saveSiteAction(_p: AdminState, form: FormData): Promise<AdminState> {
   await requireAdmin();
   try {
@@ -256,4 +293,117 @@ export async function deleteReaderAction(form: FormData) {
   await requireAdmin();
   await deleteReader(str(form, 'id'));
   revalidatePath('/admin/readers');
+}
+
+export async function sendReaderEmailAction(_p: AdminState, form: FormData): Promise<AdminState> {
+  await requireAdmin();
+  try {
+    const subject = str(form, 'subject', 300);
+    const body = str(form, 'body', 20000);
+    const recipientsRaw = str(form, 'recipients', 50000);
+
+    if (!subject.trim()) return { error: 'Please enter a subject line.' };
+    if (!body.trim()) return { error: 'Please enter a message body.' };
+    if (!recipientsRaw.trim()) return { error: 'No recipients selected.' };
+
+    const recipients: string[] = JSON.parse(recipientsRaw);
+    if (!Array.isArray(recipients) || recipients.length === 0) return { error: 'No recipients selected.' };
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const valid = recipients.filter((e) => emailRe.test(e));
+    if (valid.length === 0) return { error: 'No valid email addresses found.' };
+
+    const { sendMail } = await import('@/lib/email');
+    const site = await getSite();
+
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+    const htmlBody = `<div style="font-family:Georgia,serif;background:#f3f0ea;padding:24px">
+<div style="max-width:560px;margin:0 auto;background:#fff;padding:28px 30px">
+<div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#1b1814">KEN MERRELL</div>
+<h1 style="font-size:22px;font-weight:600;color:#1b1814;margin:18px 0 18px">${esc(subject)}</h1>
+<div style="font-size:16px;line-height:1.75;color:#1b1814;white-space:pre-wrap">${esc(body)}</div>
+<p style="font-size:12px;color:#8a8173;margin-top:28px;border-top:1px solid #ece6da;padding-top:16px">You are receiving this as an advance reader for Ken Merrell.</p>
+</div></div>`;
+
+    let sent = 0;
+    const errors: string[] = [];
+    for (const email of valid) {
+      const ok = await sendMail({ to: email, subject, html: htmlBody, replyTo: site.notifyEmail || undefined });
+      if (ok) sent++;
+      else errors.push(email);
+    }
+
+    if (sent === 0) return { error: 'Failed to send. Check your RESEND_API_KEY.' };
+    if (errors.length > 0) return { ok: true, error: `Sent to ${sent}/${valid.length}. Failed: ${errors.join(', ')}` };
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not send emails.' };
+  }
+}
+
+/* ---------------- reviews ---------------- */
+export async function approveReviewAction(form: FormData) {
+  await requireAdmin();
+  const bookId = str(form, 'bookId');
+  const reviewId = str(form, 'reviewId');
+  const adminComment = str(form, 'adminComment', 1000);
+  await updateReview(bookId, reviewId, { approved: true, adminComment: adminComment || undefined });
+  refresh();
+}
+
+export async function rejectReviewAction(form: FormData) {
+  await requireAdmin();
+  const bookId = str(form, 'bookId');
+  const reviewId = str(form, 'reviewId');
+  await updateReview(bookId, reviewId, { approved: false });
+  refresh();
+}
+
+export async function saveReviewCommentAction(form: FormData) {
+  await requireAdmin();
+  const bookId = str(form, 'bookId');
+  const reviewId = str(form, 'reviewId');
+  const adminComment = str(form, 'adminComment', 1000);
+  await updateReview(bookId, reviewId, { adminComment: adminComment || undefined });
+  refresh();
+}
+
+export async function deleteReviewAction(form: FormData) {
+  await requireAdmin();
+  const bookId = str(form, 'bookId');
+  const reviewId = str(form, 'reviewId');
+  await deleteReview(bookId, reviewId);
+  refresh();
+}
+
+export async function addReviewAction(_p: AdminState, form: FormData): Promise<AdminState & { review?: import('@/lib/types').Review }> {
+  await requireAdmin();
+  try {
+    const bookId = str(form, 'bookId');
+    const name = str(form, 'name', 120);
+    const text = str(form, 'text', 3000);
+    const rating = Math.min(5, Math.max(1, parseInt(str(form, 'rating'), 10) || 5));
+    const adminComment = str(form, 'adminComment', 1000);
+
+    if (!bookId) return { error: 'Book ID missing.' };
+    if (!name) return { error: 'Please enter the reviewer name.' };
+    if (!text) return { error: 'Please enter the review text.' };
+
+    const { addReview } = await import('@/lib/store');
+    const review: import('@/lib/types').Review = {
+      id: newId(),
+      name,
+      rating,
+      text,
+      adminComment: adminComment || undefined,
+      createdAt: new Date().toISOString(),
+      approved: true,
+    };
+    await addReview(bookId, review);
+    refresh();
+    // Return the review so the client can append it to local state without a page reload
+    return { ok: true, review };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not add review.' };
+  }
 }

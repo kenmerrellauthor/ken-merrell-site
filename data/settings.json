@@ -2,8 +2,8 @@
   {
     "id": "site",
     "pullQuote": "What will I do when the pressure falls on me?",
-    "bio": "Sooner or later, life puts each of us in a vise. We may have to choose between people we love, protect something we could lose, or find a way forward when every choice has a cost.\n\nThat is the moment I write toward. My stories may begin with a watchful landlord, a sentence of treason, or a secret buried beneath a river. But beneath the suspense is a question I think we all know: What will I do when the pressure falls on me?",
-    "photo": null,
+    "bio": "Sooner or later, life puts each of us in a vise. We may have to choose between people we love, protect something we could lose, or find a way forward when every choice has a cost.\r\n\r\nThat is the moment I write toward. My stories may begin with a watchful landlord, a sentence of treason, or a secret buried beneath a river. But beneath the suspense is a question I think we all know: What will I do when the pressure falls on me?",
+    "photo": "/uploads/author/1790784932063-84839ee7afa7.png",
     "amazonAuthorUrl": "",
     "youtubeUrl": "",
     "notifyEmail": "",
@@ -28,6 +28,7 @@
         "sub": "[Book title]",
         "who": "[Name · Source]"
       }
-    ]
+    ],
+    "lastSeenReaders": "2026-09-30T17:01:14.781Z"
   }
 ]

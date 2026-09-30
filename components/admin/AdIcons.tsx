@@ -20,7 +20,8 @@ const P: Record<string, React.ReactNode> = {
   caretDown: <path d="M6 9l6 6 6-6" />,
   menu: <path d="M4 8h16M4 16h16" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
-  image: <><rect x="3" y="4" width="18" height="16" rx="1.5" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 9" /></>
+  image: <><rect x="3" y="4" width="18" height="16" rx="1.5" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 9" /></>,
+  x: <path d="M6 6l12 12M18 6L6 18" />,
 };
 export function Ic({ k, s = 18, sw = 1.6 }: { k: keyof typeof P | string; s?: number; sw?: number }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden>{P[k]}</svg>;

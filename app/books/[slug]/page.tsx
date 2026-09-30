@@ -8,6 +8,7 @@ import { Book3D, DisplayTitle } from '@/components/Bits';
 import { Case, Cubby } from '@/components/Shelf';
 import { Arrow, Down, Headphones } from '@/components/icons';
 import { getBookBySlug, getBooks, getSite } from '@/lib/store';
+import ReviewSection from '@/components/ReviewSection';
 
 export const revalidate = 60;
 
@@ -62,7 +63,18 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             <Link href="/">HOME</Link><span>/</span><Link href="/books">BOOKS</Link><span>/</span><span className="cur" aria-current="page">{book.title}</span>
           </nav>
           <div className="book-main">
-            <Book3D book={book} w={410} h={615} i={Math.max(0, idx)} />
+            {book.sample.trim() ? (
+              <a href="#sample" className="book-cover-link" aria-label="Click here to open the book" style={{ position: 'relative', display: 'block' }}>
+                <Book3D book={book} w={410} h={615} i={Math.max(0, idx)} />
+                <div className="book-hover-hint" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s', background: 'rgba(0,0,0,0.3)', borderRadius: 4 }}>
+                  <span style={{ background: '#c9a860', color: '#111', padding: '10px 16px', borderRadius: 4, fontWeight: 600, fontSize: 13, letterSpacing: '.1em', textTransform: 'uppercase', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                    Click here to open the book
+                  </span>
+                </div>
+              </a>
+            ) : (
+              <Book3D book={book} w={410} h={615} i={Math.max(0, idx)} />
+            )}
             <div className="info">
               <div className="eyebrow"><span className="line" style={{ width: 48 }} /><span className="txt">{book.status === 'coming' ? 'COMING SOON' : (book.genre || 'A NOVEL').toUpperCase()}</span></div>
               <h1><DisplayTitle text={book.displayTitle || book.title} /></h1>
@@ -115,6 +127,9 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           />
         </section>
       )}
+
+      {/* Reader Reviews */}
+      <ReviewSection bookId={book.id} reviews={book.reviews ?? []} />
 
       {others.length > 0 && (
         <section className="more">

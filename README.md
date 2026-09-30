@@ -22,10 +22,11 @@ Next.js 15 site built from the approved Viloro Tech design (homepage, library, b
 
 ```bash
 npm install
-cp .env.example .env.local   # optional for local; defaults below
+cp .env.example .env.local   # copy environment config; sets dev credentials in .env.local
 npm run dev
 ```
-Without env vars in development: admin login is `ken@example.com` / `admin`, data is stored in `/data/*.json` (created on first run from `lib/seed.ts`), uploads go to `/data/uploads`, and emails are logged to the console instead of sent.
+In local development with `.env.local`: admin login credentials are set via `ADMIN_EMAIL` and `ADMIN_PASSWORD`, data is stored in `/data/*.json` (created on first run from `lib/seed.ts`), uploads go to `/data/uploads`, and emails are logged to the console instead of sent when Resend is unconfigured.
+
 
 ## Launch checklist (Vercel + Supabase + Resend + Turnstile)
 

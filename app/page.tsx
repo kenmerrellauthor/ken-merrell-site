@@ -5,12 +5,12 @@ import HeroCarousel from '@/components/HeroCarousel';
 import QuoteCarousel from '@/components/QuoteCarousel';
 import VideoGrid from '@/components/Videos';
 import Countdown from '@/components/Countdown';
-import { AdvanceForm, ContactForm } from '@/components/Forms';
+import { ContactForm } from '@/components/Forms';
 import { Cover, Eyebrow, Seal } from '@/components/Bits';
-import { Case, Cubby, SoonCubby } from '@/components/Shelf';
-import { Arrow, Ext, Person } from '@/components/icons';
+import { Case, Cubby, SoonCubby, EmptyCubby } from '@/components/Shelf';
+import { Arrow, Ext } from '@/components/icons';
 import ScrollReveal from '@/components/ScrollReveal';
-import { getBooks, getSite, getVideos } from '@/lib/store';
+import { getBooks, getSite, getVideos, isBookNew } from '@/lib/store';
 
 export const revalidate = 60;
 
@@ -21,14 +21,14 @@ export default async function Home() {
   const featured = available.filter((b) => b.featured).slice(0, 5);
   const hero = featured.length ? featured : available.slice(0, 3);
   const shelf = available.slice(0, 7);
-  const bio = site.bio.split(/\n\s*\n/).filter(Boolean);
-  const roman = coming ? ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'] : ['I.', '', 'II.', 'III.', 'IV.', 'V.'];
+  const roman = coming ? ['I.', 'II.', 'III.', 'IV.'] : ['I.', '', 'II.', 'III.'];
+
 
   return (
     <>
       <ScrollReveal />
       <div style={{ position: 'relative' }}>
-        <Header />
+        <Header active="home" />
         <HeroCarousel books={hero} />
       </div>
 
@@ -41,20 +41,13 @@ export default async function Home() {
             <Eyebrow num={roman[0]} text="THE BOOKS" />
             <h2 className="h2">Every novel, <em>in one place</em></h2>
           </div>
-          <p className="aside">Pick a book from the shelf to read a sample, then buy it on Amazon or Audible.</p>
+          <Link href="/books" className="btn btn-gold">BROWSE ALL BOOKS <Arrow /></Link>
         </div>
         <div className="reveal-on-scroll reveal-delay-1">
           <Case cols4>
-            {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} />)}
+            {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={isBookNew(b)} />)}
             <SoonCubby href={coming ? '/#coming' : '/books'} label={coming ? 'More to come' : 'See every book'} />
           </Case>
-        </div>
-        <div className="browse-row reveal-on-scroll reveal-delay-2">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="t1">Not seeing the book you want?</span>
-            <span className="t2">The shelf above holds the latest {shelf.length}. The full library has every title Ken has written.</span>
-          </div>
-          <Link href="/books" className="btn btn-gold">BROWSE ALL BOOKS <Arrow /></Link>
         </div>
       </section>
 
@@ -69,7 +62,7 @@ export default async function Home() {
             {coming.tagline && <p className="teaser">{coming.tagline}</p>}
             <Countdown date={coming.releaseDate} label={coming.releaseLabel} />
             <div className="cta-row">
-              <Link href="/#advance" className="btn btn-gold" style={{ boxShadow: 'none' }}>READ IT EARLY</Link>
+              <Link href="/advance-readers" className="btn btn-gold" style={{ boxShadow: 'none' }}>BECOME AN ADVANCED READER</Link>
               <span>Join the Advance Readers for a copy before release.</span>
             </div>
           </div>
@@ -115,63 +108,41 @@ export default async function Home() {
         </section>
       )}
 
-      {/* IV · ADVANCE READERS */}
-      <section id="advance" className="advance">
-        <div className="km-paper abs" />
-        <div className="copy reveal-on-scroll">
-          <Eyebrow num={roman[3]} text="ADVANCE READERS" dark />
-          <h2>Read the next one<br /><em>before anyone else.</em></h2>
-          <p className="lead">Join Ken’s advance reader team. You receive an early copy of each new novel, and in return you leave an honest review when it launches.</p>
-          <div className="steps">
-            <div><b>i.</b><span>Sign up in under a minute</span></div>
-            <div><b>ii.</b><span>Receive the book before release</span></div>
-            <div><b>iii.</b><span>Share an honest review at launch</span></div>
-          </div>
-        </div>
-        <div className="ar-wrap reveal-on-scroll reveal-delay-1">
-          <div className="ar-seal seal km-seal"><div className="ring" style={{ width: '78%', height: '78%', fontSize: 26 }}>KM</div></div>
-          <AdvanceForm bookTitle={coming?.title} />
-        </div>
-      </section>
-
-      {/* V · ABOUT */}
-      <section id="about" className="about">
-        <div className="portrait reveal-on-scroll">
-          <div className="frame" />
-          <div className="ph">
-            <div className="km-grain abs" style={{ opacity: 0.7 }} />
-            {site.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={site.photo} alt="Ken Merrell" />
-            ) : (
-              <>
-                <Person />
-                <span>[AUTHOR PHOTO]</span>
-              </>
-            )}
-          </div>
-          <div className="name">KEN MERRELL</div>
-        </div>
-        <div className="copy reveal-on-scroll reveal-delay-1">
-          <Eyebrow num={roman[4]} text="ABOUT KEN" />
-          {site.pullQuote && <p className="pull">“{site.pullQuote}”</p>}
-          <div className="bio">{bio.map((p, k) => <p key={k}>{p}</p>)}</div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/img/logo.png" alt="" className="sig" />
-        </div>
-      </section>
-
-      {/* VI · CONTACT */}
+      {/* IV · CONTACT */}
       <section id="contact" className="contact">
-        <div className="copy reveal-on-scroll">
-          <Eyebrow num={roman[5]} text="CONTACT" />
-          <h2 className="h2">Write <em>to Ken</em></h2>
-          <p>Readers, book clubs, events and media. Your message goes straight to Ken’s inbox.</p>
-        </div>
-        <div className="reveal-on-scroll reveal-delay-1">
-          <ContactForm />
+        <div className="contact-inner">
+          <div className="contact-left reveal-on-scroll">
+            <Eyebrow num={roman[3]} text="CONTACT" />
+            <h2>Write <em>to Ken</em></h2>
+            <p>Have a question, a thought, or just want to say hello? Ken reads every message and does his best to reply.</p>
+            <div className="contact-perks">
+              <div className="contact-perk">
+                <span className="contact-perk-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </span>
+                <span>Ken reads every message personally.</span>
+              </div>
+              <div className="contact-perk">
+                <span className="contact-perk-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <span>Replies typically arrive within a few days.</span>
+              </div>
+              <div className="contact-perk">
+                <span className="contact-perk-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <span>Book clubs &amp; reading groups are always welcome.</span>
+              </div>
+            </div>
+          </div>
+          <div className="contact-right reveal-on-scroll reveal-delay-1">
+            <h3>Send a message</h3>
+            <ContactForm />
+          </div>
         </div>
       </section>
+
 
       <Footer site={site} />
     </>

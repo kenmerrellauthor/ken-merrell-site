@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Book, Reader, SiteSettings, Video } from './types';
+import type { Book, Reader, Review, SiteSettings, Video } from './types';
 import { seedBooks, seedSite, seedVideos } from './seed';
 
 /*
@@ -68,12 +68,14 @@ async function all<T extends { id: string }>(table: Table): Promise<T[]> {
   if (!db) return readLocal<T>(table);
   const { data, error } = await db.from(table).select('id, data');
   if (error) throw new Error(`Supabase read ${table}: ${error.message}`);
-  if (!data.length && seeds[table].length) {
+  const rows = data ?? [];
+  if (!rows.length && seeds[table].length) {
     await db.from(table).insert(seeds[table].map((r) => ({ id: r.id, data: r })));
     return seeds[table] as unknown as T[];
   }
-  return data.map((r) => r.data as T);
+  return rows.map((r) => r.data as T);
 }
+
 
 async function upsert<T extends { id: string }>(table: Table, row: T) {
   const db = supabase();
@@ -112,19 +114,35 @@ async function remove(table: Table, id: string) {
 
 export const newId = () => crypto.randomBytes(6).toString('hex');
 
+/** Returns true if the book was uploaded within the last 3 days. Always computed from createdAt (or updatedAt as fallback). */
+export function isBookNew(book: Book): boolean {
+  const dateStr = book.createdAt || book.updatedAt;
+  if (!dateStr) return false;
+  const uploadedTime = new Date(dateStr).getTime();
+  if (isNaN(uploadedTime)) return false;
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  return Date.now() - uploadedTime <= THREE_DAYS_MS;
+}
+
 /* ---------------- Books ---------------- */
 export async function getBooks(): Promise<Book[]> {
   const rows = await all<Book>('books');
   return rows.sort((a, b) => a.order - b.order);
 }
 export async function getBook(id: string) {
-  return (await getBooks()).find((b) => b.id === id) ?? null;
+  const b = (await getBooks()).find((b) => b.id === id) ?? null;
+  if (b && !b.reviews) return { ...b, reviews: [] };
+  return b;
 }
 export async function getBookBySlug(slug: string) {
-  return (await getBooks()).find((b) => b.slug === slug) ?? null;
+  const b = (await getBooks()).find((b) => b.slug === slug) ?? null;
+  if (b && !b.reviews) return { ...b, reviews: [] };
+  return b;
 }
 export async function saveBook(book: Book) {
-  return upsert('books', book);
+  // Ensure reviews array always exists
+  const safe: Book = { reviews: [], ...book };
+  return upsert('books', safe);
 }
 export async function deleteBook(id: string) {
   return remove('books', id);
@@ -138,6 +156,28 @@ export async function saveBookOrder(ids: string[]) {
     })
     .filter(Boolean) as Book[];
   return upsertMany('books', changed);
+}
+
+/* --- Book Reviews --- */
+export async function addReview(bookId: string, review: Review) {
+  const book = await getBook(bookId);
+  if (!book) throw new Error('Book not found');
+  const reviews = [...(book.reviews ?? []), review];
+  await saveBook({ ...book, reviews });
+}
+
+export async function updateReview(bookId: string, reviewId: string, patch: Partial<Review>) {
+  const book = await getBook(bookId);
+  if (!book) throw new Error('Book not found');
+  const reviews = (book.reviews ?? []).map((r) => (r.id === reviewId ? { ...r, ...patch } : r));
+  await saveBook({ ...book, reviews });
+}
+
+export async function deleteReview(bookId: string, reviewId: string) {
+  const book = await getBook(bookId);
+  if (!book) throw new Error('Book not found');
+  const reviews = (book.reviews ?? []).filter((r) => r.id !== reviewId);
+  await saveBook({ ...book, reviews });
 }
 
 /* ---------------- Videos ---------------- */
@@ -186,19 +226,24 @@ export async function deleteReader(id: string) {
   return remove('readers', id);
 }
 
-/* ---------------- File uploads (covers, banners, author photo) ---------------- */
-const ALLOWED = new Map([
+const ALLOWED_EXTENSIONS = new Map([
   ['image/jpeg', 'jpg'],
   ['image/png', 'png'],
   ['image/webp', 'webp']
 ]);
 
+const ALLOWED_UPLOAD_FOLDERS = new Set(['covers', 'banners', 'author']);
+
 export async function uploadImage(file: File, folder: string): Promise<string> {
-  const ext = ALLOWED.get(file.type);
+  if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
+    throw new Error('Invalid upload destination folder.');
+  }
+  const ext = ALLOWED_EXTENSIONS.get(file.type);
   if (!ext) throw new Error('Please upload a JPG, PNG or WebP image.');
   if (file.size > 10 * 1024 * 1024) throw new Error('Images must be under 10 MB.');
   const name = `${folder}/${Date.now()}-${newId()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
+
   const db = supabase();
   if (!db) {
     try {

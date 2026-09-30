@@ -18,9 +18,9 @@ export function DisplayTitle({ text }: { text: string }) {
   );
 }
 
-export const plainTitle = (b: Book) => b.title;
 
 export function Eyebrow({ num, text, dark }: { num?: string; text: string; dark?: boolean }) {
+
   return (
     <div className={`eyebrow${dark ? ' dark' : ''}`}>
       {num && <span className="num">{num}</span>}

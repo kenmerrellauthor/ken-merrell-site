@@ -9,28 +9,50 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
   const n = books.length;
   const [i, setI] = useState(0);
   const [dir, setDir] = useState<'next' | 'prev'>('next');
-  const [auto, setAuto] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   const sx = useRef<number | null>(null);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerInteraction = useCallback(() => {
+    setIsPaused(true);
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 7000);
+  }, []);
 
   const move = useCallback((step: number, fromAuto = false) => {
-    setDir(step > 0 ? 'next' : 'prev');
-    setI((cur) => (cur + step + n) % n);
-    if (!fromAuto) setAuto(false);
-  }, [n]);
+    setI((cur) => {
+      const next = (cur + step + n) % n;
+      setDir(step > 0 ? 'next' : 'prev');
+      return next;
+    });
+    if (!fromAuto) {
+      triggerInteraction();
+    }
+  }, [n, triggerInteraction]);
 
   useEffect(() => {
-    if (!auto || n < 2) return;
+    if (isPaused || n < 2) return;
     const t = setInterval(() => move(1, true), 6000);
     return () => clearInterval(t);
-  }, [auto, move, n, i]);
+  }, [isPaused, move, n, i]);
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    };
+  }, []);
 
   if (!n) return null;
+
   const go = (k: number) => {
-    if (k === i) return;
+    if (k === i || k < 0 || k >= n) return;
     setDir(k > i ? 'next' : 'prev');
     setI(k);
-    setAuto(false);
+    triggerInteraction();
   };
+
 
   return (
     <section
@@ -42,8 +64,8 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
         if (sx.current == null) return;
         const dx = e.clientX - sx.current;
         sx.current = null;
-        if (dx < -50) move(1);
-        else if (dx > 50) move(-1);
+        if (dx < -50 && i < n - 1) move(1);
+        else if (dx > 50 && i > 0) move(-1);
       }}
     >
       {books.map((b, k) => (
@@ -85,8 +107,8 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
         <div className="hero-tabs">
           <div className="tabs">
             {books.map((b, k) => (
-              <button key={b.id} type="button" className={`hero-tab${k === i ? ' on' : ''}${auto ? ' auto' : ''}`} onClick={() => go(k)} aria-label={`Show ${b.title}`} aria-current={k === i}>
-                <span className="track"><span className="fill" key={`${i}-${auto}`} /></span>
+              <button key={b.id} type="button" className={`hero-tab${k === i ? ' on' : ''}${!isPaused ? ' auto' : ''}`} onClick={() => go(k)} aria-label={`Show ${b.title}`} aria-current={k === i}>
+                <span className="track"><span className="fill" key={`${i}-${!isPaused}`} /></span>
                 <span className="n">{String(k + 1).padStart(2, '0')}{b.isNew ? ' · NEW' : ''}</span>
                 <span className="nm">{b.title}</span>
               </button>
@@ -95,11 +117,26 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
           <div className="ctrl">
             <span className="count">{String(i + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}</span>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="sq-btn" onClick={() => move(-1)} aria-label="Previous book"><ChevL /></button>
-              <button type="button" className="sq-btn gold" onClick={() => move(1)} aria-label="Next book"><ChevR /></button>
+              <button
+                type="button"
+                className="sq-btn gold"
+                onClick={() => move(-1)}
+                aria-label="Previous book"
+              >
+                <ChevL />
+              </button>
+              <button
+                type="button"
+                className="sq-btn gold"
+                onClick={() => move(1)}
+                aria-label="Next book"
+              >
+                <ChevR />
+              </button>
             </div>
           </div>
         </div>
+
       )}
     </section>
   );

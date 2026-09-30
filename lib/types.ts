@@ -5,6 +5,19 @@ export interface Quote {
   source: string;
 }
 
+export interface Review {
+  id: string;
+  name: string;
+  rating: number; // 1-5
+  text: string;
+  /** Optional comment left by admin in the CRM */
+  adminComment?: string;
+  /** ISO timestamp of when the review was submitted */
+  createdAt: string;
+  /** Whether the review is approved/visible on the public page */
+  approved: boolean;
+}
+
 export interface Book {
   id: string;
   slug: string;
@@ -28,6 +41,7 @@ export interface Book {
   formats: string;
   isbn: string;
   quotes: Quote[];
+  reviews?: Review[];
   chapterTitle: string;
   /** Sample chapter. Blank line = new paragraph, a line with *** = scene break. */
   sample: string;
@@ -35,6 +49,8 @@ export interface Book {
   releaseDate: string;
   releaseLabel: string;
   updatedAt: string;
+  /** ISO timestamp of when the book was first created/uploaded. Used for the 3-day "New" badge. */
+  createdAt?: string;
 }
 
 export type VideoType = 'Trailer' | 'Reading' | 'Interview';
@@ -46,6 +62,7 @@ export interface Video {
   type: VideoType;
   duration: string;
   order: number;
+  thumbnail?: string | null;
 }
 
 export interface HomeQuote {
@@ -62,6 +79,7 @@ export interface SiteSettings {
   youtubeUrl: string;
   notifyEmail: string;
   homeQuotes: HomeQuote[];
+  lastSeenReaders?: string;
 }
 
 export interface Reader {

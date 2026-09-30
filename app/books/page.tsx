@@ -6,7 +6,7 @@ import { Arrow, ArrowLeft } from '@/components/icons';
 import { getBooks } from '@/lib/store';
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: 'All books', description: 'Every novel by Ken Merrell, shelf by shelf.' };
+export const metadata: Metadata = { title: 'All books', description: 'The complete works and published novels of author Ken Merrell.' };
 
 const PER_SHELF = 6;
 const SHELVES = 6;
@@ -20,8 +20,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
   const onPage = books.slice(start, start + PER_PAGE);
   const shelves: (typeof books[number] | null)[][] = [];
   for (let s = 0; s < Math.max(1, Math.ceil(onPage.length / PER_SHELF)); s++) {
-    const row = onPage.slice(s * PER_SHELF, s * PER_SHELF + PER_SHELF) as (typeof books[number] | null)[];
-    while (row.length < PER_SHELF) row.push(null);
+    const row = onPage.slice(s * PER_SHELF, s * PER_SHELF + PER_SHELF);
     shelves.push(row);
   }
   const href = (p: number) => (p === 1 ? '/books' : `/books?page=${p}`);
@@ -34,7 +33,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
           <div className="l">
             <Link href="/" className="back"><ArrowLeft s={14} />BACK TO HOME</Link>
             <div className="eyebrow"><span className="line" /><span className="txt">THE LIBRARY</span></div>
-            <h1 className="h1">Every book, <em>shelf by shelf</em></h1>
+            <h1 className="h1">The Complete Works <em>of Ken Merrell</em></h1>
           </div>
           <div className="lib-count">
             <b>{books.length}</b>
@@ -45,7 +44,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
           <Case stacked>
             {shelves.map((row, s) => (
               <div key={s} className="shelf-row">
-                {row.map((b, c) => (b ? <Cubby key={b.id} book={b} no={start + s * PER_SHELF + c + 1} small /> : <EmptyCubby key={`e${c}`} small />))}
+                {row.map((b, c) => (<Cubby key={b.id} book={b} no={start + s * PER_SHELF + c + 1} small />))}
               </div>
             ))}
           </Case>

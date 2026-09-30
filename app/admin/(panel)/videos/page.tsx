@@ -1,9 +1,10 @@
 import AddVideo from '@/components/admin/AddVideo';
 import { Ic } from '@/components/admin/AdIcons';
+import { ImagePick } from '@/components/admin/ImagePick';
 import { getVideos } from '@/lib/store';
 import { deleteVideoAction, moveVideo, updateVideoAction } from '../../actions';
 
-const COLS = '44px 176px minmax(0, 1fr) 140px 90px 150px';
+const COLS = '44px 240px minmax(0, 1fr) 140px 90px 150px';
 
 export default async function VideosAdmin() {
   const videos = await getVideos();
@@ -26,8 +27,16 @@ export default async function VideosAdmin() {
               <form action={moveVideo}><input type="hidden" name="id" value={v.id} /><input type="hidden" name="dir" value="up" /><button type="submit" disabled={i === 0} aria-label="Move up"><Ic k="caretUp" s={16} /></button></form>
               <form action={moveVideo}><input type="hidden" name="id" value={v.id} /><input type="hidden" name="dir" value="down" /><button type="submit" disabled={i === videos.length - 1} aria-label="Move down"><Ic k="caretDown" s={16} /></button></form>
             </div>
-            <div style={{ position: 'relative', width: 160, height: 90, borderRadius: 2, overflow: 'hidden', background: v.youtubeId ? `#1c1712 url(https://i.ytimg.com/vi/${v.youtubeId}/mqdefault.jpg) center / cover` : '#1c1712' }}>
-              {!v.youtubeId && <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#6e6457' }}>Placeholder</span>}
+            <div style={{ position: 'relative', width: 220, alignSelf: 'start' }}>
+              <ImagePick 
+                name="thumbnail" 
+                current={v.thumbnail ?? (v.youtubeId ? `https://i.ytimg.com/vi/${v.youtubeId}/mqdefault.jpg` : null)} 
+                label="Custom Thumbnail" 
+                aspect="16 / 9" 
+                removeName="removeThumbnail" 
+                sizeHint="Recommended: 1280 × 720"
+                formId={`vf-${v.id}`}
+              />
             </div>
             <form action={updateVideoAction} id={`vf-${v.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
               <input type="hidden" name="id" value={v.id} />

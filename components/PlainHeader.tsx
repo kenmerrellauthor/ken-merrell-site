@@ -11,7 +11,7 @@ export default function PlainHeader({ active }: { active?: 'books' }) {
         <Link href="/">HOME</Link>
         <Link href="/books" className={active === 'books' ? 'on' : undefined} aria-current={active === 'books' ? 'page' : undefined}>ALL BOOKS</Link>
         <Link href="/#coming">COMING SOON</Link>
-        <Link href="/#about">ABOUT</Link>
+        <Link href="/author">AUTHOR</Link>
         <Link href="/#contact">CONTACT</Link>
       </nav>
       <Link href="/" className="back m-only" style={{ alignItems: 'center' }}>HOME</Link>
