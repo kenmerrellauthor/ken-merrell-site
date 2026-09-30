@@ -185,7 +185,7 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
           {showBoard && <div className="fb-gutter" />}
           {idle && (
             <>
-              <div className="fb-idle" onClick={() => turn('next')} style={{ cursor: 'pointer' }}>
+              <div className="fb-idle" onClick={() => turn('next')} style={{ cursor: 'pointer' }} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && turn('next')}>
                 <span className="a">Click here to open the book</span>
                 <span className="b">SWIPE OR CLICK TO TURN PAGES <Arrow /></span>
               </div>
