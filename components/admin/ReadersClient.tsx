@@ -19,6 +19,7 @@ export default function ReadersClient({
   readers,
   allReaders,
   nextBook,
+  comingBooks,
   filter,
   totalAll,
   totalEbook,
