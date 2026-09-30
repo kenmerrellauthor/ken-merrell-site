@@ -11,7 +11,8 @@ export default async function ReadersAdmin({ searchParams }: { searchParams: Pro
   const week = Date.now() - 7 * 86_400_000;
   const next = books.find((b) => b.status === 'coming');
 
-  const comingBooks = books.filter(b => b.status === 'coming').map(b => ({ id: b.id, title: b.title }));
+  const comingBooks = books.filter(b => b.status === 'coming').map(b => ({ id: b.id, title: b.title, status: b.status, hasSample: !!b.sample?.trim() }));
+  const allBooksList = books.map(b => ({ id: b.id, title: b.title, status: b.status, hasSample: !!b.sample?.trim() }));
 
   return (
     <ReadersClient
@@ -19,6 +20,7 @@ export default async function ReadersAdmin({ searchParams }: { searchParams: Pro
       allReaders={all}
       nextBook={next?.title ?? null}
       comingBooks={comingBooks}
+      books={allBooksList}
       filter={f}
       totalAll={all.length}
       totalEbook={all.filter((r) => r.format === 'Ebook').length}

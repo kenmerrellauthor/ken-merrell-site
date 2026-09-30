@@ -336,9 +336,19 @@ export async function sendReaderEmailAction(_p: AdminState, form: FormData): Pro
           const chunks: Buffer[] = [];
           doc.on('data', (chunk: Buffer) => chunks.push(chunk));
           doc.on('end', () => resolve(Buffer.concat(chunks)));
-          doc.fontSize(24).text(book.title, { align: 'center' });
-          doc.moveDown(2);
-          doc.fontSize(12).text(book.sample, { align: 'left' });
+          doc.fontSize(22).font('Helvetica-Bold').text(book.title, { align: 'center' });
+          if (book.tagline) {
+            doc.moveDown(0.5);
+            doc.fontSize(12).font('Helvetica-Oblique').text(book.tagline, { align: 'center' });
+          }
+          doc.moveDown(1.5);
+          if (book.chapterTitle) {
+            doc.fontSize(15).font('Helvetica-Bold').text(book.chapterTitle, { align: 'left' });
+            doc.moveDown(0.8);
+          }
+          const rawText = book.sample?.trim() || book.description?.trim() || 'Advance reader sample manuscript coming soon.';
+          const cleanText = rawText.replace(/\r\n/g, '\n');
+          doc.fontSize(11).font('Helvetica').text(cleanText, { align: 'left', lineGap: 4 });
           doc.end();
         });
         attachments = [{ filename: `${book.title.replace(/[^a-z0-9]/gi, '_')}_Sample.pdf`, content: pdfBuffer }];

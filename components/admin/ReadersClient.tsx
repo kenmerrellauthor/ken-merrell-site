@@ -19,7 +19,8 @@ export default function ReadersClient({
   readers,
   allReaders,
   nextBook,
-  comingBooks,
+  comingBooks = [],
+  books = [],
   filter,
   totalAll,
   totalEbook,
@@ -29,7 +30,8 @@ export default function ReadersClient({
   readers: Reader[];
   allReaders: Reader[];
   nextBook: string | null;
-  comingBooks: { id: string, title: string }[];
+  comingBooks?: { id: string; title: string; status?: string; hasSample?: boolean }[];
+  books?: { id: string; title: string; status: 'available' | 'coming'; hasSample?: boolean }[];
   filter: string;
   totalAll: number;
   totalEbook: number;
@@ -40,6 +42,10 @@ export default function ReadersClient({
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const rows = readers.filter(r => !deletedIds.has(r.id)); // Table rows (filtered by tab)
   const composerRows = allReaders.filter(r => !deletedIds.has(r.id)); // Composer rows (always all)
+
+  const availableBooks = books.length > 0 ? books : comingBooks.map(b => ({ ...b, status: (b.status || 'coming') as 'available' | 'coming' }));
+  const comingSoonList = availableBooks.filter(b => b.status === 'coming');
+  const otherBooksList = availableBooks.filter(b => b.status !== 'coming');
 
   useEffect(() => {
     markReadersSeenAction();
@@ -232,12 +238,43 @@ export default function ReadersClient({
                 <span className="help">Plain text only. Each reader gets a personal email — no one sees others' addresses.</span>
               </div>
               <div className="ad-field">
-                <label className="ad-label" htmlFor="em-book">ATTACH SAMPLE PDF (OPTIONAL)</label>
-                <select id="em-book" className="ad-in" value={bookId} onChange={(e) => setBookId(e.target.value)}>
-                  <option value="">No attachment</option>
-                  {comingBooks.map(b => <option key={b.id} value={b.id}>{b.title} (PDF)</option>)}
+                <label className="ad-label" htmlFor="em-book">ATTACH BOOK SAMPLE (PDF)</label>
+                <select
+                  id="em-book"
+                  className="ad-in"
+                  value={bookId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setBookId(id);
+                    if (id && (!subject || subject === 'A note for my advance readers' || subject.startsWith('Your advance copy of '))) {
+                      const found = availableBooks.find((b) => b.id === id);
+                      if (found) setSubject(`Your advance copy of ${found.title}`);
+                    }
+                  }}
+                >
+                  <option value="">No attachment (Text only email)</option>
+                  {comingSoonList.length > 0 && (
+                    <optgroup label="Coming Soon Books">
+                      {comingSoonList.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          ⭐ {b.title} (Coming Soon{b.hasSample ? ' · Sample PDF' : ''})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {otherBooksList.length > 0 && (
+                    <optgroup label={comingSoonList.length > 0 ? "Other Books in Catalog" : "All Books"}>
+                      {otherBooksList.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.title} {b.hasSample ? '(Sample PDF)' : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
-                <span className="help">Automatically generates a PDF from the book's sample text and attaches it.</span>
+                <span className="help">
+                  Automatically generates a formatted PDF from the book's sample text and attaches it to each email.
+                </span>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
