@@ -222,7 +222,7 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
 
 /* ---------- phone: one page at a time ---------- */
 function PhoneBook({ book }: { book: FlipBookProps }) {
-  const text = useMemo(() => paginate(parseSample(book.sample), 470, 330), [book.sample]);
+  const text = useMemo(() => paginate(parseSample(book.sample), 440, 320), [book.sample]);
   const total = text.length + 2; // opener, text pages, end
   const [i, setI] = useState(0);
   const go = (d: number) => setI((c) => Math.max(0, Math.min(total - 1, c + d)));
@@ -237,10 +237,14 @@ function PhoneBook({ book }: { book: FlipBookProps }) {
             <span style={{ fontFamily: 'var(--serif-d)', fontSize: 64, fontWeight: 600, lineHeight: 0.8, color: '#1b1814' }}>One</span>
             {book.chapterTitle && <span style={{ fontFamily: 'var(--serif-d)', fontStyle: 'italic', fontSize: 20, color: '#5d5448' }}>{book.chapterTitle}</span>}
             <span style={{ width: 40, height: 1, background: '#8a6a32' }} />
-            {book.tagline && <span style={{ fontFamily: 'var(--serif-d)', fontStyle: 'italic', fontSize: 19, lineHeight: 1.4, color: '#6b6152', whiteSpace: 'pre-line', paddingTop: 16 }}>{book.tagline}</span>}
+            {book.tagline && <span style={{ fontFamily: 'var(--serif-d)', fontStyle: 'italic', fontSize: 18, lineHeight: 1.4, color: '#6b6152', whiteSpace: 'pre-line', paddingTop: 16 }}>{book.tagline}</span>}
           </div>
         )}
-        {i > 0 && !isEnd && <Blocks blocks={text[i - 1]} firstPage={i === 1} mobile />}
+        {i > 0 && !isEnd && (
+          <div className="m-text-body">
+            <Blocks blocks={text[i - 1]} firstPage={i === 1} mobile />
+          </div>
+        )}
         {isEnd && (
           <div className="end">
             <span style={{ fontFamily: 'var(--serif-d)', fontStyle: 'italic', fontSize: 26, lineHeight: 1.25, color: '#1b1814' }}>Want to know what happens next?</span>

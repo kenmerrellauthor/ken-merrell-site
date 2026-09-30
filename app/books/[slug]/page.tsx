@@ -136,7 +136,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
           {/* 1. First: Video present if any */}
           {bookVideoId && (
-            <div className="book-video-wrap" style={{ maxWidth: 860, margin: '0 auto 60px', padding: '0 24px' }}>
+            <div className="book-video-wrap" style={{ width: '100%', maxWidth: 860, margin: '0 auto 60px', padding: '0 16px', boxSizing: 'border-box' }}>
               <div className="head" style={{ marginBottom: 24, textAlign: 'center' }}>
                 <div className="eyebrow dark"><span className="line" /><span className="txt">WATCH</span><span className="line" /></div>
                 <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', margin: '8px 0 10px', color: '#1b1814' }}>
