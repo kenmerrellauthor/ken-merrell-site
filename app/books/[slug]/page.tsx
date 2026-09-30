@@ -132,7 +132,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
       {(bookVideoId || book.sample.trim()) && (
         <section id="sample" className="sample">
-          <div className="km-paper abs" />
+          <div className="km-paper abs" style={{ opacity: 0.28, pointerEvents: 'none', mixBlendMode: 'multiply' }} />
 
           {/* 1. First: Video present if any */}
           {bookVideoId && (
