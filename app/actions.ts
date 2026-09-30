@@ -62,7 +62,7 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
     await sendMail({
       to: toEmail,
       subject: `New advance reader: ${name}`,
-      html: readerEmail({ name, email, format }, `${await origin()}/admin/readers`),
+      html: readerEmail({ name, email, format: res.reader.format }, `${await origin()}/admin/readers`),
       replyTo: email
     });
   }

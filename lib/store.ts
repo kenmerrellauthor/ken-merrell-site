@@ -218,7 +218,14 @@ export async function getReaders(): Promise<Reader[]> {
 }
 export async function addReader(r: Reader) {
   const existing = (await getReaders()).find((x) => x.email.toLowerCase() === r.email.toLowerCase());
-  if (existing) return { duplicate: true as const, reader: existing };
+  if (existing) {
+    if (existing.format !== r.format && !existing.format.includes(r.format)) {
+      const updated = { ...existing, format: existing.format + ' & ' + r.format };
+      await upsert('readers', updated);
+      return { duplicate: false as const, reader: updated };
+    }
+    return { duplicate: true as const, reader: existing };
+  }
   await upsert('readers', r);
   return { duplicate: false as const, reader: r };
 }
