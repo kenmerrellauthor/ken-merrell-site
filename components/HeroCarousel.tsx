@@ -23,7 +23,12 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
 
   const move = useCallback((step: number, fromAuto = false) => {
     setI((cur) => {
-      const next = (cur + step + n) % n;
+      if (fromAuto) {
+        setDir('next');
+        return (cur + 1) % n;
+      }
+      const next = cur + step;
+      if (next < 0 || next >= n) return cur;
       setDir(step > 0 ? 'next' : 'prev');
       return next;
     });
@@ -119,16 +124,18 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 type="button"
-                className="sq-btn"
+                className={`sq-btn${i > 0 ? ' gold' : ' disabled'}`}
                 onClick={() => move(-1)}
+                disabled={i === 0}
                 aria-label="Previous book"
               >
                 <ChevL />
               </button>
               <button
                 type="button"
-                className="sq-btn gold"
+                className={`sq-btn${i < n - 1 ? ' gold' : ' disabled'}`}
                 onClick={() => move(1)}
+                disabled={i === n - 1}
                 aria-label="Next book"
               >
                 <ChevR />
