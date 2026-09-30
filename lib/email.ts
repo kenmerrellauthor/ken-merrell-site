@@ -18,7 +18,7 @@ ${body}
 </div></div>`;
 }
 
-export async function sendMail(opts: { to: string; subject: string; html: string; replyTo?: string }) {
+export async function sendMail(opts: { to: string; subject: string; html: string; replyTo?: string; attachments?: { filename: string; content: Buffer }[] }) {
   const key = process.env.RESEND_API_KEY;
   if (!key || !opts.to) {
     console.log(`[email not sent: ${!key ? 'RESEND_API_KEY missing' : 'no recipient set in Admin > Author & bio'}]`, opts.subject);
@@ -30,7 +30,8 @@ export async function sendMail(opts: { to: string; subject: string; html: string
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
-    replyTo: opts.replyTo
+    replyTo: opts.replyTo,
+    attachments: opts.attachments,
   });
   if (error) {
     console.error('Resend error', error);

@@ -325,10 +325,30 @@ export async function sendReaderEmailAction(_p: AdminState, form: FormData): Pro
 <p style="font-size:12px;color:#8a8173;margin-top:28px;border-top:1px solid #ece6da;padding-top:16px">You are receiving this as an advance reader for Ken Merrell.</p>
 </div></div>`;
 
+    let attachments: { filename: string; content: Buffer }[] | undefined;
+    const bookId = str(form, 'bookId');
+    if (bookId) {
+      const book = await import('@/lib/store').then((m) => m.getBook(bookId));
+      if (book) {
+        const PDFDocument = (await import('pdfkit')).default;
+        const pdfBuffer = await new Promise<Buffer>((resolve) => {
+          const doc = new PDFDocument({ margin: 50 });
+          const chunks: Buffer[] = [];
+          doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+          doc.on('end', () => resolve(Buffer.concat(chunks)));
+          doc.fontSize(24).text(book.title, { align: 'center' });
+          doc.moveDown(2);
+          doc.fontSize(12).text(book.sample, { align: 'left' });
+          doc.end();
+        });
+        attachments = [{ filename: `${book.title.replace(/[^a-z0-9]/gi, '_')}_Sample.pdf`, content: pdfBuffer }];
+      }
+    }
+
     let sent = 0;
     const errors: string[] = [];
     for (const email of valid) {
-      const ok = await sendMail({ to: email, subject, html: htmlBody, replyTo: site.notifyEmail || undefined });
+      const ok = await sendMail({ to: email, subject, html: htmlBody, replyTo: site.notifyEmail || undefined, attachments });
       if (ok) sent++;
       else errors.push(email);
     }

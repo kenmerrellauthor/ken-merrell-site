@@ -28,6 +28,7 @@ export default function ReadersClient({
   readers: Reader[];
   allReaders: Reader[];
   nextBook: string | null;
+  comingBooks: { id: string, title: string }[];
   filter: string;
   totalAll: number;
   totalEbook: number;
@@ -47,6 +48,7 @@ export default function ReadersClient({
   const [composerOpen, setComposerOpen] = useState(false);
   const [subject, setSubject] = useState(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
   const [body, setBody] = useState('');
+  const [bookId, setBookId] = useState('');
 
   // Recipient selection state — step 2
   const [step, setStep] = useState<'compose' | 'recipients'>('compose');
@@ -98,6 +100,7 @@ export default function ReadersClient({
     const fd = new FormData();
     fd.set('subject', subject);
     fd.set('body', body);
+    if (bookId) fd.set('bookId', bookId);
     fd.set('recipients', JSON.stringify(recipientEmails));
     const res = await sendReaderEmailAction({}, fd);
     setSendPending(false);
@@ -226,6 +229,14 @@ export default function ReadersClient({
                   style={{ fontFamily: 'inherit', lineHeight: 1.75 }}
                 />
                 <span className="help">Plain text only. Each reader gets a personal email — no one sees others' addresses.</span>
+              </div>
+              <div className="ad-field">
+                <label className="ad-label" htmlFor="em-book">ATTACH SAMPLE PDF (OPTIONAL)</label>
+                <select id="em-book" className="ad-in" value={bookId} onChange={(e) => setBookId(e.target.value)}>
+                  <option value="">No attachment</option>
+                  {comingBooks.map(b => <option key={b.id} value={b.id}>{b.title} (PDF)</option>)}
+                </select>
+                <span className="help">Automatically generates a PDF from the book's sample text and attaches it.</span>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
