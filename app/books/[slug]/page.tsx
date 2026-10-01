@@ -29,6 +29,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+function getBannerTitle(b: { title: string; displayTitle?: string }): string {
+  if (!b.displayTitle || b.displayTitle.trim().toLowerCase() === 'untitled') return b.title;
+  const cleanDisplay = b.displayTitle.replace(/[*|_]/g, '').trim().toLowerCase();
+  const cleanTitle = (b.title || '').trim().toLowerCase();
+  if (cleanDisplay && cleanTitle && cleanDisplay !== cleanTitle) return b.title;
+  return b.displayTitle;
+}
+
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [book, all, site, videos] = await Promise.all([getBookBySlug(slug), getBooks(), getSite(), getVideos()]);
@@ -101,7 +109,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             )}
             <div className="info">
               <div className="eyebrow"><span className="line" style={{ width: 48 }} /><span className="txt">{book.status === 'coming' ? 'COMING SOON' : (book.genre || 'A NOVEL').toUpperCase()}</span></div>
-              <h1><DisplayTitle text={book.displayTitle || book.title} /></h1>
+              <h1><DisplayTitle text={getBannerTitle(book)} /></h1>
               {book.tagline && <p className="tag">{book.tagline}</p>}
               {book.description && <div className="desc">{book.description.split(/\n\s*\n/).map((p, k) => <p key={k}>{p}</p>)}</div>}
               <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 6, flexWrap: 'wrap', justifyContent: 'inherit' }}>

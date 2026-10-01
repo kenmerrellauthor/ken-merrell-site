@@ -5,6 +5,18 @@ import type { Book } from '@/lib/types';
 import { Book3D, DisplayTitle } from './Bits';
 import { Arrow, BookIc, ChevL, ChevR, Headphones } from './icons';
 
+function getHeroTitle(book: Book): string {
+  if (!book.displayTitle || book.displayTitle.trim().toLowerCase() === 'untitled') {
+    return book.title;
+  }
+  const cleanDisplay = book.displayTitle.replace(/[*|_]/g, '').trim().toLowerCase();
+  const cleanTitle = (book.title || '').trim().toLowerCase();
+  if (cleanDisplay && cleanTitle && cleanDisplay !== cleanTitle) {
+    return book.title;
+  }
+  return book.displayTitle;
+}
+
 export default function HeroCarousel({ books }: { books: Book[] }) {
   const n = books.length;
   const [i, setI] = useState(0);
@@ -83,9 +95,9 @@ export default function HeroCarousel({ books }: { books: Book[] }) {
             <div className="copy">
               <div className="kicker"><span className="l" /><span className="t">{b.isNew ? 'THE NEW NOVEL' : 'NOW AVAILABLE'}</span></div>
               {k === 0 ? (
-                <h1 className="title"><DisplayTitle text={b.displayTitle || b.title} /></h1>
+                <h1 className="title"><DisplayTitle text={getHeroTitle(b)} /></h1>
               ) : (
-                <h2 className="title"><DisplayTitle text={b.displayTitle || b.title} /></h2>
+                <h2 className="title"><DisplayTitle text={getHeroTitle(b)} /></h2>
               )}
               {b.tagline && <p className="tag">{b.tagline}</p>}
               {b.description && <p className="desc">{b.description.split('\n\n')[0]}</p>}

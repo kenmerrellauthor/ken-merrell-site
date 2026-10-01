@@ -161,10 +161,14 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     if (form.get('removeVideoThumbnail') === 'on') videoThumbnail = null;
 
     const isNewBook = !existing;
-    if (isNewBook && books.length > 0) {
-      // Shift all other books down so the new book is always #1
-      const shifted = books.map((b) => ({ ...b, order: (b.order ?? 1) + 1 }));
-      await saveBooks(shifted);
+
+    let displayTitle = str(form, 'displayTitle', 200);
+    const cleanDisplay = displayTitle.replace(/[*|_]/g, '').trim().toLowerCase();
+    const cleanExisting = (existing?.title || '').trim().toLowerCase();
+    const cleanTitle = title.trim().toLowerCase();
+
+    if (!displayTitle || cleanDisplay === 'untitled' || (existing && cleanTitle !== cleanExisting && cleanDisplay === cleanExisting)) {
+      displayTitle = title;
     }
 
     const hasAudible = form.get('hasAudible') === 'on';
@@ -173,14 +177,14 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       id,
       slug,
       title,
-      displayTitle: str(form, 'displayTitle', 200) || title,
+      displayTitle,
       tagline: clampWords(str(form, 'tagline', 2000), 50),
       description: clampWords(str(form, 'description', 8000), 200),
       genre: str(form, 'genre', 80),
       status: form.get('status') === 'coming' ? 'coming' : 'available',
       featured: isNewBook ? true : form.get('featured') === 'on',
       isNew: isNewBook ? true : form.get('isNew') === 'on',
-      order: isNewBook ? 1 : (existing?.order ?? 1),
+      order: existing?.order ?? (books.length + 1),
       cover,
       banner,
       videoThumbnail,
