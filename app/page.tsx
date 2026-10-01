@@ -47,7 +47,33 @@ export default async function Home() {
   // Respect "In homepage banner" (featured: true); fallback to latest available books if none explicitly featured
   const featured = available.filter((b) => b.featured);
   const hero = featured.length ? featured.slice(0, 4) : available.slice(0, 4);
-  const shelf = available.slice(0, 7);
+  // Build a balanced, symmetrical bookcase without orphan or distorted cubbies:
+  // - 1-3 books: show books + SoonCubby + EmptyCubby to complete a full 4-cubby row.
+  // - exactly 4 books: show all 4 books in a complete, full 4-cubby row.
+  // - 5-7 books: show books + SoonCubby + EmptyCubby to complete 2 full 4-cubby rows (8 cubbies total).
+  // - 8+ books: show the 8 latest books across 2 full 4-cubby rows.
+  let shelfCubbies: React.ReactNode[] = [];
+  if (available.length < 4) {
+    shelfCubbies = [
+      ...available.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />),
+      <SoonCubby key="soon" href="/#coming" label={coming.releaseLabel || 'More to come'} />
+    ];
+    while (shelfCubbies.length < 4) {
+      shelfCubbies.push(<EmptyCubby key={`empty-${shelfCubbies.length}`} />);
+    }
+  } else if (available.length === 4) {
+    shelfCubbies = available.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />);
+  } else if (available.length < 8) {
+    shelfCubbies = [
+      ...available.slice(0, 7).map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />),
+      <SoonCubby key="soon" href="/#coming" label={coming.releaseLabel || 'More to come'} />
+    ];
+    while (shelfCubbies.length < 8) {
+      shelfCubbies.push(<EmptyCubby key={`empty-${shelfCubbies.length}`} />);
+    }
+  } else {
+    shelfCubbies = available.slice(0, 8).map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />);
+  }
   const roman = ['I.', 'II.', 'III.', 'IV.'];
 
   return (
@@ -71,8 +97,7 @@ export default async function Home() {
         </div>
         <div className="reveal-on-scroll reveal-delay-1">
           <Case cols4>
-            {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />)}
-            <SoonCubby href="/#coming" label={coming.releaseLabel || 'More to come'} />
+            {shelfCubbies}
           </Case>
         </div>
       </section>

@@ -988,14 +988,3 @@ button { font: inherit; }
 @media (max-width: 760px) { .case .glowbox { left: -20px; right: -20px; } }
 
 .book-cover-link:hover .book-hover-hint, .book-cover-link:focus .book-hover-hint { opacity: 1 !important; }
-
-/* Flexbox layout for .case.c4 to center odd numbers */
-.case.c4 .body { display: flex !important; flex-wrap: wrap; justify-content: center; }
-.case.c4 .body > * { flex: 0 0 calc(25% - 16.5px); }
-@media (max-width: 900px) { .case.c4 .body > * { flex: 0 0 calc(50% - 4px); } }
-
-/* Flexbox layout for .shelf-row to center odd numbers */
-.shelf-row { display: flex !important; flex-wrap: wrap; justify-content: center; gap: 2px; }
-.shelf-row > * { flex: 0 0 calc(16.66% - 1.7px); }
-@media (max-width: 900px) { .shelf-row > * { flex: 0 0 calc(33.33% - 1.4px); } }
-@media (max-width: 600px) { .shelf-row > * { flex: 0 0 calc(50% - 1px); } }
