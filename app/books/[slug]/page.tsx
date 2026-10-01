@@ -35,7 +35,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
   // Check if book has a video present (its own videoUrl or a matching title in videos)
   let bookVideoId = book.videoUrl ? parseYouTubeId(book.videoUrl) : '';
-  let bookVideoTitle = book.videoUrl ? `${book.title} — Video` : '';
+  const videoById = bookVideoId ? videos.find((v) => v.youtubeId === bookVideoId) : null;
+  let bookVideoTitle = videoById?.title || (book.videoUrl ? `${book.title} — Video` : '');
 
   if (!bookVideoId) {
     const match = videos.find((v) => {
