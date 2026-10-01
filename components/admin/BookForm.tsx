@@ -14,15 +14,66 @@ function Save({ label = 'SAVE CHANGES' }: { label?: string }) {
   return <button type="submit" className="ad-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : label}</button>;
 }
 
-function Field({ label, name, value, placeholder, help, area, rows, type = 'text' }: { label: string; name: string; value?: string; placeholder?: string; help?: string; area?: boolean; rows?: number; type?: string }) {
+function Field({
+  label,
+  name,
+  value,
+  placeholder,
+  help,
+  area,
+  rows,
+  type = 'text',
+  maxLength,
+}: {
+  label: string;
+  name: string;
+  value?: string;
+  placeholder?: string;
+  help?: string;
+  area?: boolean;
+  rows?: number;
+  type?: string;
+  maxLength?: number;
+}) {
+  const [val, setVal] = useState(value ?? '');
   const id = `f-${name}`;
+
+  useEffect(() => {
+    setVal(value ?? '');
+  }, [value]);
+
   return (
     <div className="ad-field">
-      <label className="ad-label" htmlFor={id}>{label}</label>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <label className="ad-label" htmlFor={id}>{label}</label>
+        {maxLength && (
+          <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: val.length >= maxLength ? '#e58a78' : val.length > maxLength * 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
+            {val.length} / {maxLength}
+          </span>
+        )}
+      </div>
       {area ? (
-        <textarea id={id} name={name} className="ad-in" defaultValue={value} placeholder={placeholder} rows={rows ?? 6} />
+        <textarea
+          id={id}
+          name={name}
+          className="ad-in"
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          placeholder={placeholder}
+          rows={rows ?? 6}
+          maxLength={maxLength}
+        />
       ) : (
-        <input id={id} name={name} type={type} className="ad-in" defaultValue={value} placeholder={placeholder} />
+        <input
+          id={id}
+          name={name}
+          type={type}
+          className="ad-in"
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+        />
       )}
       {help && <span className="help">{help}</span>}
     </div>
@@ -411,8 +462,26 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   <Field label="GENRE LINE" name="genre" value={book.genre} placeholder="Historical suspense · A novel" />
                   <Field label="WEB ADDRESS" name="slug" value={book.slug} placeholder="made from the title" help={`yoursite.com/books/${book.slug || '…'}`} />
                 </div>
-                <Field label="TAGLINE" name="tagline" value={book.tagline} area rows={2} placeholder="They hanged her husband. They did not silence his widow." help="One or two short lines. A new line here starts a new line on the site." />
-                <Field label="DESCRIPTION" name="description" value={book.description} area rows={7} placeholder="A paragraph or two that sets up the story." />
+                <Field
+                  label="TAGLINE"
+                  name="tagline"
+                  value={book.tagline}
+                  area
+                  rows={2}
+                  maxLength={140}
+                  placeholder="They hanged her husband. They did not silence his widow."
+                  help="Recommended: 1 to 2 punchy lines (max 140 chars). A new line here starts a new line on the site."
+                />
+                <Field
+                  label="DESCRIPTION"
+                  name="description"
+                  value={book.description}
+                  area
+                  rows={7}
+                  maxLength={800}
+                  placeholder="A paragraph or two that sets up the story."
+                  help="Recommended: 1 to 2 engaging paragraphs (max 800 chars) for an optimal layout across banners and book pages."
+                />
                 <Field label="BANNER TITLE" name="displayTitle" value={book.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>
 

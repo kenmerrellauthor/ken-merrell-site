@@ -119,8 +119,8 @@ button { font: inherit; }
 .hero .kicker .t { font-family: var(--serif-c); font-size: 13px; font-weight: 600; letter-spacing: .32em; color: var(--gold); }
 .hero h1, .hero h2.title { margin: 0; font-family: var(--serif-d); font-weight: 600; font-size: 116px; line-height: .88; letter-spacing: -.015em; color: var(--cream-3); }
 .hero .title .gold-em { font-size: .6em; }
-.hero .tag { margin: 0; font-family: var(--serif-d); font-style: italic; font-size: 32px; line-height: 1.3; color: #e6dcc7; max-width: 580px; white-space: pre-line; }
-.hero .desc { margin: 0; font-size: 18px; line-height: 1.7; color: var(--soft); max-width: 540px; }
+.hero .tag { margin: 0; font-family: var(--serif-d); font-style: italic; font-size: 32px; line-height: 1.3; color: #e6dcc7; max-width: 580px; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hero .desc { margin: 0; font-size: 18px; line-height: 1.7; color: var(--soft); max-width: 540px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .hero .actions { display: flex; align-items: center; gap: 14px; padding-top: 10px; flex-wrap: wrap; }
 .hero-tabs { position: absolute; left: var(--pad); right: var(--pad); bottom: 48px; display: flex; align-items: flex-end; justify-content: space-between; z-index: 5; }
 .hero-tabs .tabs { display: flex; gap: 36px; }
@@ -241,7 +241,7 @@ button { font: inherit; }
 .coming .ghost { position: absolute; right: -40px; top: 50%; margin-top: -170px; font-family: var(--serif-d); font-style: italic; font-weight: 600; font-size: 340px; line-height: 1; color: rgba(201,168,96,.05); pointer-events: none; }
 .coming .copy { position: relative; width: 640px; max-width: 100%; display: flex; flex-direction: column; gap: 30px; }
 .coming h2 { margin: 0; font-family: var(--serif-d); font-weight: 600; font-size: 92px; line-height: .92; color: var(--cream-3); }
-.coming .teaser { margin: 0; font-family: var(--serif-d); font-style: italic; font-size: 30px; line-height: 1.35; color: #e6dcc7; white-space: pre-line; }
+.coming .teaser { margin: 0; font-family: var(--serif-d); font-style: italic; font-size: 30px; line-height: 1.35; color: #e6dcc7; white-space: pre-line; max-width: 600px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .countdown { display: flex; gap: 12px; flex-wrap: wrap; }
 .countdown .box { width: 96px; height: 96px; border: 1px solid rgba(201,168,96,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .countdown .box .v { font-family: var(--serif-d); font-size: 40px; font-weight: 600; line-height: 1; color: var(--cream-2); }
