@@ -1,10 +1,56 @@
 import type { Book } from '@/lib/types';
 import { Fragment } from 'react';
 
+export function formatStylishTitle(title: string, existingDisplay?: string): string {
+  const cleanTitle = (title || '').trim();
+  if (!cleanTitle) return '';
+
+  if (existingDisplay && existingDisplay.includes('*')) {
+    const rawDisplay = existingDisplay.replace(/[*|_]/g, '').trim().toLowerCase();
+    const rawTitle = cleanTitle.toLowerCase();
+    if (rawDisplay === rawTitle) return existingDisplay;
+  }
+
+  const startMatch = cleanTitle.match(/^(the|of|a|an|in|for|from)\s+(.+)$/i);
+  if (startMatch) {
+    const prefix = startMatch[1];
+    const rest = startMatch[2].trim();
+    const restWords = rest.split(/\s+/);
+    if (restWords.length === 1) {
+      return `*${prefix}*|${rest}`;
+    } else if (restWords.length === 2) {
+      return `*${prefix}* ${restWords[0]}|${restWords[1]}`;
+    } else {
+      const mid = Math.ceil(restWords.length / 2);
+      return `*${prefix}* ${restWords.slice(0, mid).join(' ')}|${restWords.slice(mid).join(' ')}`;
+    }
+  }
+
+  const words = cleanTitle.split(/\s+/);
+  if (words.length >= 2) {
+    for (let i = 1; i < words.length - 1; i++) {
+      const lower = words[i].toLowerCase();
+      if (['and', 'of', 'in', 'for', 'with', 'by'].includes(lower)) {
+        const before = words.slice(0, i).join(' ');
+        const after = words.slice(i + 1).join(' ');
+        return `${before}|*${words[i]}* ${after}`;
+      }
+    }
+    if (words.length === 2) {
+      return `*${words[0]}*|${words[1]}`;
+    }
+    const splitIdx = Math.ceil(words.length / 2);
+    return `*${words[0]}* ${words.slice(1, splitIdx).join(' ')}|${words.slice(splitIdx).join(' ')}`;
+  }
+
+  return cleanTitle;
+}
+
 /** Renders "Petticoats *and a*|Traitor’s Death" as the design's two-tone title. */
 export function DisplayTitle({ text }: { text?: string }) {
   const safeText = typeof text === 'string' ? text : '';
-  const lines = safeText.split('|');
+  const styled = safeText.includes('*') ? safeText : formatStylishTitle(safeText);
+  const lines = styled.split('|');
   return (
     <>
       {lines.map((line, li) => (

@@ -18,6 +18,7 @@ import {
 } from '@/lib/store';
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
+import { formatStylishTitle } from '@/components/Bits';
 
 export type AdminState = { ok?: boolean; error?: string; fields?: Record<string, string>; id?: string; book?: Book };
 
@@ -168,7 +169,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     const cleanTitle = title.trim().toLowerCase();
 
     if (!displayTitle || cleanDisplay === 'untitled' || (existing && cleanTitle !== cleanExisting && cleanDisplay === cleanExisting)) {
-      displayTitle = title;
+      displayTitle = formatStylishTitle(title);
     }
 
     const hasAudible = form.get('hasAudible') === 'on';
