@@ -24,6 +24,7 @@ function Field({
   rows,
   type = 'text',
   maxLength,
+  maxWords,
 }: {
   label: string;
   name: string;
@@ -34,6 +35,7 @@ function Field({
   rows?: number;
   type?: string;
   maxLength?: number;
+  maxWords?: number;
 }) {
   const [val, setVal] = useState(value ?? '');
   const id = `f-${name}`;
@@ -42,15 +44,28 @@ function Field({
     setVal(value ?? '');
   }, [value]);
 
+  const wordCount = maxWords ? (val.trim() ? val.trim().split(/\s+/).length : 0) : 0;
+  const isOverWordLimit = Boolean(maxWords && wordCount > maxWords);
+
   return (
     <div className="ad-field">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <label className="ad-label" htmlFor={id}>{label}</label>
-        {maxLength && (
+        {maxWords ? (
+          <span style={{
+            fontSize: 11,
+            fontFamily: 'var(--serif-c)',
+            letterSpacing: '.08em',
+            color: wordCount > maxWords ? '#e58a78' : wordCount >= maxWords * 0.9 ? 'var(--gold)' : 'var(--muted)',
+            fontWeight: wordCount > maxWords ? 700 : 500,
+          }}>
+            {wordCount} / {maxWords} words {wordCount > maxWords ? `(${wordCount - maxWords} over limit)` : ''}
+          </span>
+        ) : maxLength ? (
           <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: val.length >= maxLength ? '#e58a78' : val.length > maxLength * 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
             {val.length} / {maxLength}
           </span>
-        )}
+        ) : null}
       </div>
       {area ? (
         <textarea
@@ -62,6 +77,7 @@ function Field({
           placeholder={placeholder}
           rows={rows ?? 6}
           maxLength={maxLength}
+          style={isOverWordLimit ? { borderColor: '#e58a78' } : undefined}
         />
       ) : (
         <input
@@ -73,9 +89,15 @@ function Field({
           onChange={(e) => setVal(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
+          style={isOverWordLimit ? { borderColor: '#e58a78' } : undefined}
         />
       )}
       {help && <span className="help">{help}</span>}
+      {isOverWordLimit && (
+        <span style={{ fontSize: 12, color: '#e58a78', marginTop: -4 }}>
+          Please shorten to {maxWords} words or less.
+        </span>
+      )}
     </div>
   );
 }
@@ -468,9 +490,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   value={book.tagline}
                   area
                   rows={2}
-                  maxLength={140}
+                  maxWords={50}
                   placeholder="They hanged her husband. They did not silence his widow."
-                  help="Recommended: 1 to 2 punchy lines (max 140 chars). A new line here starts a new line on the site."
+                  help="A hook or teaser for the book (limit: 50 words). Displays across hero banners and book pages."
                 />
                 <Field
                   label="DESCRIPTION"
@@ -478,9 +500,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   value={book.description}
                   area
                   rows={7}
-                  maxLength={800}
+                  maxWords={250}
                   placeholder="A paragraph or two that sets up the story."
-                  help="Recommended: 1 to 2 engaging paragraphs (max 800 chars) for an optimal layout across banners and book pages."
+                  help="The book synopsis or summary (limit: 250 words) to set up the plot, characters, and stakes."
                 />
                 <Field label="BANNER TITLE" name="displayTitle" value={book.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>

@@ -22,6 +22,24 @@ export type AdminState = { ok?: boolean; error?: string; fields?: Record<string,
 
 const refresh = () => revalidatePath('/', 'layout');
 const str = (f: FormData, k: string, max = 20000) => String(f.get(k) ?? '').trim().slice(0, max);
+const clampWords = (s: string, maxWords: number) => {
+  const trimmed = s.trim();
+  if (!trimmed) return '';
+  const words = trimmed.split(/\s+/);
+  if (words.length <= maxWords) return trimmed;
+  let count = 0;
+  let idx = 0;
+  const regex = /\S+/g;
+  let match;
+  while ((match = regex.exec(trimmed)) !== null) {
+    count++;
+    if (count === maxWords) {
+      idx = regex.lastIndex;
+      break;
+    }
+  }
+  return trimmed.slice(0, idx).trim();
+};
 const file = (f: FormData, k: string) => {
   const v = f.get(k);
   return v instanceof File && v.size > 0 ? v : null;
@@ -129,8 +147,8 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       slug,
       title,
       displayTitle: str(form, 'displayTitle', 200) || title,
-      tagline: str(form, 'tagline', 140),
-      description: str(form, 'description', 800),
+      tagline: clampWords(str(form, 'tagline', 2000), 50),
+      description: clampWords(str(form, 'description', 8000), 250),
       genre: str(form, 'genre', 80),
       status: form.get('status') === 'coming' ? 'coming' : 'available',
       featured: isNewBook ? true : form.get('featured') === 'on',
