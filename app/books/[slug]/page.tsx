@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const book = await getBookBySlug((await params).slug);
   if (!book) return {};
-  const description = (book.tagline || book.description).replace(/\s+/g, ' ').slice(0, 160);
+  const description = (book.tagline || book.description || '').replace(/\s+/g, ' ').slice(0, 160);
   return {
     title: book.title,
     description,
@@ -56,7 +56,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
   const others = all.filter((b) => b.id !== book.id && b.status === 'available').slice(0, 4);
   const idx = all.filter((b) => b.status === 'available').findIndex((b) => b.id === book.id);
-  const quotes = book.quotes.filter((q) => q.text.trim());
+  const quotes = (Array.isArray(book.quotes) ? book.quotes : []).filter((q) => q?.text?.trim());
+  const hasSample = Boolean(typeof book.sample === 'string' && book.sample.trim());
   const facts = [
     ['PUBLISHED', book.status === 'coming' ? book.releaseLabel || 'Coming soon' : book.published],
     ['PAGES', book.pages],
@@ -86,7 +87,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             <Link href="/">HOME</Link><span>/</span><Link href="/books">BOOKS</Link><span>/</span><span className="cur" aria-current="page">{book.title}</span>
           </nav>
           <div className="book-main">
-            {book.sample.trim() ? (
+            {hasSample ? (
               <a href="#sample" className="book-cover-link" aria-label="Click here to open the book" style={{ position: 'relative', display: 'block' }}>
                 <Book3D book={book} w={410} h={615} i={Math.max(0, idx)} />
                 <div className="book-hover-hint" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s', background: 'rgba(0,0,0,0.3)', borderRadius: 4 }}>
@@ -106,7 +107,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 6, flexWrap: 'wrap', justifyContent: 'inherit' }}>
                 {book.amazonUrl && <a href={book.amazonUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold">BUY ON AMAZON <Arrow /></a>}
                 {book.audibleUrl && <a href={book.audibleUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Headphones />LISTEN ON AUDIBLE</a>}
-                {(bookVideoId || book.sample.trim()) && (
+                {(bookVideoId || hasSample) && (
                   <a href={bookVideoId ? "#video" : "#sample"} className="btn btn-text">
                     {bookVideoId ? 'WATCH & READ' : 'READ THE SAMPLE'} <Down />
                   </a>
@@ -149,7 +150,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               title={bookVideoTitle || `${book.title} — Official Trailer`}
               thumbnail={bookVideoThumbnail}
             />
-            {book.sample.trim() && (
+            {hasSample && (
               <a href="#sample" className="book-video-scroll-hint">
                 <span>READ THE FIRST CHAPTER</span>
                 <Down />
@@ -160,7 +161,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       )}
 
       {/* 2. Interactive Sample Chapter Flipbook */}
-      {book.sample.trim() && (
+      {hasSample && (
         <section id="sample" className="sample">
           <div className="km-paper abs" style={{ opacity: 0.28, pointerEvents: 'none', mixBlendMode: 'multiply' }} />
           <div className="head">

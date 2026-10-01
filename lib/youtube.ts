@@ -1,5 +1,7 @@
-export function parseYouTubeId(input: string): string {
+export function parseYouTubeId(input?: string | null): string {
+  if (!input || typeof input !== 'string') return '';
   const s = input.trim();
+  if (!s) return '';
   if (/^[\w-]{11}$/.test(s)) return s;
   try {
     const u = new URL(s);
@@ -10,3 +12,4 @@ export function parseYouTubeId(input: string): string {
   } catch { /* not a URL */ }
   return '';
 }
+

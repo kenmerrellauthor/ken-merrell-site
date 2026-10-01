@@ -49,7 +49,8 @@ export default async function BooksAdmin({ searchParams }: { searchParams: Promi
         {rows.map((b) => {
           const i = books.findIndex((x) => x.id === b.id);
           const on = b.status === 'available';
-          const needs = [!b.cover && 'Needs cover', !b.sample.trim() && on && 'No sample', !b.amazonUrl && on && 'No Amazon link'].filter(Boolean).join(' · ');
+          const sampleStr = typeof b.sample === 'string' ? b.sample : '';
+          const needs = [!b.cover && 'Needs cover', !sampleStr.trim() && on && 'No sample', !b.amazonUrl && on && 'No Amazon link'].filter(Boolean).join(' · ');
           return (
             <div key={b.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, height: 104 }}>
               <div className="movers">

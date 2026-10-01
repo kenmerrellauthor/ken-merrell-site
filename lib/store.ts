@@ -125,33 +125,66 @@ export function isBookNew(book: Book): boolean {
   return Date.now() - uploadedTime <= THREE_DAYS_MS;
 }
 
+export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
+  return {
+    id: b.id,
+    slug: b.slug || b.id,
+    title: b.title || 'Untitled',
+    displayTitle: b.displayTitle || b.title || 'Untitled',
+    tagline: b.tagline || '',
+    description: b.description || '',
+    genre: b.genre || 'A novel',
+    status: b.status === 'coming' ? 'coming' : 'available',
+    featured: Boolean(b.featured),
+    isNew: Boolean(b.isNew),
+    order: typeof b.order === 'number' ? b.order : 1,
+    cover: b.cover ?? null,
+    banner: b.banner ?? null,
+    clothColor: b.clothColor || '#1c1712',
+    amazonUrl: b.amazonUrl || '',
+    audibleUrl: b.audibleUrl || '',
+    videoUrl: b.videoUrl || '',
+    videoThumbnail: b.videoThumbnail ?? null,
+    published: b.published || '',
+    pages: b.pages || '',
+    formats: b.formats || 'Print, Ebook',
+    isbn: b.isbn || '',
+    quotes: Array.isArray(b.quotes) ? b.quotes : [],
+    reviews: Array.isArray(b.reviews) ? b.reviews : [],
+    chapterTitle: b.chapterTitle || '',
+    sample: typeof b.sample === 'string' ? b.sample : '',
+    releaseDate: b.releaseDate || '',
+    releaseLabel: b.releaseLabel || '',
+    updatedAt: b.updatedAt || new Date().toISOString(),
+    createdAt: b.createdAt || b.updatedAt || new Date().toISOString(),
+  };
+}
+
 /* ---------------- Books ---------------- */
 export async function getBooks(): Promise<Book[]> {
   const rows = await all<Book>('books');
-  return rows.sort((a, b) => {
+  return rows.map(sanitizeBook).sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
     const tA = new Date(a.createdAt || a.updatedAt || 0).getTime();
     const tB = new Date(b.createdAt || b.updatedAt || 0).getTime();
     return tB - tA;
   });
 }
-export async function getBook(id: string) {
+export async function getBook(id: string): Promise<Book | null> {
   const b = (await getBooks()).find((b) => b.id === id) ?? null;
-  if (b && !b.reviews) return { ...b, reviews: [] };
-  return b;
+  return b ? sanitizeBook(b) : null;
 }
-export async function getBookBySlug(slug: string) {
+export async function getBookBySlug(slug: string): Promise<Book | null> {
   const b = (await getBooks()).find((b) => b.slug === slug) ?? null;
-  if (b && !b.reviews) return { ...b, reviews: [] };
-  return b;
+  return b ? sanitizeBook(b) : null;
 }
 export async function saveBook(book: Book) {
-  // Ensure reviews array always exists
-  const safe: Book = { reviews: [], ...book };
+  const safe = sanitizeBook(book);
   return upsert('books', safe);
 }
 export async function saveBooks(books: Book[]) {
-  return upsertMany('books', books);
+  const safe = books.map(sanitizeBook);
+  return upsertMany('books', safe);
 }
 export async function deleteBook(id: string) {
   return remove('books', id);
@@ -164,7 +197,7 @@ export async function saveBookOrder(ids: string[]) {
       return b ? { ...b, order: i + 1 } : null;
     })
     .filter(Boolean) as Book[];
-  return upsertMany('books', changed);
+  return upsertMany('books', changed.map(sanitizeBook));
 }
 
 /* --- Book Reviews --- */
@@ -313,11 +346,12 @@ export async function getCrmNotifications(limit?: number): Promise<{ notificatio
   for (const b of books) {
     for (const rev of b.reviews ?? []) {
       const isUnread = !rev.approved || (new Date(rev.createdAt).getTime() > lastSeen);
+      const stars = Math.max(0, Math.min(5, Math.floor(rev.rating || 0)));
       notifications.push({
         id: `rev-${rev.id}`,
         type: 'review',
         title: `${rev.name} reviewed "${b.title}"`,
-        subtitle: `${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)} · ${rev.approved ? 'Approved' : 'Pending Approval'}`,
+        subtitle: `${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} · ${rev.approved ? 'Approved' : 'Pending Approval'}`,
         detail: rev.text,
         createdAt: rev.createdAt,
         href: `/admin/notifications?highlight=rev-${rev.id}`,

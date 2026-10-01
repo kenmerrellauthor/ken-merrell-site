@@ -13,7 +13,8 @@ import {
 } from '@/lib/auth';
 import {
   addReader, deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
-  saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage
+  saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage,
+  sanitizeBook
 } from '@/lib/store';
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
@@ -22,8 +23,9 @@ export type AdminState = { ok?: boolean; error?: string; fields?: Record<string,
 
 const refresh = () => revalidatePath('/', 'layout');
 const str = (f: FormData, k: string, max = 20000) => String(f.get(k) ?? '').trim().slice(0, max);
-const clampWords = (s: string, maxWords: number) => {
-  const trimmed = s.trim();
+const clampWords = (s: unknown, maxWords: number) => {
+  const strVal = typeof s === 'string' ? s : String(s || '');
+  const trimmed = strVal.trim();
   if (!trimmed) return '';
   const words = trimmed.split(/\s+/);
   if (words.length <= maxWords) return trimmed;
@@ -147,7 +149,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
 
     const hasAudible = form.get('hasAudible') === 'on';
     const videoUrl = str(form, 'videoUrl', 300);
-    const book: Book = {
+    const book: Book = sanitizeBook({
       id,
       slug,
       title,
@@ -178,7 +180,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       releaseLabel: str(form, 'releaseLabel', 60),
       updatedAt: new Date().toISOString(),
       createdAt: existing?.createdAt || existing?.updatedAt || new Date().toISOString()
-    };
+    });
     await saveBook(book);
     refresh();
     return { ok: true, id };

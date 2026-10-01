@@ -218,11 +218,11 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const [audible, setAudible] = useState(!!book.audibleUrl);
   const [videoUrl, setVideoUrl] = useState(book.videoUrl || '');
   const [videoThumbnail, setVideoThumbnail] = useState(book.videoThumbnail || '');
-  const [quotes, setQuotes] = useState<Quote[]>(book.quotes.length ? book.quotes : []);
+  const [quotes, setQuotes] = useState<Quote[]>(Array.isArray(book.quotes) ? book.quotes : []);
   const [fileName, setFileName] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [reviews, setReviews] = useState<Review[]>(book.reviews ?? []);
+  const [reviews, setReviews] = useState<Review[]>(Array.isArray(book.reviews) ? book.reviews : []);
   const [commentEdit, setCommentEdit] = useState<Record<string, string>>({});
   const [showAddReview, setShowAddReview] = useState(false);
 
@@ -236,9 +236,17 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
     return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
 
-  const words = book.sample.trim() ? book.sample.trim().split(/\s+/).length : 0;
+  const sampleStr = typeof book.sample === 'string' ? book.sample : '';
+  const words = sampleStr.trim() ? sampleStr.trim().split(/\s+/).length : 0;
   const pending = reviews.filter((r) => !r.approved);
   const approved = reviews.filter((r) => r.approved);
+
+  const previewYoutubeId = parseYouTubeId(videoUrl);
+  const matchedGalleryVideo = previewYoutubeId
+    ? videos.find(v => Boolean(v.youtubeId && v.youtubeId === previewYoutubeId))
+    : videos.find(v => Boolean(videoUrl && v.youtubeId && videoUrl.includes(v.youtubeId)));
+  const activePreviewThumb = videoThumbnail || matchedGalleryVideo?.thumbnail || (previewYoutubeId ? `https://i.ytimg.com/vi/${previewYoutubeId}/mqdefault.jpg` : null);
+  const isCustomPreviewThumb = Boolean(videoThumbnail || matchedGalleryVideo?.thumbnail);
 
   function ReviewRow({ r, bookId }: { r: Review; bookId: string }) {
     const [busy, setBusy] = useState(false);
@@ -530,7 +538,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                     <select
                       id="bf-video-select"
                       className="ad-in"
-                      value={videos.some(v => v.youtubeId && videoUrl.includes(v.youtubeId)) ? (videos.find(v => v.youtubeId && videoUrl.includes(v.youtubeId))?.id || '') : ''}
+                      value={matchedGalleryVideo?.id || ''}
                       onChange={(e) => {
                         const sel = videos.find(v => v.id === e.target.value);
                         if (sel && sel.youtubeId) {
@@ -577,7 +585,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   <div style={{ maxWidth: 360 }}>
                     <ImagePick
                       name="videoThumbnail"
-                      current={videoThumbnail || videos.find(v => v.youtubeId && videoUrl.includes(v.youtubeId))?.thumbnail || null}
+                      current={videoThumbnail || matchedGalleryVideo?.thumbnail || null}
                       label="Upload custom thumbnail"
                       aspect="16 / 9"
                       removeName="removeVideoThumbnail"
@@ -587,54 +595,47 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 </div>
 
                 {/* Live Preview Card */}
-                {parseYouTubeId(videoUrl) && (() => {
-                  const yId = parseYouTubeId(videoUrl);
-                  const matchedVideo = videos.find(v => v.youtubeId === yId);
-                  const activeThumb = videoThumbnail || matchedVideo?.thumbnail || (yId ? `https://i.ytimg.com/vi/${yId}/mqdefault.jpg` : null);
-                  const isCustomThumb = !!(videoThumbnail || matchedVideo?.thumbnail);
-
-                  return (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 16,
-                      padding: 14,
-                      background: 'rgba(201,168,96,.08)',
-                      border: '1px solid rgba(201,168,96,.3)',
-                      borderRadius: 6,
-                      marginTop: 14
-                    }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {activeThumb && (
-                        <img
-                          src={activeThumb}
-                          alt="Trailer thumbnail"
-                          style={{ width: 110, height: 62, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
-                        />
-                      )}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {matchedVideo?.title || `${book.title || 'Book'} Trailer`}
-                        </div>
-                        <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
-                          Active on public book page
-                          {isCustomThumb && (
-                            <span style={{ color: '#6dbf78', marginLeft: 6 }}>• Custom thumbnail</span>
-                          )}
-                        </div>
+                {previewYoutubeId && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    padding: 14,
+                    background: 'rgba(201,168,96,.08)',
+                    border: '1px solid rgba(201,168,96,.3)',
+                    borderRadius: 6,
+                    marginTop: 14
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {activePreviewThumb && (
+                      <img
+                        src={activePreviewThumb}
+                        alt="Trailer thumbnail"
+                        style={{ width: 110, height: 62, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {matchedGalleryVideo?.title || `${book.title || 'Book'} Trailer`}
                       </div>
-                      <button
-                        type="button"
-                        className="ad-sm"
-                        style={{ height: 32, fontSize: 12 }}
-                        onClick={() => { setVideoUrl(''); setVideoThumbnail(''); setDirty(true); }}
-                      >
-                        Clear
-                      </button>
+                      <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
+                        Active on public book page
+                        {isCustomPreviewThumb && (
+                          <span style={{ color: '#6dbf78', marginLeft: 6 }}>• Custom thumbnail</span>
+                        )}
+                      </div>
                     </div>
-                  );
-                })()}
+                    <button
+                      type="button"
+                      className="ad-sm"
+                      style={{ height: 32, fontSize: 12 }}
+                      onClick={() => { setVideoUrl(''); setVideoThumbnail(''); setDirty(true); }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
               </section>
 
               <section className="ad-card">
