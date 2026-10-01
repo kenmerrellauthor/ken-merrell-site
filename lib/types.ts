@@ -37,6 +37,7 @@ export interface Book {
   amazonUrl: string;
   audibleUrl: string;
   videoUrl?: string;
+  videoThumbnail?: string | null;
   published: string;
   pages: string;
   formats: string;

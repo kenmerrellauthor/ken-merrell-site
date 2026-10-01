@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Flipbook from '@/components/Flipbook';
+import BookVideoPlayer from '@/components/BookVideoPlayer';
 import { Book3D, DisplayTitle } from '@/components/Bits';
 import { Case, Cubby } from '@/components/Shelf';
 import { Arrow, Down, Headphones } from '@/components/icons';
@@ -37,6 +38,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   let bookVideoId = book.videoUrl ? parseYouTubeId(book.videoUrl) : '';
   const videoById = bookVideoId ? videos.find((v) => v.youtubeId === bookVideoId) : null;
   let bookVideoTitle = videoById?.title || (book.videoUrl ? `${book.title} — Video` : '');
+  let bookVideoThumbnail = book.videoThumbnail || videoById?.thumbnail || (bookVideoId ? `https://i.ytimg.com/vi/${bookVideoId}/hqdefault.jpg` : null);
 
   if (!bookVideoId) {
     const match = videos.find((v) => {
@@ -48,6 +50,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     if (match) {
       bookVideoId = match.youtubeId;
       bookVideoTitle = match.title;
+      bookVideoThumbnail = book.videoThumbnail || match.thumbnail || `https://i.ytimg.com/vi/${match.youtubeId}/hqdefault.jpg`;
     }
   }
 
@@ -141,14 +144,11 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               <h2>{bookVideoTitle || `${book.title} — Official Trailer`}</h2>
               <p className="book-video-sub">Watch the cinematic trailer and author reading before diving into the excerpt below.</p>
             </div>
-            <div className="book-video-frame">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${bookVideoId}?rel=0`}
-                title={bookVideoTitle || `${book.title} Video`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+            <BookVideoPlayer
+              videoId={bookVideoId}
+              title={bookVideoTitle || `${book.title} — Official Trailer`}
+              thumbnail={bookVideoThumbnail}
+            />
             {book.sample.trim() && (
               <a href="#sample" className="book-video-scroll-hint">
                 <span>READ THE FIRST CHAPTER</span>

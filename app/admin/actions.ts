@@ -133,6 +133,11 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     if (bf) banner = await uploadImage(bf, 'banners');
     if (form.get('removeBanner') === 'on') banner = null;
 
+    let videoThumbnail = existing?.videoThumbnail ?? null;
+    const vf = file(form, 'videoThumbnail');
+    if (vf) videoThumbnail = await uploadImage(vf, 'videos');
+    if (form.get('removeVideoThumbnail') === 'on') videoThumbnail = null;
+
     const isNewBook = !existing;
     if (isNewBook && books.length > 0) {
       // Shift all other books down so the new book is always #1
@@ -156,6 +161,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       order: isNewBook ? 1 : (existing?.order ?? 1),
       cover,
       banner,
+      videoThumbnail,
       clothColor: /^#[0-9a-f]{6}$/i.test(str(form, 'clothColor')) ? str(form, 'clothColor') : existing?.clothColor || '#1c1712',
       amazonUrl: str(form, 'amazonUrl', 500),
       audibleUrl: hasAudible ? str(form, 'audibleUrl', 500) : '',

@@ -33,6 +33,7 @@ function book(p: Partial<Book> & Pick<Book, 'id' | 'slug' | 'title' | 'order'>):
     amazonUrl: '',
     audibleUrl: '',
     videoUrl: '',
+    videoThumbnail: null,
     published: '[Month Year]',
     pages: '[000]',
     formats: 'Print, Ebook',

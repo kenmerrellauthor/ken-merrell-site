@@ -581,6 +581,31 @@ button { font: inherit; }
   height: 100%;
   border: 0;
 }
+.book-video-cover-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: #1a1612;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+}
+.book-video-thumb-img {
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.book-video-cover-btn:hover .book-video-thumb-img {
+  transform: scale(1.03);
+}
+.book-video-cover-btn:hover .vplay {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+.book-video-cover-btn:hover .vplay .core {
+  background: #f0d794;
+  box-shadow: 0 0 26px rgba(201,168,96,.7);
+}
 .book-video-scroll-hint {
   display: inline-flex;
   align-items: center;

@@ -217,6 +217,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const [status, setStatus] = useState(book.status);
   const [audible, setAudible] = useState(!!book.audibleUrl);
   const [videoUrl, setVideoUrl] = useState(book.videoUrl || '');
+  const [videoThumbnail, setVideoThumbnail] = useState(book.videoThumbnail || '');
   const [quotes, setQuotes] = useState<Quote[]>(book.quotes.length ? book.quotes : []);
   const [fileName, setFileName] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
@@ -534,6 +535,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                         const sel = videos.find(v => v.id === e.target.value);
                         if (sel && sel.youtubeId) {
                           setVideoUrl(`https://www.youtube.com/watch?v=${sel.youtubeId}`);
+                          if (sel.thumbnail && !videoThumbnail) {
+                            setVideoThumbnail(sel.thumbnail);
+                          }
                           setDirty(true);
                         }
                       }}
@@ -564,42 +568,73 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   </span>
                 </div>
 
-                {/* Live Preview Card */}
-                {parseYouTubeId(videoUrl) && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 16,
-                    padding: 14,
-                    background: 'rgba(201,168,96,.08)',
-                    border: '1px solid rgba(201,168,96,.3)',
-                    borderRadius: 6
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://i.ytimg.com/vi/${parseYouTubeId(videoUrl)}/mqdefault.jpg`}
-                      alt="Trailer thumbnail"
-                      style={{ width: 100, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
+                {/* Custom Trailer Thumbnail */}
+                <div style={{ marginTop: 12 }}>
+                  <label className="ad-label">CUSTOM TRAILER THUMBNAIL (OPTIONAL)</label>
+                  <p className="sub" style={{ marginTop: 2, marginBottom: 10, fontSize: 13 }}>
+                    Appears before the video plays on the book reading page. Defaults to the gallery video's custom thumbnail or YouTube cover.
+                  </p>
+                  <div style={{ maxWidth: 360 }}>
+                    <ImagePick
+                      name="videoThumbnail"
+                      current={videoThumbnail || videos.find(v => v.youtubeId && videoUrl.includes(v.youtubeId))?.thumbnail || null}
+                      label="Upload custom thumbnail"
+                      aspect="16 / 9"
+                      removeName="removeVideoThumbnail"
+                      sizeHint="Recommended: 1280 × 720 (16:9)"
                     />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {videos.find(v => v.youtubeId === parseYouTubeId(videoUrl))?.title || `${book.title || 'Book'} Trailer`}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
-                        Active on public book page
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="ad-sm"
-                      style={{ height: 32, fontSize: 12 }}
-                      onClick={() => { setVideoUrl(''); setDirty(true); }}
-                    >
-                      Clear
-                    </button>
                   </div>
-                )}
+                </div>
+
+                {/* Live Preview Card */}
+                {parseYouTubeId(videoUrl) && (() => {
+                  const yId = parseYouTubeId(videoUrl);
+                  const matchedVideo = videos.find(v => v.youtubeId === yId);
+                  const activeThumb = videoThumbnail || matchedVideo?.thumbnail || (yId ? `https://i.ytimg.com/vi/${yId}/mqdefault.jpg` : null);
+                  const isCustomThumb = !!(videoThumbnail || matchedVideo?.thumbnail);
+
+                  return (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 16,
+                      padding: 14,
+                      background: 'rgba(201,168,96,.08)',
+                      border: '1px solid rgba(201,168,96,.3)',
+                      borderRadius: 6,
+                      marginTop: 14
+                    }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {activeThumb && (
+                        <img
+                          src={activeThumb}
+                          alt="Trailer thumbnail"
+                          style={{ width: 110, height: 62, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
+                        />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {matchedVideo?.title || `${book.title || 'Book'} Trailer`}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
+                          Active on public book page
+                          {isCustomThumb && (
+                            <span style={{ color: '#6dbf78', marginLeft: 6 }}>• Custom thumbnail</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="ad-sm"
+                        style={{ height: 32, fontSize: 12 }}
+                        onClick={() => { setVideoUrl(''); setVideoThumbnail(''); setDirty(true); }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  );
+                })()}
               </section>
 
               <section className="ad-card">
