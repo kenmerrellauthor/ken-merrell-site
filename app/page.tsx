@@ -44,8 +44,9 @@ export default async function Home() {
     releaseLabel: 'Coming Soon',
     order: 8,
   };
-  // Always display the 4 latest books in the hero section
-  const hero = available.slice(0, 4);
+  // Respect "In homepage banner" (featured: true); fallback to latest available books if none explicitly featured
+  const featured = available.filter((b) => b.featured);
+  const hero = featured.length ? featured.slice(0, 4) : available.slice(0, 4);
   const shelf = available.slice(0, 7);
   const roman = ['I.', 'II.', 'III.', 'IV.'];
 
@@ -70,7 +71,7 @@ export default async function Home() {
         </div>
         <div className="reveal-on-scroll reveal-delay-1">
           <Case cols4>
-            {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={isBookNew(b)} />)}
+            {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />)}
             <SoonCubby href="/#coming" label={coming.releaseLabel || 'More to come'} />
           </Case>
         </div>

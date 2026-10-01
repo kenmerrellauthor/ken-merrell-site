@@ -114,8 +114,9 @@ async function remove(table: Table, id: string) {
 
 export const newId = () => crypto.randomBytes(6).toString('hex');
 
-/** Returns true if the book was uploaded within the last 3 days. Always computed from createdAt (or updatedAt as fallback). */
+/** Returns true if the book has isNew enabled in admin, or was uploaded within the last 3 days if not explicitly set. */
 export function isBookNew(book: Book): boolean {
+  if (typeof book.isNew === 'boolean') return book.isNew;
   const dateStr = book.createdAt || book.updatedAt;
   if (!dateStr) return false;
   const uploadedTime = new Date(dateStr).getTime();

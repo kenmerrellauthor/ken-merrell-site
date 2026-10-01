@@ -62,6 +62,7 @@ export default async function BooksAdmin({ searchParams }: { searchParams: Promi
                 <span className="ad-meta">
                   {on ? `No. ${String(liveIndex(b.id)).padStart(2, '0')}` : `Expected ${b.releaseLabel || 'date not set'}`}
                   {b.featured && on ? ' · In homepage banner' : ''}
+                  {b.isNew && on ? ' · NEW ribbon' : ''}
                   {needs ? <span style={{ color: '#e2b86a' }}> · {needs}</span> : ''}
                 </span>
               </div>

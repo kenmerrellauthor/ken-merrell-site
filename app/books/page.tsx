@@ -44,7 +44,7 @@ export default async function Library({ searchParams }: { searchParams: Promise<
           <Case stacked>
             {shelves.map((row, s) => (
               <div key={s} className="shelf-row">
-                {row.map((b, c) => (<Cubby key={b.id} book={b} no={start + s * PER_SHELF + c + 1} small />))}
+                {row.map((b, c) => (<Cubby key={b.id} book={b} no={start + s * PER_SHELF + c + 1} small isNew={Boolean(b.isNew)} />))}
               </div>
             ))}
           </Case>

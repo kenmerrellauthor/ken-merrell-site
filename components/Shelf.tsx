@@ -3,6 +3,7 @@ import type { Book } from '@/lib/types';
 import { Cover } from './Bits';
 
 export function Cubby({ book, no, small, isNew }: { book: Book; no: number; small?: boolean; isNew?: boolean }) {
+  const showRibbon = isNew !== undefined ? isNew : Boolean(book.isNew);
   return (
     <Link href={`/books/${book.slug}`} className={`cubby km-cubby${small ? ' sm' : ''}`} aria-label={book.title}>
       <div className="km-lamp abs" />
@@ -15,7 +16,7 @@ export function Cubby({ book, no, small, isNew }: { book: Book; no: number; smal
       <div className="bk">
         <Cover book={book} w={small ? 140 : 176} h={small ? 210 : 264} title={small ? 19 : 23} author={small ? 9 : 11} />
         <div className="km-spine abs" />
-        {isNew && <span className="ribbon">NEW</span>}
+        {showRibbon && <span className="ribbon">NEW</span>}
       </div>
       <div className="lip km-wood km-lip">
         <div className="plate km-brass">
