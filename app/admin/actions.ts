@@ -227,17 +227,30 @@ export async function addVideoAction(_p: AdminState, form: FormData): Promise<Ad
 
 export async function updateVideoAction(form: FormData) {
   await requireAdmin();
-  const vids = await getVideos();
-  const v = vids.find((x) => x.id === str(form, 'id'));
-  if (!v) return;
-  const type = (['Trailer', 'Reading', 'Interview'].includes(str(form, 'type')) ? str(form, 'type') : v.type) as VideoType;
-  let thumbnail = v.thumbnail;
-  const thFile = file(form, 'thumbnail');
-  if (thFile) thumbnail = await uploadImage(thFile, 'videos');
-  if (form.get('removeThumbnail') === 'on') thumbnail = null;
-  await saveVideo({ ...v, title: str(form, 'title', 200) || v.title, type, duration: str(form, 'duration', 12), thumbnail });
-  revalidatePath('/admin/videos');
-  refresh();
+  try {
+    const vids = await getVideos();
+    const id = str(form, 'id');
+    const v = vids.find((x) => x.id === id);
+    if (!v) return { error: 'Video not found.' };
+    const type = (['Trailer', 'Reading', 'Interview'].includes(str(form, 'type')) ? str(form, 'type') : v.type) as VideoType;
+    let thumbnail = v.thumbnail;
+    const thFile = file(form, 'thumbnail');
+    if (thFile) thumbnail = await uploadImage(thFile, 'videos');
+    if (form.get('removeThumbnail') === 'on') thumbnail = null;
+    const updated: Video = {
+      ...v,
+      title: str(form, 'title', 200) || v.title,
+      type,
+      duration: str(form, 'duration', 12),
+      thumbnail,
+    };
+    await saveVideo(updated);
+    revalidatePath('/admin/videos');
+    refresh();
+    return { ok: true, video: updated };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update video.' };
+  }
 }
 
 export async function deleteVideoAction(form: FormData) {

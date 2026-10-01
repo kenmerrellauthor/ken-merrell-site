@@ -4,7 +4,11 @@ import type { Video } from '@/lib/types';
 import { Play } from './icons';
 
 const thumb = (v: Video, fallback: string) =>
-  v.youtubeId ? `url(https://i.ytimg.com/vi/${v.youtubeId}/hqdefault.jpg)` : fallback;
+  v.thumbnail
+    ? `url(${v.thumbnail})`
+    : v.youtubeId
+    ? `url(https://i.ytimg.com/vi/${v.youtubeId}/hqdefault.jpg)`
+    : fallback;
 
 function Card({ v, featured, fallback }: { v: Video; featured?: boolean; fallback: string }) {
   const [playing, setPlaying] = useState(false);

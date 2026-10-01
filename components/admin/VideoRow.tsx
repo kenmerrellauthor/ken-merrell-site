@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import type { Video } from '@/lib/types';
+import { useState, useTransition, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Video, VideoType } from '@/lib/types';
 import { updateVideoAction, deleteVideoAction, moveVideo } from '@/app/admin/actions';
 import { Ic } from './AdIcons';
 import { ImagePick } from './ImagePick';
@@ -10,14 +11,27 @@ import { DeleteButton } from './DeleteButton';
 const COLS = '44px 220px minmax(0, 1fr) 140px 90px 170px';
 
 export function VideoRow({ v, index, total }: { v: Video; index: number; total: number }) {
+  const router = useRouter();
+  const [video, setVideo] = useState(v);
+  const [title, setTitle] = useState(v.title);
+  const [type, setType] = useState(v.type);
+  const [duration, setDuration] = useState(v.duration);
   const [isMoving, startMove] = useTransition();
   const [isSaving, startSaving] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setVideo(v);
+    setTitle(v.title);
+    setType(v.type);
+    setDuration(v.duration);
+  }, [v]);
 
   const handleMove = (dir: 'up' | 'down') => {
     startMove(async () => {
       const fd = new FormData();
-      fd.set('id', v.id);
+      fd.set('id', video.id);
       fd.set('dir', dir);
       await moveVideo(fd);
     });
@@ -25,11 +39,25 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     const fd = new FormData(e.currentTarget);
     startSaving(async () => {
-      await updateVideoAction(fd);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      try {
+        const res = await updateVideoAction(fd);
+        if (res?.error) {
+          setError(res.error);
+        } else if (res?.video) {
+          setVideo(res.video);
+          setTitle(res.video.title);
+          setType(res.video.type);
+          setDuration(res.video.duration);
+          setSaved(true);
+          router.refresh();
+          setTimeout(() => setSaved(false), 2500);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save changes');
+      }
     });
   };
 
@@ -42,15 +70,15 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
         gridTemplateColumns: COLS,
         minWidth: 900,
         alignItems: 'start',
-        paddingTop: 20,
-        paddingBottom: 20,
+        paddingTop: 18,
+        paddingBottom: 18,
         borderBottom: '1px solid rgba(239,231,214,.08)',
       }}
     >
-      <input type="hidden" name="id" value={v.id} />
+      <input type="hidden" name="id" value={video.id} />
 
       {/* 1. Movers */}
-      <div className="movers" style={{ paddingTop: 4 }}>
+      <div className="movers" style={{ height: 44, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <button
           type="button"
           disabled={index === 0 || isMoving}
@@ -69,11 +97,11 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
         </button>
       </div>
 
-      {/* 2. Custom Thumbnail */}
+      {/* 2. Custom Thumbnail for already uploaded video */}
       <div style={{ position: 'relative', width: 220 }}>
         <ImagePick
           name="thumbnail"
-          current={v.thumbnail ?? (v.youtubeId ? `https://i.ytimg.com/vi/${v.youtubeId}/mqdefault.jpg` : null)}
+          current={video.thumbnail ?? (video.youtubeId ? `https://i.ytimg.com/vi/${video.youtubeId}/mqdefault.jpg` : null)}
           label="Custom Thumbnail"
           aspect="16 / 9"
           removeName="removeThumbnail"
@@ -82,25 +110,28 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
       </div>
 
       {/* 3. Title & Subtitle */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
         <input
           name="title"
-          defaultValue={v.title}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="ad-in"
           aria-label="Video title"
           style={{ fontFamily: 'var(--serif-d)', fontSize: 18, fontWeight: 600, height: 44 }}
         />
         <span className="ad-meta">
-          {v.youtubeId ? `youtube.com/watch?v=${v.youtubeId}` : 'Custom video'}
+          {video.youtubeId ? `youtube.com/watch?v=${video.youtubeId}` : 'Custom video'}
           {index === 0 ? ' · Featured large on the homepage' : ''}
         </span>
+        {error && <span style={{ color: '#e58a78', fontSize: 12 }}>{error}</span>}
       </div>
 
       {/* 4. Type (aligned horizontally with title input) */}
       <div>
         <select
           name="type"
-          defaultValue={v.type}
+          value={type}
+          onChange={(e) => setType(e.target.value as VideoType)}
           className="ad-in"
           style={{ height: 44 }}
           aria-label="Video type"
@@ -115,7 +146,8 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
       <div>
         <input
           name="duration"
-          defaultValue={v.duration}
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
           className="ad-in"
           style={{ height: 44 }}
           placeholder="0:00"
@@ -139,7 +171,13 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
           <Ic k="check" s={15} />
           {isSaving ? 'Saving…' : saved ? 'Saved!' : 'Save'}
         </button>
-        <DeleteButton action={deleteVideoAction} id={v.id} itemName={v.title} title={`Remove ${v.title}`} />
+        <DeleteButton
+          action={deleteVideoAction}
+          id={video.id}
+          itemName={video.title}
+          title={`Remove ${video.title}`}
+          style={{ height: 44, width: 44 }}
+        />
       </div>
     </form>
   );

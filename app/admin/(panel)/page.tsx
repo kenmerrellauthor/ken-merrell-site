@@ -12,7 +12,7 @@ export default async function BooksAdmin({ searchParams }: { searchParams: Promi
   const [books, videos, readers] = await Promise.all([getBooks(), getVideos(), getReaders()]);
   const live = books.filter((b) => b.status === 'available');
   const soon = books.filter((b) => b.status === 'coming');
-  const rows = tab === 'live' ? live : books;
+  const rows = tab === 'live' ? live : tab === 'soon' ? soon : books;
   const week = Date.now() - 7 * 86_400_000;
   const liveIndex = (id: string) => live.findIndex((b) => b.id === id) + 1;
 
@@ -38,6 +38,7 @@ export default async function BooksAdmin({ searchParams }: { searchParams: Promi
       <nav className="ad-tabs" aria-label="Filter books">
         <Link href="/admin" className={tab === 'all' ? 'on' : ''}>All books ({books.length})</Link>
         <Link href="/admin?tab=live" className={tab === 'live' ? 'on' : ''}>Available ({live.length})</Link>
+        <Link href="/admin?tab=soon" className={tab === 'soon' ? 'on' : ''}>Coming soon ({soon.length})</Link>
       </nav>
 
       <div className="ad-table">
