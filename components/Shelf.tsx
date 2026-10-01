@@ -69,7 +69,7 @@ export function SoonCubby({ href, label = 'More to come' }: { href: string; labe
       </div>
       <div className="lip km-wood km-lip">
         <div className="plate km-brass">
-          <span className="plate-btn">VIEW DETAILS →</span>
+          <span className="plate-btn">FOR MORE BOOKS →</span>
         </div>
       </div>
     </Link>
