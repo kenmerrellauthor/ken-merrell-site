@@ -12,8 +12,8 @@ import {
   requireAdmin
 } from '@/lib/auth';
 import {
-  deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
-  saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReview, uploadImage
+  addReader, deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
+  saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage
 } from '@/lib/store';
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
@@ -298,10 +298,57 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
 }
 
 /* ---------------- readers ---------------- */
+export async function addReaderAdminAction(_p: AdminState, form: FormData): Promise<AdminState & { reader?: import('@/lib/types').Reader }> {
+  await requireAdmin();
+  try {
+    const name = str(form, 'name', 120);
+    const email = str(form, 'email', 200).toLowerCase();
+    const format = str(form, 'format', 50) || 'Ebook';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return { error: 'Please enter a valid email address.' };
+    }
+    const r: import('@/lib/types').Reader = {
+      id: newId(),
+      name: name || email.split('@')[0],
+      email,
+      format,
+      agreed: true,
+      createdAt: new Date().toISOString()
+    };
+    const res = await addReader(r);
+    revalidatePath('/admin/readers');
+    revalidatePath('/admin');
+    return { ok: true, reader: res.reader };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not add reader.' };
+  }
+}
+
+export async function updateReaderAction(_p: AdminState, form: FormData): Promise<AdminState & { reader?: import('@/lib/types').Reader }> {
+  await requireAdmin();
+  try {
+    const id = str(form, 'id');
+    const name = str(form, 'name', 120);
+    const email = str(form, 'email', 200).toLowerCase();
+    const format = str(form, 'format', 50) || 'Ebook';
+    if (!id) return { error: 'Missing reader ID.' };
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return { error: 'Please enter a valid email address.' };
+    }
+    const updated = await updateReader(id, { name: name || email.split('@')[0], email, format });
+    revalidatePath('/admin/readers');
+    revalidatePath('/admin');
+    return { ok: true, reader: updated };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not update reader.' };
+  }
+}
+
 export async function deleteReaderAction(form: FormData) {
   await requireAdmin();
   await deleteReader(str(form, 'id'));
   revalidatePath('/admin/readers');
+  revalidatePath('/admin');
 }
 
 export async function sendReaderEmailAction(_p: AdminState, form: FormData): Promise<AdminState> {
@@ -444,5 +491,35 @@ export async function addReviewAction(_p: AdminState, form: FormData): Promise<A
     return { ok: true, review };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Could not add review.' };
+  }
+}
+
+export async function updateReviewContentAction(_p: AdminState, form: FormData): Promise<AdminState & { review?: import('@/lib/types').Review }> {
+  await requireAdmin();
+  try {
+    const bookId = str(form, 'bookId');
+    const reviewId = str(form, 'reviewId');
+    const name = str(form, 'name', 120);
+    const text = str(form, 'text', 3000);
+    const rating = Math.min(5, Math.max(1, parseInt(str(form, 'rating'), 10) || 5));
+    const adminComment = str(form, 'adminComment', 1000);
+
+    if (!bookId || !reviewId) return { error: 'Missing review or book reference.' };
+    if (!name) return { error: 'Please enter a name for the reviewer.' };
+    if (!text) return { error: 'Review text cannot be empty.' };
+
+    const patch: Partial<import('@/lib/types').Review> = {
+      name,
+      rating,
+      text,
+      adminComment: adminComment || undefined,
+    };
+    await updateReview(bookId, reviewId, patch);
+    refresh();
+    const book = await getBook(bookId);
+    const updated = book?.reviews?.find((r) => r.id === reviewId);
+    return { ok: true, review: updated };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not update review.' };
   }
 }

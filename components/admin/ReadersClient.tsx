@@ -1,9 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import type { Reader } from '@/lib/types';
-import { deleteReaderAction, sendReaderEmailAction, markReadersSeenAction } from '@/app/admin/actions';
+import { deleteReaderAction, sendReaderEmailAction, markReadersSeenAction, addReaderAdminAction, updateReaderAction } from '@/app/admin/actions';
 import { Ic } from '@/components/admin/AdIcons';
 import Link from 'next/link';
+import NotificationBell from './NotificationBell';
+import type { CrmNotification } from '@/lib/types';
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
@@ -13,7 +15,7 @@ const fmtDate = (iso: string) => {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const COLS = 'minmax(0,1.1fr) minmax(0,1.3fr) 110px 140px 60px';
+const COLS = 'minmax(0,1.1fr) minmax(0,1.3fr) 130px 140px 90px';
 
 export default function ReadersClient({
   readers,
@@ -26,6 +28,8 @@ export default function ReadersClient({
   totalEbook,
   totalPaper,
   totalNewThisWeek,
+  notifications = [],
+  unreadCount = 0,
 }: {
   readers: Reader[];
   allReaders: Reader[];
@@ -37,11 +41,38 @@ export default function ReadersClient({
   totalEbook: number;
   totalPaper: number;
   totalNewThisWeek: number;
+  notifications?: CrmNotification[];
+  unreadCount?: number;
 }) {
   const week = Date.now() - 7 * 86_400_000;
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const rows = readers.filter(r => !deletedIds.has(r.id)); // Table rows (filtered by tab)
-  const composerRows = allReaders.filter(r => !deletedIds.has(r.id)); // Composer rows (always all)
+  const [readerList, setReaderList] = useState<Reader[]>(allReaders);
+
+  useEffect(() => {
+    setReaderList(allReaders);
+  }, [allReaders]);
+
+  // Add reader state
+  const [addOpen, setAddOpen] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addFormat, setAddFormat] = useState('Ebook');
+  const [addBusy, setAddBusy] = useState(false);
+  const [addError, setAddError] = useState('');
+
+  // Edit reader state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editFormat, setEditFormat] = useState('Ebook');
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const rows = readerList.filter((r) => {
+    if (filter === 'ebook') return r.format?.toLowerCase().includes('ebook');
+    if (filter === 'paper') return r.format?.toLowerCase().includes('paper');
+    return true;
+  });
+  const composerRows = readerList;
 
   const availableBooks = books.length > 0 ? books : comingBooks.map(b => ({ ...b, status: (b.status || 'coming') as 'available' | 'coming' }));
   const comingSoonList = availableBooks.filter(b => b.status === 'coming');
@@ -115,11 +146,65 @@ export default function ReadersClient({
   }
 
   async function removeReader(id: string) {
+    if (!confirm('Remove this reader from your advance list?')) return;
     const fd = new FormData();
     fd.set('id', id);
     await deleteReaderAction(fd);
-    setDeletedIds((prev) => { const n = new Set(prev); n.add(id); return n; });
+    setReaderList((prev) => prev.filter((x) => x.id !== id));
     setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
+  }
+
+  async function handleAddReader(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addEmail.trim()) { setAddError('Please enter an email.'); return; }
+    setAddBusy(true);
+    setAddError('');
+    const fd = new FormData();
+    fd.set('name', addName.trim());
+    fd.set('email', addEmail.trim());
+    fd.set('format', addFormat);
+    const res = await addReaderAdminAction({}, fd);
+    setAddBusy(false);
+    if (res.error) {
+      setAddError(res.error);
+      return;
+    }
+    if (res.reader) {
+      setReaderList((prev) => [res.reader!, ...prev.filter(x => x.id !== res.reader!.id)]);
+    }
+    setAddName('');
+    setAddEmail('');
+    setAddFormat('Ebook');
+    setAddOpen(false);
+  }
+
+  function startEdit(r: Reader) {
+    setEditingId(r.id);
+    setEditName(r.name);
+    setEditEmail(r.email);
+    setEditFormat(r.format || 'Ebook');
+    setEditError('');
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editEmail.trim()) { setEditError('Please enter an email.'); return; }
+    setEditBusy(true);
+    setEditError('');
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('name', editName.trim());
+    fd.set('email', editEmail.trim());
+    fd.set('format', editFormat);
+    const res = await updateReaderAction({}, fd);
+    setEditBusy(false);
+    if (res.error) {
+      setEditError(res.error);
+      return;
+    }
+    if (res.reader) {
+      setReaderList((prev) => prev.map((x) => x.id === id ? res.reader! : x));
+    }
+    setEditingId(null);
   }
 
   return (
@@ -131,14 +216,55 @@ export default function ReadersClient({
           <p>Everyone who signed up for early copies. Each new signup is also emailed to you.</p>
         </div>
         <div className="ad-actions">
+          <button
+            type="button"
+            className="ad-btn pri"
+            onClick={() => { setAddOpen((v) => !v); setComposerOpen(false); }}
+          >
+            <Ic k={addOpen ? 'x' : 'plus'} s={16} sw={1.8} />
+            {addOpen ? 'CANCEL' : 'ADD READER'}
+          </button>
           <a href="/admin/readers.csv" className="ad-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
           {composerRows.length > 0 && (
-            <button type="button" className="ad-btn pri" onClick={openComposer}>
+            <button type="button" className="ad-btn" onClick={openComposer}>
               <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
             </button>
           )}
         </div>
       </div>
+
+      {/* ── Add Reader Card ── */}
+      {addOpen && (
+        <form onSubmit={handleAddReader} className="ad-card" style={{ background: 'rgba(201,168,96,.04)', border: '1px solid rgba(201,168,96,.3)', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: 20 }}>Add an advance reader</h2>
+            <button type="button" className="ad-sm icon" onClick={() => setAddOpen(false)} aria-label="Close"><Ic k="x" s={16} /></button>
+          </div>
+          <p className="sub" style={{ margin: 0 }}>Manually add a reader who requested an early copy in person, at a book event, or via email.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 180px auto', gap: 14, alignItems: 'end' }}>
+            <div className="ad-field">
+              <label className="ad-label" htmlFor="ar-name">NAME</label>
+              <input id="ar-name" className="ad-in" placeholder="e.g. Jane Smith" value={addName} onChange={(e) => setAddName(e.target.value)} />
+            </div>
+            <div className="ad-field">
+              <label className="ad-label" htmlFor="ar-email">EMAIL</label>
+              <input id="ar-email" type="email" required className="ad-in" placeholder="reader@example.com" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
+            </div>
+            <div className="ad-field">
+              <label className="ad-label" htmlFor="ar-format">PREFERENCE</label>
+              <select id="ar-format" className="ad-in" value={addFormat} onChange={(e) => setAddFormat(e.target.value)}>
+                <option value="Ebook">Ebook</option>
+                <option value="Paperback">Paperback</option>
+                <option value="Ebook & Paperback">Both</option>
+              </select>
+            </div>
+            <button type="submit" className="ad-btn pri" disabled={addBusy} style={{ height: 48, alignSelf: 'end' }}>
+              <Ic k="plus" s={16} />{addBusy ? 'ADDING…' : 'ADD READER'}
+            </button>
+          </div>
+          {addError && <div className="ad-err" role="alert">{addError}</div>}
+        </form>
+      )}
 
       {/* ── Stats ── */}
       <div className="ad-stats">
@@ -463,36 +589,93 @@ export default function ReadersClient({
       {/* ── Table ── */}
       <div className="ad-table">
         <div className="ad-tr head" style={{ gridTemplateColumns: COLS }}>
-          <span>NAME</span><span>EMAIL</span><span>FORMAT</span><span>SIGNED UP</span><span />
+          <span>NAME</span><span>EMAIL</span><span>FORMAT</span><span>SIGNED UP</span><span style={{ textAlign: 'right' }}>ACTIONS</span>
         </div>
         {rows.length === 0 && (
           <div style={{ padding: 28, color: 'var(--muted)' }}>
-            No signups yet. They appear here the moment someone joins from the homepage.
+            No signups yet. They appear here the moment someone joins from the homepage or is added above.
           </div>
         )}
-        {rows.map((r) => (
-          <div key={r.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, height: 68, fontSize: 15 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
-              {new Date(r.createdAt).getTime() > week && (
-                <span className="pill gold" style={{ height: 20, fontSize: 11, flexShrink: 0 }}>New</span>
-              )}
-            </span>
-            <span style={{ color: 'var(--soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.email}</span>
-            <span style={{ color: 'var(--soft)' }}>{r.format}</span>
-            <span style={{ color: 'var(--muted)', fontSize: 13 }}>{fmtDate(r.createdAt)}</span>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="ad-sm icon danger"
-                aria-label={`Remove ${r.name}`}
-                onClick={() => removeReader(r.id)}
-              >
-                <Ic k="trash" s={15} />
-              </button>
+        {rows.map((r) => {
+          const isEditing = editingId === r.id;
+          if (isEditing) {
+            return (
+              <div key={r.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, minHeight: 74, fontSize: 14, background: 'rgba(201,168,96,.06)' }}>
+                <div>
+                  <input className="ad-in" style={{ height: 38, fontSize: 14 }} placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                </div>
+                <div>
+                  <input className="ad-in" type="email" style={{ height: 38, fontSize: 14 }} placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                </div>
+                <div>
+                  <select className="ad-in" style={{ height: 38, fontSize: 13 }} value={editFormat} onChange={(e) => setEditFormat(e.target.value)}>
+                    <option value="Ebook">Ebook</option>
+                    <option value="Paperback">Paperback</option>
+                    <option value="Ebook & Paperback">Both</option>
+                  </select>
+                </div>
+                <div style={{ color: 'var(--muted)', fontSize: 12 }}>
+                  {editError ? <span style={{ color: '#e58a78' }}>{editError}</span> : fmtDate(r.createdAt)}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                  <button
+                    type="button"
+                    className="ad-sm icon"
+                    title="Save changes"
+                    disabled={editBusy}
+                    onClick={() => handleSaveEdit(r.id)}
+                    style={{ color: 'var(--gold)', borderColor: 'var(--gold)' }}
+                  >
+                    <Ic k="check" s={15} />
+                  </button>
+                  <button
+                    type="button"
+                    className="ad-sm icon"
+                    title="Cancel"
+                    disabled={editBusy}
+                    onClick={() => setEditingId(null)}
+                  >
+                    <Ic k="x" s={15} />
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={r.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, height: 68, fontSize: 15 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+                {new Date(r.createdAt).getTime() > week && (
+                  <span className="pill gold" style={{ height: 20, fontSize: 11, flexShrink: 0 }}>New</span>
+                )}
+              </span>
+              <span style={{ color: 'var(--soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.email}</span>
+              <span style={{ color: 'var(--soft)' }}>{r.format}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 13 }}>{fmtDate(r.createdAt)}</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                <button
+                  type="button"
+                  className="ad-sm icon"
+                  aria-label={`Edit ${r.name}`}
+                  title={`Edit ${r.name}`}
+                  onClick={() => startEdit(r)}
+                >
+                  <Ic k="edit" s={15} />
+                </button>
+                <button
+                  type="button"
+                  className="ad-sm icon danger"
+                  aria-label={`Remove ${r.name}`}
+                  title={`Remove ${r.name}`}
+                  onClick={() => removeReader(r.id)}
+                >
+                  <Ic k="trash" s={15} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

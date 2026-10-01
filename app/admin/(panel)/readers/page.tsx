@@ -3,7 +3,10 @@ import ReadersClient from '@/components/admin/ReadersClient';
 
 export default async function ReadersAdmin({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
   const f = (await searchParams).f || 'all';
-  const [all, books] = await Promise.all([getReaders(), getBooks()]);
+  const [all, books] = await Promise.all([
+    getReaders(),
+    getBooks()
+  ]);
 
   const rows = all.filter((r) =>
     f === 'all' || (f === 'ebook' ? r.format === 'Ebook' : r.format === 'Paperback')

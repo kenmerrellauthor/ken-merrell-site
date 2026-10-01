@@ -87,7 +87,26 @@ export interface Reader {
   id: string;
   name: string;
   email: string;
-  format: 'Ebook' | 'Paperback';
-  agreed: boolean;
+  format: 'Ebook' | 'Paperback' | string;
+  agreed?: boolean;
   createdAt: string;
+}
+
+export interface CrmNotification {
+  id: string;
+  type: 'reader' | 'review';
+  title: string;
+  subtitle: string;
+  detail?: string;
+  createdAt: string;
+  href: string;
+  unread: boolean;
+  metadata?: {
+    email?: string;
+    format?: string;
+    bookTitle?: string;
+    bookId?: string;
+    rating?: number;
+    readerName?: string;
+  };
 }

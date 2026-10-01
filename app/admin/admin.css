@@ -1,5 +1,20 @@
+.ad-shell { min-height: 100vh; background: #14110e; color: var(--cream); display: flex; flex-direction: column; }
+.ad-topbar { height: 64px; background: #0a0908; border-bottom: 1px solid rgba(239,231,214,.08); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+.ad-topbar-left { display: flex; align-items: center; gap: 16px; }
+.ad-topbar-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+.ad-topbar-brand img { height: 32px; width: auto; display: block; }
+.ad-topbar-tag { font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .25em; color: var(--gold); border-left: 1px solid rgba(201,168,96,.3); padding-left: 12px; line-height: 1; }
+.ad-topbar-right { display: flex; align-items: center; gap: 16px; }
+.ad-topbar-link { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 4px; color: var(--soft); font-size: 13px; font-family: var(--serif-b); border: 1px solid rgba(239,231,214,.1); background: rgba(239,231,214,.02); transition: all .15s ease; text-decoration: none; }
+.ad-topbar-link:hover { color: var(--cream); border-color: rgba(201,168,96,.4); background: rgba(201,168,96,.08); }
+.ad-topbar-user { display: flex; align-items: center; gap: 10px; padding-left: 14px; border-left: 1px solid rgba(239,231,214,.08); }
+.ad-topbar-user-info { display: flex; flex-direction: column; }
+.ad-topbar-user-name { font-size: 13px; font-weight: 600; color: var(--cream); line-height: 1.2; }
+.ad-topbar-user small { font-size: 11px; color: #6e6457; line-height: 1.2; }
+.ad-mobile-toggle { display: none; }
+.ad-body { display: flex; flex: 1; min-height: calc(100vh - 64px); }
 .ad { display: flex; min-height: 100vh; background: #14110e; color: var(--cream); }
-.ad-side { width: 272px; flex-shrink: 0; background: #0a0908; border-right: 1px solid rgba(239,231,214,.08); padding: 32px 20px 28px; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 0; height: 100vh; }
+.ad-side { width: 250px; flex-shrink: 0; background: #0d0b09; border-right: 1px solid rgba(239,231,214,.08); padding: 24px 14px 28px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 64px; height: calc(100vh - 64px); }
 .ad-brand { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
 .ad-brand img { height: 34px; width: auto; align-self: flex-start; }
 .ad-brand span { font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .3em; color: var(--gold); }
@@ -91,11 +106,16 @@ select.ad-in { appearance: auto; }
 .login form { position: relative; width: 440px; max-width: 100%; padding: 48px 44px 40px; background: rgba(20,17,14,.94); border: 1px solid rgba(201,168,96,.3); box-shadow: 0 40px 90px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 22px; }
 .ad-mobilebar { display: none; }
 @media (max-width: 980px) {
+  .ad-mobile-toggle { display: inline-flex; }
+  .ad-topbar { padding: 0 16px; height: 58px; }
+  .ad-topbar-tag { display: none; }
+  .ad-topbar-link { display: none; }
+  .ad-topbar-user { display: none; }
   .ad { flex-direction: column; }
-  .ad-side { display: none; }
-  .ad-side.open { display: flex; position: fixed; inset: 0; z-index: 50; width: 100%; height: 100%; overflow: auto; }
-  .ad-mobilebar { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 16px; background: #0a0908; border-bottom: 1px solid rgba(239,231,214,.08); position: sticky; top: 0; z-index: 10; }
-  .ad-mobilebar img { height: 28px; width: auto; }
+  .ad-body { flex-direction: column; }
+  .ad-side { display: none; position: fixed; top: 58px; left: 0; width: 280px; height: calc(100vh - 58px); z-index: 100; box-shadow: 12px 0 32px rgba(0,0,0,.8); }
+  .ad-side.open { display: flex; }
+  .ad-mobilebar { display: none; }
   .ad-main { padding: 28px 16px 64px; gap: 24px; }
   .ad-top h1 { font-size: 36px; }
   .ad-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

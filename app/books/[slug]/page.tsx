@@ -104,7 +104,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 {book.amazonUrl && <a href={book.amazonUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold">BUY ON AMAZON <Arrow /></a>}
                 {book.audibleUrl && <a href={book.audibleUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Headphones />LISTEN ON AUDIBLE</a>}
                 {(bookVideoId || book.sample.trim()) && (
-                  <a href="#sample" className="btn btn-text">
+                  <a href={bookVideoId ? "#video" : "#sample"} className="btn btn-text">
                     {bookVideoId ? 'WATCH & READ' : 'READ THE SAMPLE'} <Down />
                   </a>
                 )}
@@ -131,61 +131,53 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      {(bookVideoId || book.sample.trim()) && (
+      {/* 1. Cinematic Book Video / Trailer (if available) */}
+      {bookVideoId && (
+        <section id="video" className="book-video-section" aria-label="Book Video Trailer">
+          <div className="book-video-ambient" />
+          <div className="book-video-container">
+            <div className="book-video-head">
+              <div className="eyebrow"><span className="line" /><span className="txt">OFFICIAL TRAILER</span><span className="line" /></div>
+              <h2>{bookVideoTitle || `${book.title} — Official Trailer`}</h2>
+              <p className="book-video-sub">Watch the cinematic trailer and author reading before diving into the excerpt below.</p>
+            </div>
+            <div className="book-video-frame">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${bookVideoId}?rel=0`}
+                title={bookVideoTitle || `${book.title} Video`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            {book.sample.trim() && (
+              <a href="#sample" className="book-video-scroll-hint">
+                <span>READ THE FIRST CHAPTER</span>
+                <Down />
+              </a>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 2. Interactive Sample Chapter Flipbook */}
+      {book.sample.trim() && (
         <section id="sample" className="sample">
           <div className="km-paper abs" style={{ opacity: 0.28, pointerEvents: 'none', mixBlendMode: 'multiply' }} />
-
-          {/* 1. First: Video present if any */}
-          {bookVideoId && (
-            <div className="book-video-wrap" style={{ width: '100%', maxWidth: 860, margin: '0 auto 60px', padding: '0 16px', boxSizing: 'border-box' }}>
-              <div className="head" style={{ marginBottom: 24, textAlign: 'center' }}>
-                <div className="eyebrow dark"><span className="line" /><span className="txt">WATCH</span><span className="line" /></div>
-                <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', margin: '8px 0 10px', color: '#1b1814' }}>
-                  {bookVideoTitle || `${book.title} — Official Trailer`}
-                </h2>
-                <p className="hint">Watch the trailer or reading before opening the manuscript below.</p>
-              </div>
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                paddingBottom: '56.25%',
-                borderRadius: 8,
-                overflow: 'hidden',
-                boxShadow: '0 20px 48px rgba(0,0,0,0.3)',
-                border: '1px solid rgba(201,168,96,0.35)',
-                background: '#0a0908'
-              }}>
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${bookVideoId}?rel=0`}
-                  title={bookVideoTitle || `${book.title} Video`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 2. Then: Reading the book (mean swipe the book to read it) */}
-          {book.sample.trim() && (
-            <>
-              <div className="head">
-                <div className="eyebrow dark"><span className="line" /><span className="txt">READ A SAMPLE</span><span className="line" /></div>
-                <h2>Open the <em>first chapter</em></h2>
-                <p className="hint">Swipe the page or use the arrows to turn it.</p>
-              </div>
-              <Flipbook
-                title={book.title}
-                cover={book.cover}
-                clothColor={book.clothColor}
-                tagline={book.tagline}
-                chapterTitle={book.chapterTitle}
-                sample={book.sample}
-                amazonUrl={book.amazonUrl}
-                audibleUrl={book.audibleUrl}
-              />
-            </>
-          )}
+          <div className="head">
+            <div className="eyebrow dark"><span className="line" /><span className="txt">READ A SAMPLE</span><span className="line" /></div>
+            <h2>Open the <em>first chapter</em></h2>
+            <p className="hint">Swipe the page or use the arrows to turn it.</p>
+          </div>
+          <Flipbook
+            title={book.title}
+            cover={book.cover}
+            clothColor={book.clothColor}
+            tagline={book.tagline}
+            chapterTitle={book.chapterTitle}
+            sample={book.sample}
+            amazonUrl={book.amazonUrl}
+            audibleUrl={book.audibleUrl}
+          />
         </section>
       )}
 

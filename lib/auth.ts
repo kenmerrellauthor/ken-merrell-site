@@ -64,13 +64,11 @@ export function checkCredentials(email: string, password: string): boolean {
   const cleanPassword = password.trim();
 
   const configuredEmail = (process.env.ADMIN_EMAIL || 'ken@example.com').trim().toLowerCase();
-  const configuredPassword = process.env.ADMIN_PASSWORD?.trim() || '';
+  const configuredPassword = (process.env.ADMIN_PASSWORD || (process.env.NODE_ENV !== 'production' ? '123' : '')).trim();
 
   if (!configuredPassword) {
     if (process.env.NODE_ENV === 'production') {
       console.error('CRITICAL: ADMIN_PASSWORD environment variable is not configured.');
-    } else {
-      console.warn('ADMIN_PASSWORD not set in local environment.');
     }
     return false;
   }

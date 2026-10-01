@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Book, Reader, Review, SiteSettings, Video } from './types';
+import type { Book, CrmNotification, Reader, Review, SiteSettings, Video } from './types';
 import { seedBooks, seedSite, seedVideos } from './seed';
 
 /*
@@ -240,6 +240,14 @@ export async function addReader(r: Reader) {
 export async function deleteReader(id: string) {
   return remove('readers', id);
 }
+export async function updateReader(id: string, patch: Partial<Reader>): Promise<Reader> {
+  const readers = await getReaders();
+  const r = readers.find((x) => x.id === id);
+  if (!r) throw new Error('Reader not found');
+  const updated = { ...r, ...patch };
+  await upsert('readers', updated);
+  return updated;
+}
 
 const ALLOWED_EXTENSIONS = new Map([
   ['image/jpeg', 'jpg'],
@@ -274,4 +282,60 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
   const { error } = await db.storage.from(bucket).upload(name, buf, { contentType: file.type, upsert: false });
   if (error) throw new Error(`Upload failed: ${error.message}`);
   return db.storage.from(bucket).getPublicUrl(name).data.publicUrl;
+}
+
+/* ---------------- CRM Notifications ---------------- */
+export async function getCrmNotifications(limit?: number): Promise<{ notifications: CrmNotification[]; unreadCount: number }> {
+  const [readers, books, site] = await Promise.all([getReaders(), getBooks(), getSite()]);
+  const lastSeen = site.lastSeenReaders ? new Date(site.lastSeenReaders).getTime() : 0;
+
+  const notifications: CrmNotification[] = [];
+
+  for (const r of readers) {
+    const isUnread = new Date(r.createdAt).getTime() > lastSeen;
+    notifications.push({
+      id: `reader-${r.id}`,
+      type: 'reader',
+      title: `${r.name || 'New reader'} joined Advance Readers`,
+      subtitle: `${r.format || 'Advance Copy'} · ${r.email}`,
+      createdAt: r.createdAt,
+      href: `/admin/notifications?highlight=reader-${r.id}`,
+      unread: isUnread,
+      metadata: {
+        email: r.email,
+        format: r.format,
+        readerName: r.name,
+      }
+    });
+  }
+
+  for (const b of books) {
+    for (const rev of b.reviews ?? []) {
+      const isUnread = !rev.approved || (new Date(rev.createdAt).getTime() > lastSeen);
+      notifications.push({
+        id: `rev-${rev.id}`,
+        type: 'review',
+        title: `${rev.name} reviewed "${b.title}"`,
+        subtitle: `${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)} · ${rev.approved ? 'Approved' : 'Pending Approval'}`,
+        detail: rev.text,
+        createdAt: rev.createdAt,
+        href: `/admin/notifications?highlight=rev-${rev.id}`,
+        unread: isUnread,
+        metadata: {
+          bookTitle: b.title,
+          bookId: b.id,
+          rating: rev.rating,
+          readerName: rev.name,
+        }
+      });
+    }
+  }
+
+  notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  return {
+    notifications: typeof limit === 'number' ? notifications.slice(0, limit) : notifications,
+    unreadCount
+  };
 }

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import '../admin.css';
 import Sidebar from '@/components/admin/Sidebar';
 import { requireAdmin } from '@/lib/auth';
-import { getReaders, getSite } from '@/lib/store';
+import { getCrmNotifications, getReaders, getSite } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Site admin', robots: { index: false, follow: false } };
@@ -14,13 +14,18 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const site = await getSite();
   const lastSeen = site.lastSeenReaders ? new Date(site.lastSeenReaders).getTime() : 0;
   const cutoff = Math.max(week, lastSeen);
-  const fresh = (await getReaders()).filter((r) => new Date(r.createdAt).getTime() > cutoff).length;
+  const [readers, { notifications, unreadCount }] = await Promise.all([
+    getReaders(),
+    getCrmNotifications()
+  ]);
+  const fresh = readers.filter((r) => new Date(r.createdAt).getTime() > cutoff).length;
   return (
-    <div className="ad">
-      <Suspense fallback={<aside className="ad-side" />}>
-        <Sidebar badge={fresh} email={email} />
+    <div className="ad-shell">
+      <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0908' }} />}>
+        <Sidebar badge={fresh} email={email} notifications={notifications} unreadCount={unreadCount}>
+          {children}
+        </Sidebar>
       </Suspense>
-      <main className="ad-main">{children}</main>
     </div>
   );
 }

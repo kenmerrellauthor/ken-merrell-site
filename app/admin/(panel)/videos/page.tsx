@@ -3,8 +3,9 @@ import { Ic } from '@/components/admin/AdIcons';
 import { ImagePick } from '@/components/admin/ImagePick';
 import { getVideos } from '@/lib/store';
 import { deleteVideoAction, moveVideo, updateVideoAction } from '../../actions';
+import { DeleteButton } from '@/components/admin/DeleteButton';
 
-const COLS = '44px 240px minmax(0, 1fr) 140px 90px 150px';
+const COLS = '44px 240px minmax(0, 1fr) 140px 90px 170px';
 
 export default async function VideosAdmin() {
   const videos = await getVideos();
@@ -45,9 +46,9 @@ export default async function VideosAdmin() {
             </form>
             <select name="type" form={`vf-${v.id}`} defaultValue={v.type} className="ad-in" aria-label="Video type"><option>Trailer</option><option>Reading</option><option>Interview</option></select>
             <input name="duration" form={`vf-${v.id}`} defaultValue={v.duration} className="ad-in" placeholder="0:00" aria-label="Length" />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button type="submit" form={`vf-${v.id}`} className="ad-sm"><Ic k="check" s={15} />Save</button>
-              <form action={deleteVideoAction}><input type="hidden" name="id" value={v.id} /><button type="submit" className="ad-sm icon" aria-label={`Remove ${v.title}`}><Ic k="trash" s={16} /></button></form>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+              <button type="submit" form={`vf-${v.id}`} className="ad-sm" title="Save changes"><Ic k="check" s={15} />Save</button>
+              <DeleteButton action={deleteVideoAction} id={v.id} itemName={v.title} title={`Remove ${v.title}`} />
             </div>
           </div>
         ))}

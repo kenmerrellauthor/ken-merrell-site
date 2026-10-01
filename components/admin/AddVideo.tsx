@@ -8,7 +8,7 @@ import { ImagePick } from './ImagePick';
 
 function Btn() {
   const { pending } = useFormStatus();
-  return <button type="submit" className="ad-btn pri" style={{ height: 48, alignSelf: 'flex-start' }} disabled={pending}><Ic k="plus" s={16} sw={1.8} />{pending ? 'ADDING…' : 'ADD VIDEO'}</button>;
+  return <button type="submit" className="ad-btn pri" style={{ height: 48, alignSelf: 'end' }} disabled={pending}><Ic k="plus" s={16} sw={1.8} />{pending ? 'ADDING…' : 'ADD VIDEO'}</button>;
 }
 
 export default function AddVideo() {

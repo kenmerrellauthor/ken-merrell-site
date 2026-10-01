@@ -3,10 +3,11 @@ import Link from 'next/link';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import type { Book, Quote, Review } from '@/lib/types';
-import { deleteBookAction, saveBookAction, approveReviewAction, rejectReviewAction, saveReviewCommentAction, deleteReviewAction, addReviewAction, type AdminState } from '@/app/admin/actions';
+import type { Book, Quote, Review, Video } from '@/lib/types';
+import { deleteBookAction, saveBookAction, approveReviewAction, rejectReviewAction, saveReviewCommentAction, deleteReviewAction, addReviewAction, updateReviewContentAction, type AdminState } from '@/app/admin/actions';
 import { Ic } from './AdIcons';
 import { ImagePick } from './ImagePick';
+import { parseYouTubeId } from '@/lib/youtube';
 
 function Save({ label = 'SAVE CHANGES' }: { label?: string }) {
   const { pending } = useFormStatus();
@@ -136,12 +137,13 @@ function StarRow({ n }: { n: number }) {
   );
 }
 
-export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
+export default function BookForm({ book, isNew, videos = [] }: { book: Book; isNew: boolean; videos?: Video[] }) {
   const router = useRouter();
 
   const [state, action] = useActionState<AdminState, FormData>(saveBookAction, {});
   const [status, setStatus] = useState(book.status);
   const [audible, setAudible] = useState(!!book.audibleUrl);
+  const [videoUrl, setVideoUrl] = useState(book.videoUrl || '');
   const [quotes, setQuotes] = useState<Quote[]>(book.quotes.length ? book.quotes : []);
   const [fileName, setFileName] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
@@ -166,6 +168,14 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
 
   function ReviewRow({ r, bookId }: { r: Review; bookId: string }) {
     const [busy, setBusy] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editName, setEditName] = useState(r.name);
+    const [editRating, setEditRating] = useState(r.rating);
+    const [hoveredStar, setHoveredStar] = useState(0);
+    const [editText, setEditText] = useState(r.text);
+    const [editNote, setEditNote] = useState(r.adminComment ?? '');
+    const [editError, setEditError] = useState('');
+
     const edited = commentEdit[r.id] ?? r.adminComment ?? '';
     async function doApprove() {
       setBusy(true);
@@ -202,6 +212,92 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
       setReviews((prev) => prev.filter((x) => x.id !== r.id));
       setBusy(false);
     }
+    async function doSaveEdit() {
+      if (!editName.trim()) { setEditError('Reviewer name is required.'); return; }
+      if (!editText.trim()) { setEditError('Review text is required.'); return; }
+      setBusy(true);
+      setEditError('');
+      const fd = new FormData();
+      fd.set('bookId', bookId);
+      fd.set('reviewId', r.id);
+      fd.set('name', editName.trim());
+      fd.set('rating', String(editRating));
+      fd.set('text', editText.trim());
+      fd.set('adminComment', editNote.trim());
+      const res = await updateReviewContentAction({}, fd);
+      setBusy(false);
+      if (res.error) {
+        setEditError(res.error);
+        return;
+      }
+      if (res.review) {
+        setReviews((prev) => prev.map((x) => x.id === r.id ? res.review! : x));
+      }
+      setIsEditing(false);
+    }
+
+    if (isEditing) {
+      const displayed = hoveredStar || editRating;
+      return (
+        <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(201,168,96,.04)', padding: 16, borderRadius: 6, border: '1px solid rgba(201,168,96,.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="ad-label" style={{ color: 'var(--gold)' }}>UPDATE REVIEW</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
+          </div>
+
+          <div className="ad-grid2">
+            <div className="ad-field">
+              <label className="ad-label">REVIEWER NAME</label>
+              <input className="ad-in" value={editName} onChange={(e) => setEditName(e.target.value)} />
+            </div>
+            <div className="ad-field">
+              <span className="ad-label">STAR RATING</span>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 48 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setEditRating(star)}
+                    onMouseEnter={() => setHoveredStar(star)}
+                    onMouseLeave={() => setHoveredStar(0)}
+                    style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', lineHeight: 0 }}
+                  >
+                    <svg width={22} height={22} viewBox="0 0 24 24"
+                      fill={star <= displayed ? '#c9a860' : 'none'}
+                      stroke={star <= displayed ? '#c9a860' : '#4a4137'} strokeWidth="1.5">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </button>
+                ))}
+                <span style={{ fontSize: 13, color: 'var(--cream)', marginLeft: 6 }}>{editRating}/5</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ad-field">
+            <label className="ad-label">REVIEW TEXT</label>
+            <textarea className="ad-in" rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
+          </div>
+
+          <div className="ad-field">
+            <label className="ad-label">YOUR NOTE / CRM COMMENT</label>
+            <input className="ad-in" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="e.g. Verified purchase" />
+          </div>
+
+          {editError && <div className="ad-err" role="alert">{editError}</div>}
+
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-start' }}>
+            <button type="button" className="ad-btn pri" onClick={doSaveEdit} disabled={busy} style={{ fontSize: 12, padding: '6px 16px' }}>
+              <Ic k="check" s={14} sw={2} />{busy ? 'SAVING…' : 'SAVE CHANGES'}
+            </button>
+            <button type="button" className="ad-sm" onClick={() => setIsEditing(false)} disabled={busy} style={{ fontSize: 12 }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -226,9 +322,10 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
             <button type="button" className="ad-sm" onClick={doSaveComment} disabled={busy} style={{ whiteSpace: 'nowrap' }}>Save note</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {!r.approved && <button type="button" className="ad-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
           {r.approved && <button type="button" className="ad-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
+          <button type="button" className="ad-sm" onClick={() => setIsEditing(true)} disabled={busy} style={{ fontSize: 12 }}><Ic k="edit" s={14} />Edit</button>
           <button type="button" className="ad-sm danger" onClick={doDelete} disabled={busy} style={{ fontSize: 12, marginLeft: 'auto' }}><Ic k="trash" s={14} />Delete</button>
         </div>
       </div>
@@ -320,6 +417,101 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
               </section>
 
               <section className="ad-card">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <div>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Ic k="video" s={22} />
+                      Book video &amp; trailer
+                    </h2>
+                    <p className="sub" style={{ marginTop: 6 }}>
+                      Displays an official video or reading trailer before the sample chapter reader.
+                    </p>
+                  </div>
+                  <span className={`pill ${videoUrl ? 'gold' : 'off'}`} style={{ fontSize: 11, letterSpacing: '.1em' }}>
+                    {videoUrl ? 'VIDEO ACTIVE' : 'OPTIONAL'}
+                  </span>
+                </div>
+
+                {videos.length > 0 && (
+                  <div className="ad-field">
+                    <label className="ad-label" htmlFor="bf-video-select">CHOOSE FROM YOUR VIDEO GALLERY</label>
+                    <select
+                      id="bf-video-select"
+                      className="ad-in"
+                      value={videos.some(v => v.youtubeId && videoUrl.includes(v.youtubeId)) ? (videos.find(v => v.youtubeId && videoUrl.includes(v.youtubeId))?.id || '') : ''}
+                      onChange={(e) => {
+                        const sel = videos.find(v => v.id === e.target.value);
+                        if (sel && sel.youtubeId) {
+                          setVideoUrl(`https://www.youtube.com/watch?v=${sel.youtubeId}`);
+                          setDirty(true);
+                        }
+                      }}
+                    >
+                      <option value="">-- Choose an uploaded video or enter custom link below --</option>
+                      {videos.filter(v => v.youtubeId).map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.title} ({v.type || 'Trailer'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="ad-field">
+                  <label className="ad-label" htmlFor="bf-video-url">OR ENTER YOUTUBE URL DIRECTLY</label>
+                  <input
+                    id="bf-video-url"
+                    name="videoUrl"
+                    type="url"
+                    className="ad-in"
+                    placeholder="https://www.youtube.com/watch?v=…"
+                    value={videoUrl}
+                    onChange={(e) => { setVideoUrl(e.target.value); setDirty(true); }}
+                  />
+                  <span className="help">
+                    Paste any YouTube video or trailer link. When saved, visitors can watch this trailer before opening the book.
+                  </span>
+                </div>
+
+                {/* Live Preview Card */}
+                {parseYouTubeId(videoUrl) && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    padding: 14,
+                    background: 'rgba(201,168,96,.08)',
+                    border: '1px solid rgba(201,168,96,.3)',
+                    borderRadius: 6
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://i.ytimg.com/vi/${parseYouTubeId(videoUrl)}/mqdefault.jpg`}
+                      alt="Trailer thumbnail"
+                      style={{ width: 100, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {videos.find(v => v.youtubeId === parseYouTubeId(videoUrl))?.title || `${book.title || 'Book'} Trailer`}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
+                        Active on public book page
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="ad-sm"
+                      style={{ height: 32, fontSize: 12 }}
+                      onClick={() => { setVideoUrl(''); setDirty(true); }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              <section className="ad-card">
                 <h2>Sample chapter</h2>
                 <p className="sub">Paste the text, or upload a Word (.docx) or text file. It is laid out as book pages automatically. Leave a blank line between paragraphs, and put *** on its own line for a scene break.</p>
                 <label className="drop" style={{ position: 'relative' }}>
@@ -343,9 +535,6 @@ export default function BookForm({ book, isNew }: { book: Book; isNew: boolean }
                   <input type="hidden" name="hasAudible" value={audible ? 'on' : ''} />
                 </div>
                 {audible && <Field label="AUDIBLE LINK" name="audibleUrl" value={book.audibleUrl} placeholder="https://www.audible.com/pd/…" type="url" />}
-                <div style={{ paddingTop: 16, borderTop: '1px solid rgba(239,231,214,.06)' }}>
-                  <Field label="BOOK TRAILER / VIDEO (YOUTUBE LINK)" name="videoUrl" value={book.videoUrl} placeholder="https://www.youtube.com/watch?v=…" help="If set, this video appears first in the reader section on the book page before the book swipe reader." type="url" />
-                </div>
               </section>
 
               <section className="ad-card">

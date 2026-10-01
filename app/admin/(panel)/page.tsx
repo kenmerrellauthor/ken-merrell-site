@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { Ic } from '@/components/admin/AdIcons';
 import { Cover } from '@/components/Bits';
 import { getBooks, getReaders, getVideos } from '@/lib/store';
-import { moveBook, toggleBookStatus } from '../actions';
+import { deleteBookAction, moveBook, toggleBookStatus } from '../actions';
+import { DeleteButton } from '@/components/admin/DeleteButton';
 
-const COLS = '44px 76px minmax(0, 1fr) 150px 190px 170px';
+const COLS = '44px 76px minmax(0, 1fr) 140px 170px 210px';
 
 export default async function BooksAdmin({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const tab = (await searchParams).tab || 'all';
@@ -72,9 +73,10 @@ export default async function BooksAdmin({ searchParams }: { searchParams: Promi
                 <button type="submit" role="switch" className="switch" aria-checked={on} aria-label={`Available on site: ${b.title}`}><span /></button>
                 <span style={{ fontSize: 14, color: on ? 'var(--cream)' : '#e2b86a' }}>{on ? 'Available' : 'Coming soon'}</span>
               </form>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <a href={`/books/${b.slug}`} target="_blank" className="ad-sm icon" aria-label={`View ${b.title} on the site`}><Ic k="ext" s={16} /></a>
-                <Link href={`/admin/books/${b.id}`} className="ad-sm"><Ic k="edit" s={15} />Edit</Link>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+                <a href={`/books/${b.slug}`} target="_blank" className="ad-sm icon" aria-label={`View ${b.title} on the site`} title="View on site"><Ic k="ext" s={16} /></a>
+                <Link href={`/admin/books/${b.id}`} className="ad-sm" title="Edit book"><Ic k="edit" s={15} />Edit</Link>
+                <DeleteButton action={deleteBookAction} id={b.id} itemName={b.title} title={`Delete ${b.title}`} />
               </div>
             </div>
           );
