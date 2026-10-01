@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Ic } from './AdIcons';
 
 export function DeleteButton({
@@ -15,23 +15,32 @@ export function DeleteButton({
   itemName?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set('id', id);
+      await action(fd);
+    });
+  };
 
   if (confirming) {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-        <form action={action} style={{ display: 'inline' }}>
-          <input type="hidden" name="id" value={id} />
-          <button
-            type="submit"
-            className="ad-sm danger"
-            style={{ height: 40, padding: '0 10px', fontSize: 12, borderColor: '#c65b4a' }}
-            title={`Confirm remove ${itemName}`}
-          >
-            Delete
-          </button>
-        </form>
         <button
           type="button"
+          disabled={isPending}
+          onClick={handleDelete}
+          className="ad-sm danger"
+          style={{ height: 40, padding: '0 10px', fontSize: 12, borderColor: '#c65b4a' }}
+          title={`Confirm remove ${itemName}`}
+        >
+          {isPending ? 'Deleting…' : 'Delete'}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
           className="ad-sm"
           style={{ height: 40, padding: '0 8px', fontSize: 12 }}
           onClick={() => setConfirming(false)}

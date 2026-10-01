@@ -9,7 +9,7 @@ const TYPES: Record<string, string> = {
   '.webp': 'image/webp'
 };
 
-const ALLOWED_FOLDERS = new Set(['covers', 'banners', 'author']);
+const ALLOWED_FOLDERS = new Set(['covers', 'banners', 'author', 'videos']);
 
 export async function GET(_req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const parts = (await params).path;

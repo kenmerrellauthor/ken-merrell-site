@@ -1,10 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Ic } from './AdIcons';
 
 export function ImagePick({ name, current, label, aspect, removeName, sizeHint, formId }: { name: string; current: string | null; label: string; aspect: string; removeName: string; sizeHint?: string; formId?: string }) {
   const [preview, setPreview] = useState<string | null>(current);
   const [removed, setRemoved] = useState(false);
+
+  useEffect(() => {
+    setPreview(current);
+    setRemoved(false);
+  }, [current]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {preview && !removed ? (

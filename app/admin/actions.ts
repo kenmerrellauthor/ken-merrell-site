@@ -220,6 +220,7 @@ export async function addVideoAction(_p: AdminState, form: FormData): Promise<Ad
   
   const v: Video = { id: newId(), youtubeId, title, type, duration: str(form, 'duration', 12), order: real.length + 1, thumbnail };
   await saveVideo(v);
+  revalidatePath('/admin/videos');
   refresh();
   return { ok: true };
 }
@@ -235,12 +236,14 @@ export async function updateVideoAction(form: FormData) {
   if (thFile) thumbnail = await uploadImage(thFile, 'videos');
   if (form.get('removeThumbnail') === 'on') thumbnail = null;
   await saveVideo({ ...v, title: str(form, 'title', 200) || v.title, type, duration: str(form, 'duration', 12), thumbnail });
+  revalidatePath('/admin/videos');
   refresh();
 }
 
 export async function deleteVideoAction(form: FormData) {
   await requireAdmin();
   await deleteVideo(str(form, 'id'));
+  revalidatePath('/admin/videos');
   refresh();
 }
 
@@ -254,6 +257,7 @@ export async function moveVideo(form: FormData) {
   if (i < 0 || j < 0 || j >= ids.length) return;
   [ids[i], ids[j]] = [ids[j], ids[i]];
   await saveVideoOrder(ids);
+  revalidatePath('/admin/videos');
   refresh();
 }
 
