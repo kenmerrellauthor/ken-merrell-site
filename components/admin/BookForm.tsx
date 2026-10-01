@@ -213,6 +213,7 @@ function StarRow({ n }: { n: number }) {
 export default function BookForm({ book, isNew, videos = [] }: { book: Book; isNew: boolean; videos?: Video[] }) {
   const router = useRouter();
 
+  const [currentBook, setCurrentBook] = useState<Book>(book);
   const [state, action] = useActionState<AdminState, FormData>(saveBookAction, {});
   const [status, setStatus] = useState(book.status);
   const [audible, setAudible] = useState(!!book.audibleUrl);
@@ -226,10 +227,47 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const [commentEdit, setCommentEdit] = useState<Record<string, string>>({});
   const [showAddReview, setShowAddReview] = useState(false);
 
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
   useEffect(() => {
-    if (state.ok && isNew && state.id) router.replace(`/admin/books/${state.id}?saved=1`);
-    if (state.ok) setDirty(false);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('saved') === '1') {
+        setSavedSuccess(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    setCurrentBook(book);
+    setStatus(book.status);
+    setAudible(!!book.audibleUrl);
+    setVideoUrl(book.videoUrl || '');
+    setVideoThumbnail(book.videoThumbnail || '');
+    setQuotes(Array.isArray(book.quotes) ? book.quotes : []);
+    setReviews(Array.isArray(book.reviews) ? book.reviews : []);
+  }, [book]);
+
+  useEffect(() => {
+    if (state.ok) {
+      setDirty(false);
+      setSavedSuccess(true);
+      if (state.book) {
+        setCurrentBook(state.book);
+        setStatus(state.book.status);
+        setAudible(!!state.book.audibleUrl);
+        setVideoUrl(state.book.videoUrl || '');
+        setVideoThumbnail(state.book.videoThumbnail || '');
+        setQuotes(Array.isArray(state.book.quotes) ? state.book.quotes : []);
+      }
+      if (isNew && state.id) {
+        router.replace(`/admin/books/${state.id}?saved=1`);
+      } else {
+        router.refresh();
+      }
+    }
   }, [state, isNew, router]);
+
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); } };
     window.addEventListener('beforeunload', warn);
@@ -467,36 +505,46 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
       <nav className="crumb" aria-label="Breadcrumb"><Link href="/admin">Books</Link><span>/</span><span style={{ color: 'var(--soft)' }}>{isNew ? 'Add a book' : 'Edit book'}</span></nav>
 
       {/* ── Main book-save form ── */}
-      <form action={action} onChange={() => setDirty(true)}>
-        <input type="hidden" name="id" value={book.id} />
+      <form action={action} noValidate encType="multipart/form-data" onChange={() => setDirty(true)}>
+        <input type="hidden" name="id" value={currentBook.id || book.id} />
         <input type="hidden" name="quotes" value={JSON.stringify(quotes)} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
           <div className="ad-top">
             <div>
-              <h1>{isNew ? 'Add a book' : book.title}</h1>
+              <h1>{isNew ? 'Add a book' : currentBook.title}</h1>
               <p>{isNew ? 'Fill in what you have. You can come back and add the rest later.' : 'Changes go live on the book page as soon as you press Save.'}</p>
             </div>
             <div className="ad-actions">
-              {!isNew && <a href={`/books/${book.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
-              <Save label={isNew ? 'ADD BOOK' : 'SAVE CHANGES'} />
+              {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
+              <Save label={isNew ? 'CREATE BOOK' : 'SAVE CHANGES'} />
             </div>
           </div>
-          {state.error && <div className="ad-err" role="alert">{state.error}</div>}
-          {state.ok && !isNew && <div className="ad-ok" role="status"><Ic k="check" s={16} sw={2} />Saved. The site is updated.</div>}
+          {state.error && (
+            <div className="ad-err" role="alert">
+              <Ic k="trash" s={18} />
+              <span><b>Could not save book:</b> {state.error}</span>
+            </div>
+          )}
+          {(state.ok || savedSuccess) && !dirty && (
+            <div className="ad-ok" role="status">
+              <Ic k="check" s={18} sw={2} />
+              <span><b>Changes saved successfully!</b> {isNew ? 'New book has been created.' : 'Book details updated and live on the website.'}</span>
+            </div>
+          )}
 
           <div className="ad-editor">
             <div className="col">
               <section className="ad-card">
                 <h2>The basics</h2>
-                <Field label="TITLE" name="title" value={book.title} placeholder="Petticoats and Ash" />
+                <Field label="TITLE" name="title" value={currentBook.title} placeholder="Petticoats and Ash" />
                 <div className="ad-grid2">
-                  <Field label="GENRE LINE" name="genre" value={book.genre} placeholder="Historical suspense · A novel" />
-                  <Field label="WEB ADDRESS" name="slug" value={book.slug} placeholder="made from the title" help={`yoursite.com/books/${book.slug || '…'}`} />
+                  <Field label="GENRE LINE" name="genre" value={currentBook.genre} placeholder="Historical suspense · A novel" />
+                  <Field label="WEB ADDRESS" name="slug" value={currentBook.slug} placeholder="made from the title" help={`yoursite.com/books/${currentBook.slug || '…'}`} />
                 </div>
                 <Field
                   label="TAGLINE"
                   name="tagline"
-                  value={book.tagline}
+                  value={currentBook.tagline}
                   area
                   rows={2}
                   maxWords={50}
@@ -506,14 +554,14 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <Field
                   label="DESCRIPTION"
                   name="description"
-                  value={book.description}
+                  value={currentBook.description}
                   area
                   rows={7}
                   maxWords={200}
                   placeholder="A paragraph or two that sets up the story."
                   help="The book synopsis or summary (limit: 200 words) to set up the plot, characters, and stakes."
                 />
-                <Field label="BANNER TITLE" name="displayTitle" value={book.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
+                <Field label="BANNER TITLE" name="displayTitle" value={currentBook.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>
 
               <section className="ad-card">
@@ -565,7 +613,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   <input
                     id="bf-video-url"
                     name="videoUrl"
-                    type="url"
+                    type="text"
                     className="ad-in"
                     placeholder="https://www.youtube.com/watch?v=…"
                     value={videoUrl}
@@ -616,7 +664,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {matchedGalleryVideo?.title || `${book.title || 'Book'} Trailer`}
+                        {matchedGalleryVideo?.title || `${currentBook.title || 'Book'} Trailer`}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
@@ -649,28 +697,28 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   </span>
                   <input type="file" name="sampleFile" accept=".docx,.txt,.md" onChange={(e) => setFileName(e.target.files?.[0]?.name || '')} />
                 </label>
-                <Field label="CHAPTER TITLE" name="chapterTitle" value={book.chapterTitle} placeholder="Optional, e.g. The Gallows Road" />
-                <Field label="OR PASTE THE TEXT" name="sample" value={book.sample} area rows={14} placeholder="Chapter One…" />
+                <Field label="CHAPTER TITLE" name="chapterTitle" value={currentBook.chapterTitle} placeholder="Optional, e.g. The Gallows Road" />
+                <Field label="OR PASTE THE TEXT" name="sample" value={currentBook.sample} area rows={14} placeholder="Chapter One…" />
               </section>
 
               <section className="ad-card">
                 <h2>Where to buy</h2>
-                <Field label="AMAZON LINK" name="amazonUrl" value={book.amazonUrl} placeholder="https://www.amazon.com/dp/…" type="url" />
+                <Field label="AMAZON LINK" name="amazonUrl" value={currentBook.amazonUrl} placeholder="https://www.amazon.com/dp/…" type="text" />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingTop: 16, borderTop: '1px solid rgba(239,231,214,.06)' }}>
                   <span><span style={{ display: 'block', fontSize: 16 }}>This book has an audiobook</span><span style={{ fontSize: 13, color: 'var(--muted)' }}>Shows the Listen on Audible button on the book page.</span></span>
                   <button type="button" role="switch" className="switch" aria-checked={audible} aria-label="Has an audiobook" onClick={() => { setAudible(!audible); setDirty(true); }}><span /></button>
                   <input type="hidden" name="hasAudible" value={audible ? 'on' : ''} />
                 </div>
-                {audible && <Field label="AUDIBLE LINK" name="audibleUrl" value={book.audibleUrl} placeholder="https://www.audible.com/pd/…" type="url" />}
+                {audible && <Field label="AUDIBLE LINK" name="audibleUrl" value={currentBook.audibleUrl} placeholder="https://www.audible.com/pd/…" type="text" />}
               </section>
 
               <section className="ad-card">
                 <h2>Details &amp; praise</h2>
                 <div className="ad-grid2">
-                  <Field label="PUBLISHED" name="published" value={book.published} placeholder="March 2025" />
-                  <Field label="PAGES" name="pages" value={book.pages} placeholder="352" />
-                  <Field label="FORMATS" name="formats" value={book.formats} placeholder="Print, Ebook, Audio" />
-                  <Field label="ISBN" name="isbn" value={book.isbn} placeholder="978-0-000-00000-0" />
+                  <Field label="PUBLISHED" name="published" value={currentBook.published} placeholder="March 2025" />
+                  <Field label="PAGES" name="pages" value={currentBook.pages} placeholder="352" />
+                  <Field label="FORMATS" name="formats" value={currentBook.formats} placeholder="Print, Ebook, Audio" />
+                  <Field label="ISBN" name="isbn" value={currentBook.isbn} placeholder="978-0-000-00000-0" />
                 </div>
                 <div className="ad-field">
                   <span className="ad-label">READER AND REVIEWER QUOTES</span>
@@ -696,8 +744,8 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <label className="choice"><input type="radio" name="status" value="coming" checked={status === 'coming'} onChange={() => setStatus('coming')} /><span><b>Coming soon</b><small>Teaser, countdown and reader signup</small></span></label>
                 {status === 'coming' && (
                   <div className="ad-grid2" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                    <Field label="RELEASE DATE" name="releaseDate" value={book.releaseDate} type="date" help="Drives the countdown" />
-                    <Field label="SHOWN AS" name="releaseLabel" value={book.releaseLabel} placeholder="Spring 2027" />
+                    <Field label="RELEASE DATE" name="releaseDate" value={currentBook.releaseDate} type="date" help="Drives the countdown" />
+                    <Field label="SHOWN AS" name="releaseLabel" value={currentBook.releaseLabel} placeholder="Spring 2027" />
                   </div>
                 )}
                 {status === 'available' && (
@@ -711,20 +759,20 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
               <section className="ad-card">
                 <h2>Cover</h2>
                 <div style={{ width: 200, alignSelf: 'center' }}>
-                  <ImagePick name="cover" current={book.cover} label="Upload a cover" aspect="2 / 3" removeName="removeCover" sizeHint="Recommended: 1600 × 2400" />
+                  <ImagePick name="cover" current={currentBook.cover} label="Upload a cover" aspect="2 / 3" removeName="removeCover" sizeHint="Recommended: 1600 × 2400" />
                 </div>
                 <span className="help" style={{ fontSize: 13, color: '#6e6457', lineHeight: 1.5 }}>JPG or PNG, at least 1600 px tall. Without a cover the book shows as a cloth hardback in this color:</span>
-                <input type="color" name="clothColor" defaultValue={book.clothColor} aria-label="Cloth cover color" style={{ width: 64, height: 36, border: '1px solid #3a332b', background: 'none' }} />
+                <input type="color" name="clothColor" defaultValue={currentBook.clothColor} aria-label="Cloth cover color" style={{ width: 64, height: 36, border: '1px solid #3a332b', background: 'none' }} />
               </section>
               <section className="ad-card">
                 <h2>Banner image</h2>
                 <p className="sub">Optional. Used behind the book on its page and in the homepage banner.</p>
-                <ImagePick name="banner" current={book.banner} label="Upload a banner" aspect="16 / 9" removeName="removeBanner" sizeHint="Recommended: 1600 × 900" />
+                <ImagePick name="banner" current={currentBook.banner} label="Upload a banner" aspect="16 / 9" removeName="removeBanner" sizeHint="Recommended: 1600 × 900" />
               </section>
               {!isNew && (
                 confirmDel ? (
                   <div className="ad-card" style={{ borderColor: 'rgba(198,91,74,.45)' }}>
-                    <p style={{ margin: 0 }}>Remove <b>{book.title}</b> from the site? This cannot be undone.</p>
+                    <p style={{ margin: 0 }}>Remove <b>{currentBook.title}</b> from the site? This cannot be undone.</p>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <button type="submit" formAction={deleteBookAction} formNoValidate className="ad-btn" style={{ borderColor: '#c65b4a', color: '#e58a78' }}>YES, REMOVE</button>
                       <button type="button" className="ad-btn" onClick={() => setConfirmDel(false)}>KEEP IT</button>

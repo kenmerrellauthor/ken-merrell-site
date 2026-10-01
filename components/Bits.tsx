@@ -2,8 +2,9 @@ import type { Book } from '@/lib/types';
 import { Fragment } from 'react';
 
 /** Renders "Petticoats *and a*|Traitor’s Death" as the design's two-tone title. */
-export function DisplayTitle({ text }: { text: string }) {
-  const lines = text.split('|');
+export function DisplayTitle({ text }: { text?: string }) {
+  const safeText = typeof text === 'string' ? text : '';
+  const lines = safeText.split('|');
   return (
     <>
       {lines.map((line, li) => (
@@ -31,11 +32,11 @@ export function Eyebrow({ num, text, dark }: { num?: string; text: string; dark?
 }
 
 function clothWords(title: string) {
-  const t = title.replace(/^\[|\]$/g, '');
+  const t = (title || '').replace(/^\[|\]$/g, '');
   const words = t.split(' ');
-  if (words.length <= 1) return [title];
+  if (words.length <= 1) return [title || ''];
   const half = Math.ceil(words.length / 2);
-  const bracket = title.startsWith('[');
+  const bracket = (title || '').startsWith('[');
   return [(bracket ? '[' : '') + words.slice(0, half).join(' '), words.slice(half).join(' ') + (bracket ? ']' : '')];
 }
 
@@ -44,20 +45,20 @@ export function Cover({ book, w, h, title = 23, author = 11, priority }: { book:
   if (book.cover) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={book.cover} alt={`${book.title} cover`} width={typeof w === 'number' ? w : undefined} height={typeof h === 'number' ? h : undefined} loading={priority ? 'eager' : 'lazy'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <img src={book.cover} alt={`${book.title || 'Book'} cover`} width={typeof w === 'number' ? w : undefined} height={typeof h === 'number' ? h : undefined} loading={priority ? 'eager' : 'lazy'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
     );
   }
   const base = typeof w === 'number' ? w : 176;
   const cq = (px: number) => `${((px / base) * 100).toFixed(2)}cqw`;
   return (
-    <div className="cloth" style={{ width: '100%', height: '100%', background: book.clothColor, containerType: 'inline-size' }} role="img" aria-label={`${book.title} cover`}>
+    <div className="cloth" style={{ width: '100%', height: '100%', background: book.clothColor || '#1c1712', containerType: 'inline-size' }} role="img" aria-label={`${book.title || 'Book'} cover`}>
       <div className="km-linen abs" />
       <div className="b1" />
       <div className="b2" />
       <div className="in">
         <span className="dia" />
         <span className="t" style={{ fontSize: cq(title) }}>
-          {clothWords(book.title).map((l, i) => (
+          {clothWords(book.title || '').map((l, i) => (
             <Fragment key={i}>{i > 0 && <br />}{l}</Fragment>
           ))}
         </span>
@@ -83,7 +84,7 @@ export function Book3D({ book, w = 400, h = 600, i = 0 }: { book: Book; w?: numb
         <div className="bface km-pageside" style={{ left: w / 2 - d / 2, top: 5, width: d, height: h - 10, transform: `rotateY(90deg) translateZ(${w / 2 - 6}px)` }} />
         <div className="bface spine3d" style={{ left: w / 2 - d / 2, top: 0, width: d, height: h, transform: `rotateY(-90deg) translateZ(${w / 2}px)`, background: spineBg[i % 3] }}>
           <div className="rules"><span /><span className="dim" /></div>
-          <span className="st">{book.title.toUpperCase()}</span>
+          <span className="st">{(book.title || '').toUpperCase()}</span>
           <span className="dia" />
           <div className="au"><span className="k">KEN</span><span className="m">MERRELL</span></div>
           <div className="rules"><span className="dim" /><span /></div>

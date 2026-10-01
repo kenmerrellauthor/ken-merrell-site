@@ -345,18 +345,6 @@ export default function NotificationBell({
           </div>
         </div>
       )}
-
-      {/* Micro-animation CSS for bell */}
-      <style jsx global>{`
-        @keyframes kmBellRing {
-          0%, 80%, 100% { transform: rotate(0); }
-          82% { transform: rotate(14deg); }
-          86% { transform: rotate(-12deg); }
-          90% { transform: rotate(8deg); }
-          94% { transform: rotate(-6deg); }
-          97% { transform: rotate(3deg); }
-        }
-      `}</style>
     </div>
   );
 }

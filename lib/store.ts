@@ -20,7 +20,11 @@ function supabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
-  if (!sb) sb = createClient(url, key, { auth: { persistSession: false } });
+  if (!sb) {
+    sb = createClient(url, key, {
+      auth: { persistSession: false },
+    });
+  }
   return sb;
 }
 
@@ -171,6 +175,18 @@ export async function getBooks(): Promise<Book[]> {
   });
 }
 export async function getBook(id: string): Promise<Book | null> {
+  if (!id || id === 'new') return null;
+  const db = supabase();
+  if (db) {
+    try {
+      const { data, error } = await db.from('books').select('id, data').eq('id', id).maybeSingle();
+      if (!error && data?.data) {
+        return sanitizeBook(data.data as Book);
+      }
+    } catch {
+      /* fallback to scanning all */
+    }
+  }
   let books = await getBooks();
   let b = books.find((x) => x.id === id) ?? null;
   if (!b && id && id !== 'new') {
@@ -184,6 +200,18 @@ export async function getBook(id: string): Promise<Book | null> {
   return b ? sanitizeBook(b) : null;
 }
 export async function getBookBySlug(slug: string): Promise<Book | null> {
+  if (!slug) return null;
+  const db = supabase();
+  if (db) {
+    try {
+      const { data, error } = await db.from('books').select('id, data').filter('data->>slug', 'eq', slug).maybeSingle();
+      if (!error && data?.data) {
+        return sanitizeBook(data.data as Book);
+      }
+    } catch {
+      /* fallback to scanning all */
+    }
+  }
   const b = (await getBooks()).find((b) => b.slug === slug) ?? null;
   return b ? sanitizeBook(b) : null;
 }
@@ -304,9 +332,15 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
   if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
     throw new Error('Invalid upload destination folder.');
   }
-  const ext = ALLOWED_EXTENSIONS.get(file.type);
+  let ext = ALLOWED_EXTENSIONS.get(file.type);
+  if (!ext) {
+    const lname = (file.name || '').toLowerCase();
+    if (lname.endsWith('.jpg') || lname.endsWith('.jpeg')) ext = 'jpg';
+    else if (lname.endsWith('.png')) ext = 'png';
+    else if (lname.endsWith('.webp')) ext = 'webp';
+  }
   if (!ext) throw new Error('Please upload a JPG, PNG or WebP image.');
-  if (file.size > 10 * 1024 * 1024) throw new Error('Images must be under 10 MB.');
+  if (file.size > 4.2 * 1024 * 1024) throw new Error('Images must be under 4 MB for upload on Vercel.');
   const name = `${folder}/${Date.now()}-${newId()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
 
@@ -322,7 +356,8 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
     return `/uploads/${name}`;
   }
   const bucket = process.env.SUPABASE_BUCKET || 'media';
-  const { error } = await db.storage.from(bucket).upload(name, buf, { contentType: file.type, upsert: false });
+  const contentType = file.type || (ext === 'jpg' ? 'image/jpeg' : `image/${ext}`);
+  const { error } = await db.storage.from(bucket).upload(name, buf, { contentType, upsert: true });
   if (error) throw new Error(`Upload failed: ${error.message}`);
   return db.storage.from(bucket).getPublicUrl(name).data.publicUrl;
 }

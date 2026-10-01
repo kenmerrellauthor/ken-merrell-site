@@ -19,9 +19,30 @@ import {
 import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 
-export type AdminState = { ok?: boolean; error?: string; fields?: Record<string, string>; id?: string };
+export type AdminState = { ok?: boolean; error?: string; fields?: Record<string, string>; id?: string; book?: Book };
 
-const refresh = () => revalidatePath('/', 'layout');
+const cleanUrl = (s: string) => {
+  const t = s.trim();
+  if (!t || t === '#') return t;
+  if (/^(https?:|\/|#)/i.test(t)) return t;
+  return `https://${t}`;
+};
+
+const refresh = (bookId?: string, bookSlug?: string, oldSlug?: string) => {
+  try {
+    revalidatePath('/', 'layout');
+    revalidatePath('/', 'page');
+    revalidatePath('/books', 'page');
+    revalidatePath('/admin', 'page');
+    revalidatePath('/admin', 'layout');
+    revalidatePath('/admin/books/[id]', 'page');
+    if (bookId) revalidatePath(`/admin/books/${bookId}`, 'page');
+    if (bookSlug) revalidatePath(`/books/${bookSlug}`, 'page');
+    if (oldSlug && oldSlug !== bookSlug) revalidatePath(`/books/${oldSlug}`, 'page');
+  } catch {
+    /* ignore outside request context */
+  }
+};
 const str = (f: FormData, k: string, max = 20000) => String(f.get(k) ?? '').trim().slice(0, max);
 const clampWords = (s: unknown, maxWords: number) => {
   const strVal = typeof s === 'string' ? s : String(s || '');
@@ -93,7 +114,7 @@ export async function logout() {
 /* ---------------- books ---------------- */
 async function sampleFromFile(f: File): Promise<string> {
   const name = f.name.toLowerCase();
-  if (f.size > 8 * 1024 * 1024) throw new Error('The sample file must be under 8 MB.');
+  if (f.size > 4.2 * 1024 * 1024) throw new Error('The sample file must be under 4 MB for upload on Vercel.');
   const buf = Buffer.from(await f.arrayBuffer());
   if (name.endsWith('.docx')) {
     const { value } = await mammoth.extractRawText({ buffer: buf });
@@ -164,9 +185,9 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       banner,
       videoThumbnail,
       clothColor: /^#[0-9a-f]{6}$/i.test(str(form, 'clothColor')) ? str(form, 'clothColor') : existing?.clothColor || '#1c1712',
-      amazonUrl: str(form, 'amazonUrl', 500),
-      audibleUrl: hasAudible ? str(form, 'audibleUrl', 500) : '',
-      videoUrl,
+      amazonUrl: cleanUrl(str(form, 'amazonUrl', 500)),
+      audibleUrl: hasAudible ? cleanUrl(str(form, 'audibleUrl', 500)) : '',
+      videoUrl: cleanUrl(videoUrl),
       published: str(form, 'published', 60),
       pages: str(form, 'pages', 20),
       formats: str(form, 'formats', 80),
@@ -181,20 +202,12 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       createdAt: existing?.createdAt || existing?.updatedAt || new Date().toISOString()
     });
     await saveBook(book);
-    refresh();
+    refresh(id, slug, existing?.slug);
 
-    if (isNewBook) {
-      redirectTarget = `/admin/books/${id}?saved=1`;
-    } else {
-      return { ok: true, id };
-    }
+    return { ok: true, id, book, fields: { slug } };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Something went wrong while saving.' };
   }
-  if (redirectTarget) {
-    redirect(redirectTarget);
-  }
-  return { ok: true };
 }
 
 export async function deleteBookAction(form: FormData) {

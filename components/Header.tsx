@@ -116,7 +116,7 @@ export default function Header({ active }: { active?: string }) {
         <div className="rule2" />
       </header>
       {/* Portal: renders mobile menu directly into <body> — outside all stacking contexts */}
-      {mounted && createPortal(mobileMenu, document.body)}
+      {mounted && open && mobileMenu ? createPortal(mobileMenu, document.body) : null}
     </>
   );
 }

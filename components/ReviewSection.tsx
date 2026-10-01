@@ -134,7 +134,7 @@ export default function ReviewSection({ bookId, reviews }: ReviewSectionProps) {
                 <blockquote className="rv-text">&ldquo;{r.text}&rdquo;</blockquote>
                 <footer className="rv-footer">
                   <span className="rv-name">{r.name}</span>
-                  <span className="rv-date">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                  <span className="rv-date">{r.createdAt && !isNaN(new Date(r.createdAt).getTime()) ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recent'}</span>
                 </footer>
                 {r.adminComment && (
                   <div className="rv-comment">

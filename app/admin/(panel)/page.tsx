@@ -7,6 +7,9 @@ import { DeleteButton } from '@/components/admin/DeleteButton';
 
 const COLS = '44px 76px minmax(0, 1fr) 140px 170px 210px';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function BooksAdmin({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const tab = (await searchParams).tab || 'all';
   const [books, videos, readers] = await Promise.all([getBooks(), getVideos(), getReaders()]);

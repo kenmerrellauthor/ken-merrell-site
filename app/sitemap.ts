@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { getBooks } from '@/lib/store';
 
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim() || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   const base = raw.startsWith('http://') || raw.startsWith('https://') ? raw : `https://${raw}`;

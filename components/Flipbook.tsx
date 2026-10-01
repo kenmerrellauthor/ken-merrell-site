@@ -37,16 +37,16 @@ function Blocks({ blocks, firstPage, mobile }: { blocks: Block[]; firstPage: boo
         const isFirstOfPage = !seenP;
         seenP = true;
         if (firstPage && k === 0 && !b.cont) {
-          const text = b.text;
+          const text = b.text || '';
           const m = text.match(/^([“"‘']?[A-Za-z0-9])(\S*)\s*([^\s]+(?:\s+[^\s]+){0,2})?(.*)$/s);
-          const drop = m ? m[1] : text[0];
+          const drop = m ? m[1] : (text[0] || '');
           const secondWord = m && m[2] ? m[2] : '';
           const nextWords = m && m[3] ? m[3] : '';
           const lead = (secondWord ? secondWord + (nextWords ? ' ' + nextWords : '') : nextWords).trim();
           const rest = m && m[4] ? m[4] : text.slice(drop.length);
           return (
             <p key={k} className="first">
-              <span className="drop">{drop}</span>
+              {drop && <span className="drop">{drop}</span>}
               {lead && <span className="lead-words">{lead}</span>}{' '}
               {rest.trim()}
             </p>
@@ -140,7 +140,7 @@ function useSwipe(onNext: () => void, onPrev: () => void) {
 /* ---------- desktop / tablet: the open two-page book ---------- */
 function DesktopBook({ book }: { book: FlipBookProps }) {
   const pages = useMemo<Page[]>(() => {
-    const text = paginate(parseSample(book.sample), 900, 760);
+    const text = paginate(parseSample(book.sample || ''), 900, 760);
     const list: Page[] = [{ kind: 'cover', side: 'right' }, { kind: 'endpaper', side: 'left' }, { kind: 'opener', side: 'right', num: 1 }];
     text.forEach((blocks, k) => list.push({ kind: 'text', side: list.length % 2 ? 'left' : 'right', num: k + 2, blocks, firstPage: k === 0 }));
     list.push({ kind: 'end', side: list.length % 2 ? 'left' : 'right' });
@@ -222,7 +222,7 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
 
 /* ---------- phone: one page at a time ---------- */
 function PhoneBook({ book }: { book: FlipBookProps }) {
-  const text = useMemo(() => paginate(parseSample(book.sample), 440, 320), [book.sample]);
+  const text = useMemo(() => paginate(parseSample(book.sample || ''), 440, 320), [book.sample]);
   const total = text.length + 2; // opener, text pages, end
   const [i, setI] = useState(0);
   const go = (d: number) => setI((c) => Math.max(0, Math.min(total - 1, c + d)));
