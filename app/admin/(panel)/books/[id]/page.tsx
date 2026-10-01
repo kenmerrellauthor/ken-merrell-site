@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import BookForm from '@/components/admin/BookForm';
 import { getBook, getVideos, sanitizeBook } from '@/lib/store';
 import { seedBooks } from '@/lib/seed';
@@ -15,6 +15,6 @@ export default async function EditBook({ params }: { params: Promise<{ id: strin
       : getBook(id),
     getVideos()
   ]);
-  if (!book) notFound();
+  if (!book) redirect('/admin');
   return <BookForm book={book} isNew={id === 'new'} videos={videos} />;
 }

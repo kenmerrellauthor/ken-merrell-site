@@ -105,6 +105,7 @@ async function sampleFromFile(f: File): Promise<string> {
 
 export async function saveBookAction(_p: AdminState, form: FormData): Promise<AdminState> {
   await requireAdmin();
+  let redirectTarget = '';
   try {
     const id = str(form, 'id') || newId();
     const existing = await getBook(id);
@@ -112,8 +113,6 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     const title = str(form, 'title', 200) || 'Untitled Book';
     let slug = slugify(str(form, 'slug', 100) || title);
     if (books.some((b) => b.slug === slug && b.id !== id)) slug = `${slug}-${id.slice(0, 4)}`;
-
-
 
     let quotes: Quote[] = [];
     try {
@@ -183,10 +182,19 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
     });
     await saveBook(book);
     refresh();
-    return { ok: true, id };
+
+    if (isNewBook) {
+      redirectTarget = `/admin/books/${id}?saved=1`;
+    } else {
+      return { ok: true, id };
+    }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Something went wrong while saving.' };
   }
+  if (redirectTarget) {
+    redirect(redirectTarget);
+  }
+  return { ok: true };
 }
 
 export async function deleteBookAction(form: FormData) {

@@ -171,7 +171,16 @@ export async function getBooks(): Promise<Book[]> {
   });
 }
 export async function getBook(id: string): Promise<Book | null> {
-  const b = (await getBooks()).find((b) => b.id === id) ?? null;
+  let books = await getBooks();
+  let b = books.find((x) => x.id === id) ?? null;
+  if (!b && id && id !== 'new') {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+      books = await getBooks();
+      b = books.find((x) => x.id === id) ?? null;
+      if (b) break;
+    }
+  }
   return b ? sanitizeBook(b) : null;
 }
 export async function getBookBySlug(slug: string): Promise<Book | null> {
