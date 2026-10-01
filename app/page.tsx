@@ -17,12 +17,37 @@ export const revalidate = 60;
 export default async function Home() {
   const [books, videos, site] = await Promise.all([getBooks(), getVideos(), getSite()]);
   const available = books.filter((b) => b.status === 'available');
-  const coming = books.find((b) => b.status === 'coming');
+  const coming = books.find((b) => b.status === 'coming') || {
+    id: 'b8',
+    slug: 'upcoming',
+    title: '[Upcoming title]',
+    displayTitle: '[Upcoming title]',
+    tagline: 'A new historical novel from Ken Merrell. Join the Advance Readers to get an early copy.',
+    description: '',
+    genre: 'Historical Fiction · A novel',
+    status: 'coming' as const,
+    featured: false,
+    isNew: false,
+    cover: null,
+    banner: null,
+    clothColor: '#120f0c',
+    amazonUrl: '',
+    audibleUrl: '',
+    published: 'Fall 2026',
+    pages: '',
+    formats: 'Print, Ebook',
+    isbn: '',
+    quotes: [],
+    chapterTitle: '',
+    sample: '',
+    releaseDate: '2026-12-09',
+    releaseLabel: 'Coming Soon',
+    order: 8,
+  };
   // Always display the 4 latest books in the hero section
   const hero = available.slice(0, 4);
   const shelf = available.slice(0, 7);
-  const roman = coming ? ['I.', 'II.', 'III.', 'IV.'] : ['I.', '', 'II.', 'III.'];
-
+  const roman = ['I.', 'II.', 'III.', 'IV.'];
 
   return (
     <>
@@ -46,14 +71,13 @@ export default async function Home() {
         <div className="reveal-on-scroll reveal-delay-1">
           <Case cols4>
             {shelf.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={isBookNew(b)} />)}
-            <SoonCubby href={coming ? '/#coming' : '/books'} label={coming ? 'More to come' : 'See every book'} />
+            <SoonCubby href="/#coming" label={coming.releaseLabel || 'More to come'} />
           </Case>
         </div>
       </section>
 
       {/* II · COMING SOON */}
-      {coming && (
-        <section id="coming" className="coming">
+      <section id="coming" className="coming">
           <div className="km-grain abs" style={{ opacity: 0.5 }} />
           <div className="ghost" aria-hidden>Soon</div>
           <div className="copy reveal-on-scroll">
@@ -88,7 +112,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-      )}
 
       {/* III · VIDEOS */}
       {videos.length > 0 && (
