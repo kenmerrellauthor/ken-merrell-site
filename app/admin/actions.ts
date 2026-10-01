@@ -153,7 +153,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       title,
       displayTitle: str(form, 'displayTitle', 200) || title,
       tagline: clampWords(str(form, 'tagline', 2000), 50),
-      description: clampWords(str(form, 'description', 8000), 250),
+      description: clampWords(str(form, 'description', 8000), 200),
       genre: str(form, 'genre', 80),
       status: form.get('status') === 'coming' ? 'coming' : 'available',
       featured: isNewBook ? true : form.get('featured') === 'on',

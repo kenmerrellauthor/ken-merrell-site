@@ -501,9 +501,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   value={book.description}
                   area
                   rows={7}
-                  maxWords={250}
+                  maxWords={200}
                   placeholder="A paragraph or two that sets up the story."
-                  help="The book synopsis or summary (limit: 250 words) to set up the plot, characters, and stakes."
+                  help="The book synopsis or summary (limit: 200 words) to set up the plot, characters, and stakes."
                 />
                 <Field label="BANNER TITLE" name="displayTitle" value={book.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>
