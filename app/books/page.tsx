@@ -6,7 +6,24 @@ import { Arrow, ArrowLeft } from '@/components/icons';
 import { getBooks } from '@/lib/store';
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: 'All books', description: 'The complete works and published novels of author Ken Merrell.' };
+export const metadata: Metadata = {
+  title: 'Books & Novels',
+  description: 'The complete works and published novels of author Ken Merrell. Read sample chapters, explore audiobooks, and find your next suspense read.',
+  alternates: { canonical: '/books' },
+  openGraph: {
+    title: 'The Books of Ken Merrell · Novels & Suspense',
+    description: 'The complete works and published novels of author Ken Merrell. Read sample chapters, explore audiobooks, and find your next suspense read.',
+    url: '/books',
+    type: 'website',
+    images: [{ url: '/img/banners/ash.jpg', width: 1200, height: 630, alt: 'The Books of Ken Merrell' }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The Books of Ken Merrell · Novels & Suspense',
+    description: 'The complete works and published novels of author Ken Merrell. Read sample chapters and discover upcoming releases.',
+    images: ['/img/banners/ash.jpg']
+  }
+};
 
 const PER_SHELF = 6;
 const SHELVES = 6;

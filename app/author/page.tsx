@@ -9,8 +9,22 @@ import { getBooks, getSite } from '@/lib/store';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'About the Author · Ken Merrell',
-  description: 'Learn more about novelist Ken Merrell, his background, writing philosophy, and published novels.'
+  title: 'About the Author',
+  description: 'Learn more about novelist Ken Merrell, his background, writing journey, and published historical suspense novels.',
+  alternates: { canonical: '/author' },
+  openGraph: {
+    title: 'About Ken Merrell · Novelist & Author',
+    description: 'Learn more about novelist Ken Merrell, his background, writing journey, and published historical suspense novels.',
+    url: '/author',
+    type: 'profile',
+    images: [{ url: '/img/banners/ash.jpg', width: 1200, height: 630, alt: 'Ken Merrell — Author' }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About Ken Merrell · Novelist & Author',
+    description: 'Learn more about novelist Ken Merrell, his background, writing journey, and published historical suspense novels.',
+    images: ['/img/banners/ash.jpg']
+  }
 };
 
 export default async function AuthorPage() {

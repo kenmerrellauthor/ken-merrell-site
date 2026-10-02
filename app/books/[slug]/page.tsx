@@ -22,10 +22,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const book = await getBookBySlug((await params).slug);
   if (!book) return {};
   const description = (book.tagline || book.description || '').replace(/\s+/g, ' ').slice(0, 160);
+  const image = book.cover || book.banner || '/img/banners/ash.jpg';
+  const title = `${book.title} · A Novel by Ken Merrell`;
   return {
     title: book.title,
     description,
-    openGraph: { title: `${book.title} by Ken Merrell`, description, images: book.cover ? [book.cover] : undefined, type: 'book' }
+    alternates: { canonical: `/books/${book.slug}` },
+    openGraph: {
+      title,
+      description,
+      type: 'book',
+      url: `/books/${book.slug}`,
+      images: [{ url: image, alt: `${book.title} by Ken Merrell` }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${book.title} · Ken Merrell`,
+      description,
+      images: [image]
+    }
   };
 }
 
@@ -72,18 +87,42 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     ['FORMATS', book.formats],
     ['ISBN', book.isbn]
   ].filter(([, v]) => v);
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  const rawBase = envUrl || (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000');
+  const baseOrigin = rawBase.startsWith('http') ? rawBase : `https://${rawBase}`;
+  const canonicalUrl = `${baseOrigin}/books/${book.slug}`;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Book',
+    '@id': `${canonicalUrl}#book`,
     name: book.title,
-    author: { '@type': 'Person', name: 'Ken Merrell' },
+    url: canonicalUrl,
+    author: {
+      '@type': 'Person',
+      name: 'Ken Merrell',
+      url: baseOrigin
+    },
+    description: book.description || book.tagline,
+    genre: book.genre,
+    inLanguage: 'en',
     image: book.cover || undefined,
-    description: book.description,
-    isbn: /\d/.test(book.isbn) ? book.isbn : undefined
+    isbn: /\d/.test(book.isbn) ? book.isbn : undefined,
+    datePublished: book.published || book.releaseDate || undefined,
+    offers: book.amazonUrl ? {
+      '@type': 'Offer',
+      url: book.amazonUrl,
+      availability: book.status === 'available' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder'
+    } : undefined
   };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="book-hero" style={{ backgroundImage: book.banner ? `url(${book.banner})` : undefined, backgroundColor: '#15120f' }}>
         <div className="book-scrim abs" />
         <div className="km-hero-top" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 220 }} />

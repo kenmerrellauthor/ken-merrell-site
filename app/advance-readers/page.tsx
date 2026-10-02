@@ -10,8 +10,22 @@ import { getBooks, getSite } from '@/lib/store';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Become an Advance Reader · Ken Merrell',
-  description: 'Join Ken Merrell’s advance reader team to receive early review copies (ARCs) before launch day in exchange for an honest review.'
+  title: 'Become an Advance Reader',
+  description: 'Join Ken Merrell’s advance reader team to receive early review copies (ARCs) before launch day in exchange for an honest review.',
+  alternates: { canonical: '/advance-readers' },
+  openGraph: {
+    title: 'Become an Advance Reader · Ken Merrell',
+    description: 'Join Ken Merrell’s advance reader team to receive early review copies (ARCs) before launch day in exchange for an honest review.',
+    url: '/advance-readers',
+    type: 'website',
+    images: [{ url: '/img/banners/ash.jpg', width: 1200, height: 630, alt: 'Advance Reader Copies · Ken Merrell' }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Become an Advance Reader · Ken Merrell',
+    description: 'Join Ken Merrell’s advance reader team to receive early review copies (ARCs) before launch day in exchange for an honest review.',
+    images: ['/img/banners/ash.jpg']
+  }
 };
 
 export default async function AdvanceReadersPage() {

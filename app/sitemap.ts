@@ -14,12 +14,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/author`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/advance-readers`, changeFrequency: 'monthly', priority: 0.8 },
     ...books
-      .filter((b) => b.status === 'available')
+      .filter((b) => Boolean(b.slug))
       .map((b) => ({
         url: `${base}/books/${b.slug}`,
         lastModified: b.updatedAt,
         changeFrequency: 'weekly' as const,
-        priority: 0.7
+        priority: b.status === 'available' ? 0.8 : 0.7
       }))
   ];
 }
