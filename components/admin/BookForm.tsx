@@ -1105,25 +1105,6 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
               )}
             </div>
           </div>
-
-          {/* ── Form bottom navigation bar ── */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '20px 24px',
-            background: 'rgba(239,231,214,.03)',
-            border: '1px solid rgba(239,231,214,.08)',
-            borderRadius: 8
-          }}>
-            <Link href="/admin" className="ad-btn" title="Back to books list">
-              <Ic k="back" s={16} />BACK TO BOOKS
-            </Link>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
-              <Save label={isNew ? 'CREATE BOOK' : 'SAVE CHANGES'} />
-            </div>
-          </div>
         </div>
       </form>
 
