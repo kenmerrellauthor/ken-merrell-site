@@ -104,48 +104,75 @@ function Field({
 
 function ReleaseDateField({
   value,
-  label = 'RELEASE DATE',
+  label = 'RELEASE DATE & TIME',
   name = 'releaseDate',
-  help = 'Drives the countdown on the landing page'
+  help = 'When this date & time arrives, the book automatically shifts from Coming Soon to Available on the shelf!'
 }: {
   value?: string;
   label?: string;
   name?: string;
   help?: string;
 }) {
-  const [val, setVal] = useState(value ?? '');
+  const initialDate = value ? (value.includes('T') ? value.split('T')[0] : value) : '';
+  const initialTime = value && value.includes('T') ? value.split('T')[1].slice(0, 5) : '';
+
+  const [dateVal, setDateVal] = useState(initialDate);
+  const [timeVal, setTimeVal] = useState(initialTime);
   const [error, setError] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const id = `f-${name}`;
 
-  // Current date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    setVal(value ?? '');
+    if (value) {
+      setDateVal(value.includes('T') ? value.split('T')[0] : value);
+      setTimeVal(value.includes('T') ? value.split('T')[1].slice(0, 5) : '');
+    } else {
+      setDateVal('');
+      setTimeVal('');
+    }
   }, [value]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setVal(v);
-    if (v && v < today) {
-      setError('Release date must be in the future (past dates not allowed).');
+  const combinedVal = dateVal ? (timeVal ? `${dateVal}T${timeVal}` : dateVal) : '';
+
+  const validate = (d: string, t: string) => {
+    if (!d) {
+      setError('');
+      return;
+    }
+    const dtStr = t ? `${d}T${t}:00` : `${d}T00:00:00`;
+    const targetMs = new Date(dtStr).getTime();
+    if (!Number.isNaN(targetMs) && targetMs < Date.now()) {
+      setError('Release date & time must be in the future (past dates not allowed).');
     } else {
       setError('');
     }
   };
 
+  const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const d = e.target.value;
+    setDateVal(d);
+    validate(d, timeVal);
+  };
+
+  const onTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const t = e.target.value;
+    setTimeVal(t);
+    validate(dateVal, t);
+  };
+
   const openPicker = () => {
-    if (inputRef.current) {
-      if ('showPicker' in inputRef.current && typeof inputRef.current.showPicker === 'function') {
+    if (dateInputRef.current) {
+      if ('showPicker' in dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
         try {
-          inputRef.current.showPicker();
+          dateInputRef.current.showPicker();
           return;
         } catch {
-          /* browser fallback */
+          /* fallback */
         }
       }
-      inputRef.current.focus();
+      dateInputRef.current.focus();
     }
   };
 
@@ -157,45 +184,60 @@ function ReleaseDateField({
           FUTURE DATES ONLY
         </span>
       </div>
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-        <input
-          ref={inputRef}
-          id={id}
-          name={name}
-          type="date"
-          min={today}
-          className="ad-in"
-          value={val}
-          onChange={handleChange}
-          style={{
-            colorScheme: 'dark',
-            paddingRight: 44,
-            borderColor: error ? '#e58a78' : undefined
-          }}
-          placeholder="mm/dd/yyyy"
-        />
-        <button
-          type="button"
-          onClick={openPicker}
-          title="Open calendar"
-          aria-label="Open calendar"
-          style={{
-            position: 'absolute',
-            right: 8,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            color: 'var(--gold)',
-            cursor: 'pointer',
-            padding: 6,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Ic k="calendar" s={18} />
-        </button>
+      <input type="hidden" name={name} value={combinedVal} />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+          <input
+            ref={dateInputRef}
+            id={id}
+            type="date"
+            min={today}
+            className="ad-in"
+            value={dateVal}
+            onChange={onDateChange}
+            style={{
+              colorScheme: 'dark',
+              paddingRight: 44,
+              borderColor: error ? '#e58a78' : undefined
+            }}
+            placeholder="mm/dd/yyyy"
+          />
+          <button
+            type="button"
+            onClick={openPicker}
+            title="Open calendar"
+            aria-label="Open calendar"
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              color: 'var(--gold)',
+              cursor: 'pointer',
+              padding: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Ic k="calendar" s={18} />
+          </button>
+        </div>
+        <div style={{ width: 125, flexShrink: 0 }}>
+          <input
+            type="time"
+            className="ad-in"
+            value={timeVal}
+            onChange={onTimeChange}
+            style={{
+              colorScheme: 'dark',
+              borderColor: error ? '#e58a78' : undefined
+            }}
+            title="Optional release time (HH:MM)"
+          />
+        </div>
       </div>
       {error ? (
         <span style={{ fontSize: 12, color: '#e58a78', marginTop: -4 }}>
@@ -203,7 +245,7 @@ function ReleaseDateField({
         </span>
       ) : (
         <span className="help">
-          {help} (Type mm/dd/yyyy or select from calendar).
+          {help}
         </span>
       )}
     </div>

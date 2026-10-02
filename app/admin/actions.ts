@@ -201,7 +201,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       reviews: existing?.reviews ?? [],
       chapterTitle: str(form, 'chapterTitle', 120),
       sample,
-      releaseDate: str(form, 'releaseDate', 10),
+      releaseDate: str(form, 'releaseDate', 30),
       releaseLabel: str(form, 'releaseLabel', 60),
       updatedAt: new Date().toISOString(),
       createdAt: existing?.createdAt || existing?.updatedAt || new Date().toISOString()

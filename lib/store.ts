@@ -130,6 +130,20 @@ export function isBookNew(book: Book): boolean {
 }
 
 export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
+  // If a 'coming' book has reached or passed its release date/time, automatically shift to 'available'
+  let status: 'available' | 'coming' = b.status === 'coming' ? 'coming' : 'available';
+  let isNew = Boolean(b.isNew);
+
+  if (status === 'coming' && b.releaseDate) {
+    const raw = b.releaseDate.trim();
+    const dateStr = raw.length === 10 ? `${raw}T00:00:00` : raw;
+    const releaseTime = new Date(dateStr).getTime();
+    if (!Number.isNaN(releaseTime) && releaseTime <= Date.now()) {
+      status = 'available';
+      isNew = true; // Mark newly shifted book as NEW on the normal bookshelf
+    }
+  }
+
   return {
     id: b.id,
     slug: b.slug || b.id,
@@ -138,9 +152,9 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
     tagline: b.tagline || '',
     description: b.description || '',
     genre: b.genre || 'A novel',
-    status: b.status === 'coming' ? 'coming' : 'available',
+    status,
     featured: Boolean(b.featured),
-    isNew: Boolean(b.isNew),
+    isNew,
     order: typeof b.order === 'number' ? b.order : 1,
     cover: b.cover ?? null,
     banner: b.banner ?? null,
@@ -149,7 +163,7 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
     audibleUrl: b.audibleUrl || '',
     videoUrl: b.videoUrl || '',
     videoThumbnail: b.videoThumbnail ?? null,
-    published: b.published || '',
+    published: b.published || (status === 'available' && b.releaseLabel ? b.releaseLabel : ''),
     pages: b.pages || '',
     formats: b.formats || 'Print, Ebook',
     isbn: b.isbn || '',
@@ -167,7 +181,33 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
 /* ---------------- Books ---------------- */
 export async function getBooks(): Promise<Book[]> {
   const rows = await all<Book>('books');
-  return rows.map(sanitizeBook).sort((a, b) => {
+  const sanitized = rows.map(sanitizeBook);
+
+  // If any coming soon book had its release date/time pass, persist the updated status
+  const expiredComing = rows.filter((r) => r.status === 'coming' && r.releaseDate).filter((r) => {
+    const raw = r.releaseDate.trim();
+    const dateStr = raw.length === 10 ? `${raw}T00:00:00` : raw;
+    const t = new Date(dateStr).getTime();
+    return !Number.isNaN(t) && t <= Date.now();
+  });
+
+  if (expiredComing.length > 0) {
+    Promise.all(
+      expiredComing.map((b) =>
+        saveBook({
+          ...b,
+          status: 'available',
+          isNew: true,
+          published: b.published || b.releaseLabel || '',
+          updatedAt: new Date().toISOString()
+        })
+      )
+    ).catch(() => {
+      /* ignore background persistence errors */
+    });
+  }
+
+  return sanitized.sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
     const tA = new Date(a.createdAt || a.updatedAt || 0).getTime();
     const tB = new Date(b.createdAt || b.updatedAt || 0).getTime();
