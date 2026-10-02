@@ -1058,15 +1058,8 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <label className="choice"><input type="radio" name="status" value="available" checked={status === 'available'} onChange={() => setStatus('available')} /><span><b>Available</b><small>On the shelf with buy links</small></span></label>
                 <label className="choice"><input type="radio" name="status" value="coming" checked={status === 'coming'} onChange={() => setStatus('coming')} /><span><b>Coming soon</b><small>Teaser, countdown and reader signup</small></span></label>
                 {status === 'coming' && (
-                  <div className="ad-grid2" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                    <ReleaseDateField value={currentBook.releaseDate} label="RELEASE DATE" name="releaseDate" help="Drives the countdown" />
-                    <Field
-                      label="SHOWN AS"
-                      name="releaseLabel"
-                      value={currentBook.releaseLabel || 'Spring 2027'}
-                      placeholder="Spring 2027"
-                      help="Display season/year on homepage (e.g. Spring 2027)"
-                    />
+                  <div style={{ marginTop: 8 }}>
+                    <ReleaseDateField value={currentBook.releaseDate} label="RELEASE DATE & TIME" name="releaseDate" help="Drives the countdown on the landing page. When this date and time arrives, the book automatically shifts to Available on the shelf!" />
                   </div>
                 )}
                 {status === 'available' && (
