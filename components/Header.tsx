@@ -1,6 +1,7 @@
 'use client';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Close, Menu } from './icons';
 
@@ -15,11 +16,46 @@ const MOBILE_LINKS = [
 ];
 
 export default function Header({ active }: { active?: string }) {
+  const pathname = usePathname();
+  const [currentActive, setCurrentActive] = useState<string>(active || '');
   const [open, setOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mounted, setMounted] = useState(false);
   const lastYRef = useRef(0);
+
+  // Sync active item when pathname changes
+  useEffect(() => {
+    if (pathname.startsWith('/books')) {
+      setCurrentActive('books');
+    } else if (pathname === '/author') {
+      setCurrentActive('author');
+    } else if (pathname === '/advance-readers') {
+      setCurrentActive('advance');
+    } else if (pathname === '/') {
+      const h = typeof window !== 'undefined' ? window.location.hash : '';
+      if (h === '#coming') setCurrentActive('coming');
+      else if (h === '#videos') setCurrentActive('videos');
+      else if (h === '#contact') setCurrentActive('contact');
+      else setCurrentActive('');
+    }
+  }, [pathname]);
+
+  // Track hash changes on the homepage (e.g. clicking /#coming, /#videos, /#contact)
+  useEffect(() => {
+    if (pathname !== '/') return;
+
+    const onHashChange = () => {
+      const h = window.location.hash;
+      if (h === '#coming') setCurrentActive('coming');
+      else if (h === '#videos') setCurrentActive('videos');
+      else if (h === '#contact') setCurrentActive('contact');
+      else if (!h) setCurrentActive('');
+    };
+
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [pathname]);
 
   // Ensure portal target is available after hydration
   useEffect(() => setMounted(true), []);
@@ -73,14 +109,14 @@ export default function Header({ active }: { active?: string }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const cls = (k: string) => (k === active ? 'on' : undefined);
+  const cls = (k: string) => (k === currentActive ? 'on' : undefined);
 
   // The mobile menu is portalled to <body> so it sits outside the header's
   // stacking context — its z-index: 9999 is global and nothing can render above it.
   const mobileMenu = open && (
     <div className="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu">
       <div className="top">
-        <Link href="/" onClick={() => setOpen(false)}>
+        <Link href="/" onClick={() => { setCurrentActive(''); setOpen(false); }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/img/logo.png" alt="Ken Merrell" style={{ height: 34, width: 'auto' }} />
         </Link>
@@ -88,7 +124,7 @@ export default function Header({ active }: { active?: string }) {
       </div>
       <nav aria-label="Mobile">
         {MOBILE_LINKS.map((l) => (
-          <Link key={l.key} href={l.href} onClick={() => setOpen(false)}>{l.label}</Link>
+          <Link key={l.key} href={l.href} className={cls(l.key)} onClick={() => { setCurrentActive(l.key); setOpen(false); }}>{l.label}</Link>
         ))}
       </nav>
     </div>
@@ -98,16 +134,16 @@ export default function Header({ active }: { active?: string }) {
     <>
       <header className={`site-header${sticky ? ' is-sticky' : ''}${hidden ? ' is-hidden' : ''}`}>
         <div className="bar">
-          <Link href="/" aria-label="Ken Merrell home" className="logo">
+          <Link href="/" aria-label="Ken Merrell home" className="logo" onClick={() => setCurrentActive('')}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/logo.png" alt="Ken Merrell" width={240} height={56} />
           </Link>
           <nav aria-label="Primary navigation" className="nav-links">
-            <Link href="/books" className={cls('books')}>BOOKS</Link>
-            <Link href="/#coming" className={cls('coming')}>COMING SOON</Link>
-            <Link href="/#videos" className={cls('videos')}>VIDEOS</Link>
-            <Link href="/author" className={cls('author')}>AUTHOR</Link>
-            <Link href="/#contact" className={cls('contact')}>CONTACT</Link>
+            <Link href="/books" className={cls('books')} onClick={() => setCurrentActive('books')}>BOOKS</Link>
+            <Link href="/#coming" className={cls('coming')} onClick={() => setCurrentActive('coming')}>COMING SOON</Link>
+            <Link href="/#videos" className={cls('videos')} onClick={() => setCurrentActive('videos')}>VIDEOS</Link>
+            <Link href="/author" className={cls('author')} onClick={() => setCurrentActive('author')}>AUTHOR</Link>
+            <Link href="/#contact" className={cls('contact')} onClick={() => setCurrentActive('contact')}>CONTACT</Link>
           </nav>
           <button type="button" className="icon-btn menu-btn" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <Menu />

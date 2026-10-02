@@ -240,16 +240,31 @@ export default function ReadersClient({
         <div className="ad-actions">
           <button
             type="button"
-            className="ad-btn pri"
-            onClick={() => { setAddOpen((v) => !v); setComposerOpen(false); }}
+            className={`ad-btn${addOpen ? ' pri' : ''}`}
+            onClick={() => {
+              setAddOpen((v) => !v);
+              setComposerOpen(false);
+            }}
           >
             <Ic k={addOpen ? 'x' : 'plus'} s={16} sw={1.8} />
             {addOpen ? 'CANCEL' : 'ADD READER'}
           </button>
           <a href="/admin/readers.csv" className="ad-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
           {composerRows.length > 0 && (
-            <button type="button" className="ad-btn" onClick={() => openComposer('all')}>
-              <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
+            <button
+              type="button"
+              className={`ad-btn${composerOpen ? ' pri' : ''}`}
+              onClick={() => {
+                if (composerOpen) {
+                  closeComposer();
+                } else {
+                  openComposer('all');
+                  setAddOpen(false);
+                }
+              }}
+            >
+              <Ic k={composerOpen ? 'x' : 'mail'} s={16} sw={1.8} />
+              {composerOpen ? 'CLOSE EMAIL' : 'EMAIL READERS'}
             </button>
           )}
         </div>

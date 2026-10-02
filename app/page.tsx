@@ -40,8 +40,8 @@ export default async function Home() {
     quotes: [],
     chapterTitle: '',
     sample: '',
-    releaseDate: '2026-12-09',
-    releaseLabel: 'Coming Soon',
+    releaseDate: '2027-04-15',
+    releaseLabel: 'Spring 2027',
     order: 8,
   };
   // Respect "In homepage banner" (featured: true); fallback to latest available books if none explicitly featured
@@ -110,7 +110,7 @@ export default async function Home() {
             <Eyebrow num={roman[1]} text="COMING SOON" />
             <h2>{coming.title}</h2>
             {coming.tagline && <p className="teaser">{coming.tagline}</p>}
-            <Countdown date={coming.releaseDate} label={coming.releaseLabel} />
+            <Countdown date={coming.releaseDate} label={coming.releaseLabel || 'Spring 2027'} />
             <div className="cta-row">
               <Link href="/advance-readers" className="btn btn-gold" style={{ boxShadow: 'none' }}>BECOME AN ADVANCED READER</Link>
               <span>Join the Advance Readers for a copy before release.</span>

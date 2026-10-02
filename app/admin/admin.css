@@ -115,6 +115,8 @@
 .ad-in { height: 48px; border: 1px solid #3a332b; background: #120f0d; padding: 0 14px; font-family: var(--serif-b); font-size: 16px; color: var(--cream); border-radius: 3px; width: 100%; }
 .ad-in:focus { outline: none; border-color: var(--gold); }
 .ad-in::placeholder { color: #6e6457; }
+input[type="date"].ad-in { color-scheme: dark; }
+input[type="date"].ad-in::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.8) sepia(60%) saturate(600%) hue-rotate(5deg); }
 textarea.ad-in { height: auto; min-height: 140px; padding: 12px 14px; line-height: 1.6; resize: vertical; }
 select.ad-in { appearance: auto; }
 .ad-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
@@ -124,8 +126,9 @@ select.ad-in { appearance: auto; }
 .ad-stat span { font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--muted); }
 .ad-stat b { font-family: var(--serif-d); font-size: 40px; font-weight: 600; line-height: 1; color: var(--cream-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ad-tabs { display: inline-flex; gap: 6px; padding: 4px; background: #0f0d0b; border: 1px solid rgba(239,231,214,.08); border-radius: 4px; }
-.ad-tabs a { height: 38px; padding: 0 18px; border-radius: 3px; display: flex; align-items: center; color: var(--muted); font-size: 15px; }
-.ad-tabs a.on { background: #2a231c; color: var(--cream-2); }
+.ad-tabs a { height: 38px; padding: 0 18px; border-radius: 3px; display: flex; align-items: center; color: var(--muted); font-size: 15px; transition: all .15s ease; }
+.ad-tabs a:hover { color: var(--cream); }
+.ad-tabs a.on { background: rgba(201,168,96,.18); color: var(--gold); border: 1px solid rgba(201,168,96,.4); font-weight: 600; }
 .ad-table { background: #1a1612; border: 1px solid rgba(239,231,214,.08); border-radius: 4px; overflow-x: auto; }
 .ad-tr { display: grid; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid rgba(239,231,214,.06); min-width: 820px; }
 .ad-tr.head { height: 48px; font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .2em; color: var(--muted); border-bottom-color: rgba(239,231,214,.08); }

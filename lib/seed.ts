@@ -74,7 +74,7 @@ export const seedBooks: Book[] = [
   book({
     id: 'b8', slug: 'upcoming', title: '[Upcoming title]', order: 8, status: 'coming', clothColor: '#120f0c',
     tagline: '[A short teaser for the upcoming book, one or two lines.]',
-    releaseDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 74).toISOString().slice(0, 10), releaseLabel: '[Month Year]',
+    releaseDate: '2027-04-15', releaseLabel: 'Spring 2027',
     sample: ''
   })
 ];

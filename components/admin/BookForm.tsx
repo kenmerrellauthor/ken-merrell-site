@@ -102,6 +102,114 @@ function Field({
   );
 }
 
+function ReleaseDateField({
+  value,
+  label = 'RELEASE DATE',
+  name = 'releaseDate',
+  help = 'Drives the countdown on the landing page'
+}: {
+  value?: string;
+  label?: string;
+  name?: string;
+  help?: string;
+}) {
+  const [val, setVal] = useState(value ?? '');
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const id = `f-${name}`;
+
+  // Current date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    setVal(value ?? '');
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    setVal(v);
+    if (v && v < today) {
+      setError('Release date must be in the future (past dates not allowed).');
+    } else {
+      setError('');
+    }
+  };
+
+  const openPicker = () => {
+    if (inputRef.current) {
+      if ('showPicker' in inputRef.current && typeof inputRef.current.showPicker === 'function') {
+        try {
+          inputRef.current.showPicker();
+          return;
+        } catch {
+          /* browser fallback */
+        }
+      }
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <div className="ad-field">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <label className="ad-label" htmlFor={id}>{label}</label>
+        <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: error ? '#e58a78' : 'var(--gold)' }}>
+          FUTURE DATES ONLY
+        </span>
+      </div>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          ref={inputRef}
+          id={id}
+          name={name}
+          type="date"
+          min={today}
+          className="ad-in"
+          value={val}
+          onChange={handleChange}
+          style={{
+            colorScheme: 'dark',
+            paddingRight: 44,
+            borderColor: error ? '#e58a78' : undefined
+          }}
+          placeholder="mm/dd/yyyy"
+        />
+        <button
+          type="button"
+          onClick={openPicker}
+          title="Open calendar"
+          aria-label="Open calendar"
+          style={{
+            position: 'absolute',
+            right: 8,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            color: 'var(--gold)',
+            cursor: 'pointer',
+            padding: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <Ic k="calendar" s={18} />
+        </button>
+      </div>
+      {error ? (
+        <span style={{ fontSize: 12, color: '#e58a78', marginTop: -4 }}>
+          ⚠️ {error}
+        </span>
+      ) : (
+        <span className="help">
+          {help} (Type mm/dd/yyyy or select from calendar).
+        </span>
+      )}
+    </div>
+  );
+}
+
 
 
 /* ─── Standalone add-review form — MUST stay outside the main <form> ─── */
@@ -909,8 +1017,14 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <label className="choice"><input type="radio" name="status" value="coming" checked={status === 'coming'} onChange={() => setStatus('coming')} /><span><b>Coming soon</b><small>Teaser, countdown and reader signup</small></span></label>
                 {status === 'coming' && (
                   <div className="ad-grid2" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                    <Field label="RELEASE DATE" name="releaseDate" value={currentBook.releaseDate} type="date" help="Drives the countdown" />
-                    <Field label="SHOWN AS" name="releaseLabel" value={currentBook.releaseLabel} placeholder="Spring 2027" />
+                    <ReleaseDateField value={currentBook.releaseDate} label="RELEASE DATE" name="releaseDate" help="Drives the countdown" />
+                    <Field
+                      label="SHOWN AS"
+                      name="releaseLabel"
+                      value={currentBook.releaseLabel || 'Spring 2027'}
+                      placeholder="Spring 2027"
+                      help="Display season/year on homepage (e.g. Spring 2027)"
+                    />
                   </div>
                 )}
                 {status === 'available' && (
