@@ -93,35 +93,78 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const baseOrigin = rawBase.startsWith('http') ? rawBase : `https://${rawBase}`;
   const canonicalUrl = `${baseOrigin}/books/${book.slug}`;
 
+  const approvedReviews = (book.reviews ?? []).filter((r) => r.approved);
+  const avgRating = approvedReviews.length > 0
+    ? (approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length).toFixed(1)
+    : null;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Book',
     '@id': `${canonicalUrl}#book`,
     name: book.title,
+    headline: book.tagline || `${book.title} by Ken Merrell`,
     url: canonicalUrl,
     author: {
       '@type': 'Person',
+      '@id': `${baseOrigin}/#author`,
       name: 'Ken Merrell',
       url: baseOrigin
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Ken Merrell'
     },
     description: book.description || book.tagline,
     genre: book.genre,
     inLanguage: 'en',
-    image: book.cover || undefined,
+    image: book.cover ? (book.cover.startsWith('http') ? book.cover : `${baseOrigin}${book.cover}`) : `${baseOrigin}/img/banners/ash.jpg`,
     isbn: /\d/.test(book.isbn) ? book.isbn : undefined,
     datePublished: book.published || book.releaseDate || undefined,
+    bookFormat: [
+      'https://schema.org/Hardcover',
+      'https://schema.org/Paperback',
+      'https://schema.org/EBook'
+    ],
     offers: book.amazonUrl ? {
       '@type': 'Offer',
       url: book.amazonUrl,
-      availability: book.status === 'available' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder'
-    } : undefined
+      availability: book.status === 'available' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+      priceCurrency: 'USD'
+    } : undefined,
+    aggregateRating: avgRating ? {
+      '@type': 'AggregateRating',
+      ratingValue: avgRating,
+      reviewCount: approvedReviews.length,
+      bestRating: 5,
+      worstRating: 1
+    } : undefined,
+    review: [
+      ...approvedReviews.slice(0, 10).map((r) => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.name },
+        datePublished: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : undefined,
+        reviewBody: r.text,
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1
+        }
+      })),
+      ...quotes.map((q) => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: q.source || 'Editorial Review' },
+        reviewBody: q.text
+      }))
+    ]
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <section className="book-hero" style={{ backgroundImage: book.banner ? `url(${book.banner})` : undefined, backgroundColor: '#15120f' }}>
         <div className="book-scrim abs" />
@@ -248,7 +291,6 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       )}
 
       <Footer site={site} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
     </>
   );
 }

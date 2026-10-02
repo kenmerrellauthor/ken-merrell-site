@@ -9,15 +9,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const books = await getBooks();
 
   return [
-    { url: `${base}/`, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${base}/books`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${base}/author`, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${base}/advance-readers`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${base}/books`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/author`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/advance-readers`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     ...books
       .filter((b) => Boolean(b.slug))
       .map((b) => ({
         url: `${base}/books/${b.slug}`,
-        lastModified: b.updatedAt,
+        lastModified: b.updatedAt ? new Date(b.updatedAt) : new Date(),
         changeFrequency: 'weekly' as const,
         priority: b.status === 'available' ? 0.8 : 0.7
       }))
