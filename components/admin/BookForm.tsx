@@ -120,6 +120,7 @@ function ReleaseDateField({
   const [timeVal, setTimeVal] = useState(initialTime);
   const [error, setError] = useState('');
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
   const id = `f-${name}`;
 
   const today = new Date().toISOString().split('T')[0];
@@ -162,7 +163,7 @@ function ReleaseDateField({
     validate(dateVal, t);
   };
 
-  const openPicker = () => {
+  const openDatePicker = () => {
     if (dateInputRef.current) {
       if ('showPicker' in dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
         try {
@@ -176,8 +177,22 @@ function ReleaseDateField({
     }
   };
 
+  const openTimePicker = () => {
+    if (timeInputRef.current) {
+      if ('showPicker' in timeInputRef.current && typeof timeInputRef.current.showPicker === 'function') {
+        try {
+          timeInputRef.current.showPicker();
+          return;
+        } catch {
+          /* fallback */
+        }
+      }
+      timeInputRef.current.focus();
+    }
+  };
+
   return (
-    <div className="ad-field">
+    <div className="ad-field" style={{ gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <label className="ad-label" htmlFor={id}>{label}</label>
         <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: error ? '#e58a78' : 'var(--gold)' }}>
@@ -185,66 +200,134 @@ function ReleaseDateField({
         </span>
       </div>
       <input type="hidden" name={name} value={combinedVal} />
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-          <input
-            ref={dateInputRef}
-            id={id}
-            type="date"
-            min={today}
-            className="ad-in"
-            value={dateVal}
-            onChange={onDateChange}
-            style={{
-              colorScheme: 'dark',
-              paddingRight: 44,
-              borderColor: error ? '#e58a78' : undefined
-            }}
-            placeholder="mm/dd/yyyy"
-          />
-          <button
-            type="button"
-            onClick={openPicker}
-            title="Open calendar"
-            aria-label="Open calendar"
-            style={{
-              position: 'absolute',
-              right: 8,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: 'var(--gold)',
-              cursor: 'pointer',
-              padding: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Ic k="calendar" s={18} />
-          </button>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, background: 'rgba(0,0,0,.22)', padding: '14px', borderRadius: 4, border: '1px solid rgba(239,231,214,.08)' }}>
+        {/* Release Date Block */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.12em', color: 'var(--cream-2)', fontWeight: 600 }}>
+              RELEASE DATE
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--serif-b)' }}>mm/dd/yyyy</span>
+          </div>
+          <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+            <input
+              ref={dateInputRef}
+              id={id}
+              type="date"
+              min={today}
+              className="ad-in"
+              value={dateVal}
+              onChange={onDateChange}
+              style={{
+                colorScheme: 'dark',
+                paddingRight: 44,
+                borderColor: error ? '#e58a78' : undefined
+              }}
+              placeholder="mm/dd/yyyy"
+            />
+            <button
+              type="button"
+              onClick={openDatePicker}
+              title="Open calendar"
+              aria-label="Open calendar"
+              tabIndex={-1}
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'var(--gold)',
+                cursor: 'pointer',
+                padding: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+                zIndex: 1
+              }}
+            >
+              <Ic k="calendar" s={18} />
+            </button>
+          </div>
         </div>
-        <div style={{ width: 125, flexShrink: 0 }}>
-          <input
-            type="time"
-            className="ad-in"
-            value={timeVal}
-            onChange={onTimeChange}
-            style={{
-              colorScheme: 'dark',
-              borderColor: error ? '#e58a78' : undefined
-            }}
-            title="Optional release time (HH:MM)"
-          />
+
+        {/* Release Time Block */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.12em', color: 'var(--cream-2)', fontWeight: 600 }}>
+              RELEASE TIME <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(OPTIONAL)</span>
+            </span>
+            {timeVal && (
+              <button
+                type="button"
+                onClick={() => { setTimeVal(''); validate(dateVal, ''); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--gold)',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline'
+                }}
+              >
+                Clear time
+              </button>
+            )}
+          </div>
+          <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+            <input
+              ref={timeInputRef}
+              type="time"
+              className="ad-in"
+              value={timeVal}
+              onChange={onTimeChange}
+              style={{
+                colorScheme: 'dark',
+                paddingRight: 44,
+                borderColor: error ? '#e58a78' : undefined,
+                letterSpacing: '.05em'
+              }}
+              title="Release time (HH:MM AM/PM)"
+            />
+            <button
+              type="button"
+              onClick={openTimePicker}
+              title="Open time picker"
+              aria-label="Open time picker"
+              tabIndex={-1}
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'var(--gold)',
+                cursor: 'pointer',
+                padding: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+                zIndex: 1
+              }}
+            >
+              <Ic k="clock" s={18} />
+            </button>
+          </div>
         </div>
       </div>
+
       {error ? (
-        <span style={{ fontSize: 12, color: '#e58a78', marginTop: -4 }}>
+        <span style={{ fontSize: 12, color: '#e58a78', marginTop: -2 }}>
           ⚠️ {error}
         </span>
       ) : (
-        <span className="help">
+        <span className="help" style={{ fontSize: 12, lineHeight: 1.5 }}>
           {help}
         </span>
       )}
