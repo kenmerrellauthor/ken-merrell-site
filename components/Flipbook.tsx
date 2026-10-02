@@ -7,7 +7,7 @@ import { ChevL, ChevR, Arrow, Headphones } from './icons';
 type Page =
   | { kind: 'cover' | 'endpaper' | 'none'; side: 'left' | 'right' }
   | { kind: 'opener'; side: 'left' | 'right'; num: number }
-  | { kind: 'text'; side: 'left' | 'right'; num: number; blocks: Block[]; firstPage: boolean }
+  | { kind: 'text'; side: 'left' | 'right'; num: number; blocks: Block[]; firstPage: boolean; isLastTextPage?: boolean }
   | { kind: 'end'; side: 'left' | 'right' };
 
 export type FlipBookProps = {
@@ -69,7 +69,14 @@ function SamplePage({ p, book }: { p: Page; book: FlipBookProps }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img className="cover-img" src={book.cover} alt={`${book.title} cover`} />
           ) : (
-            <div className="abs" style={{ background: book.clothColor }}><div className="km-linen abs" /><div className="abs" style={{ inset: 30, border: '1px solid rgba(214,181,110,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 40, fontFamily: 'var(--serif-d)', fontSize: 48, fontWeight: 700, color: '#d4b56e', letterSpacing: '.06em', textTransform: 'uppercase' }}>{book.title}</div></div>
+            <div className="abs" style={{ background: book.clothColor }}>
+              <div className="km-linen abs" />
+              <div className="abs" style={{ inset: 30, border: '1px solid rgba(214,181,110,.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', textAlign: 'center', padding: '60px 40px' }}>
+                <span style={{ width: 8, height: 8, transform: 'rotate(45deg)', background: '#d4b56e' }} />
+                <span style={{ fontFamily: 'var(--serif-d)', fontSize: 48, fontWeight: 700, color: '#d4b56e', letterSpacing: '.06em', textTransform: 'uppercase', lineHeight: 1.1 }}>{book.title}</span>
+                <span style={{ fontFamily: 'var(--serif-c)', fontSize: 13, fontWeight: 700, letterSpacing: '.24em', color: '#d4b56e' }}>KEN MERRELL</span>
+              </div>
+            </div>
           )}
           <div className="abs" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(255,255,255,.22) 1.4%, rgba(0,0,0,.28) 3.4%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,.18) 100%)' }} />
         </>
@@ -104,7 +111,16 @@ function SamplePage({ p, book }: { p: Page; book: FlipBookProps }) {
         </div>
       )}
       {p.kind === 'text' && (
-        <div className="text"><Blocks blocks={p.blocks} firstPage={p.firstPage} /></div>
+        <div className="text">
+          <Blocks blocks={p.blocks} firstPage={p.firstPage} />
+          {p.isLastTextPage && (
+            <div className="sp-tail" aria-hidden>
+              <span className="l" />
+              <span className="f" />
+              <span className="l" />
+            </div>
+          )}
+        </div>
       )}
       {p.kind === 'end' && (
         <div className="center" style={{ gap: 20 }}>
@@ -140,9 +156,18 @@ function useSwipe(onNext: () => void, onPrev: () => void) {
 /* ---------- desktop / tablet: the open two-page book ---------- */
 function DesktopBook({ book }: { book: FlipBookProps }) {
   const pages = useMemo<Page[]>(() => {
-    const text = paginate(parseSample(book.sample || ''), 900, 760);
+    const text = paginate(parseSample(book.sample || ''), 1020, 940);
     const list: Page[] = [{ kind: 'cover', side: 'right' }, { kind: 'endpaper', side: 'left' }, { kind: 'opener', side: 'right', num: 1 }];
-    text.forEach((blocks, k) => list.push({ kind: 'text', side: list.length % 2 ? 'left' : 'right', num: k + 2, blocks, firstPage: k === 0 }));
+    text.forEach((blocks, k) =>
+      list.push({
+        kind: 'text',
+        side: list.length % 2 ? 'left' : 'right',
+        num: k + 2,
+        blocks,
+        firstPage: k === 0,
+        isLastTextPage: k === text.length - 1
+      })
+    );
     list.push({ kind: 'end', side: list.length % 2 ? 'left' : 'right' });
     return list;
   }, [book.sample]);
@@ -222,7 +247,7 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
 
 /* ---------- phone: one page at a time ---------- */
 function PhoneBook({ book }: { book: FlipBookProps }) {
-  const text = useMemo(() => paginate(parseSample(book.sample || ''), 440, 320), [book.sample]);
+  const text = useMemo(() => paginate(parseSample(book.sample || ''), 660, 580), [book.sample]);
   const total = text.length + 2; // opener, text pages, end
   const [i, setI] = useState(0);
   const go = (d: number) => setI((c) => Math.max(0, Math.min(total - 1, c + d)));
@@ -243,6 +268,13 @@ function PhoneBook({ book }: { book: FlipBookProps }) {
         {i > 0 && !isEnd && (
           <div className="m-text-body">
             <Blocks blocks={text[i - 1]} firstPage={i === 1} mobile />
+            {i === text.length && (
+              <div className="sp-tail" aria-hidden style={{ paddingTop: 16 }}>
+                <span className="l" style={{ width: 32 }} />
+                <span className="f" />
+                <span className="l" style={{ width: 32 }} />
+              </div>
+            )}
           </div>
         )}
         {isEnd && (

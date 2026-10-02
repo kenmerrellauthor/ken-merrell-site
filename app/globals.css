@@ -699,11 +699,11 @@ button { font: inherit; }
   border-bottom: 1px solid rgba(160, 138, 98, 0.2); padding-bottom: 8px;
 }
 .sp .num { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; font-family: var(--serif-d); font-style: italic; font-size: 16px; color: #8a7a5c; letter-spacing: .05em; }
-.sp .text { position: absolute; left: 64px; right: 64px; top: 86px; bottom: 62px; overflow: hidden; display: block; }
+.sp .text { position: absolute; left: 64px; right: 64px; top: 84px; bottom: 58px; overflow: hidden; display: block; }
 .sp .text p {
   margin: 0; padding: 0;
   font-family: 'Source Serif 4', Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
-  font-size: 17.5px; line-height: 1.82; color: #1e1914;
+  font-size: 17.5px; line-height: 1.84; color: #1e1914;
   text-align: justify; text-justify: inter-word; hyphens: auto; -webkit-hyphens: auto;
   text-indent: 1.8em; font-optical-sizing: auto; letter-spacing: -0.003em;
 }
@@ -712,6 +712,9 @@ button { font: inherit; }
 .sp .drop { float: left; font-family: var(--serif-d); font-size: 78px; line-height: .72; font-weight: 700; color: #7a5c1e; padding: 6px 10px 0 0; margin-right: 2px; }
 .sp .brk { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 14px 0; margin: 4px 0; }
 .sp .brk span, .sp-orn .f { width: 5px; height: 5px; transform: rotate(45deg); background: #7a5c1e; opacity: .85; }
+.sp-tail { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 22px; margin-top: 2px; }
+.sp-tail .l { width: 44px; height: 1px; background: #7a5c1e; opacity: .6; }
+.sp-tail .f { width: 5px; height: 5px; transform: rotate(45deg); background: #7a5c1e; opacity: .85; }
 .sp .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 80px 64px; }
 .sp-orn { display: flex; align-items: center; gap: 12px; padding-top: 12px; }
 .sp-orn .l { width: 60px; height: 1px; background: #7a5c1e; opacity: .7; }
@@ -726,7 +729,7 @@ button { font: inherit; }
   width: 380px;
   max-width: 100%;
   height: 560px;
-  padding: 38px 28px 44px;
+  padding: 34px 24px 40px;
   background-color: #fcfaf5;
   background-image:
     radial-gradient(ellipse 95% 95% at 50% 50%, #ffffff 0%, #f7f3ea 70%, #ede3ce 100%);
@@ -759,7 +762,7 @@ button { font: inherit; }
   padding: 0;
   font-family: 'Source Serif 4', Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
   font-size: 16px;
-  line-height: 1.72;
+  line-height: 1.76;
   text-indent: 1.6em;
   text-align: justify;
   text-justify: inter-word;
