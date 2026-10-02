@@ -1012,7 +1012,7 @@ button { font: inherit; }
   html { scroll-behavior: auto !important; }
   .book3d { animation-duration: 14s !important; }
 }
-.countdown .v, .lib-count b, .pager .nums, .facts .v, .hero-tabs .count, .plate .no, .sp .num { font-variant-numeric: lining-nums; }
+.countdown .v, .lib-count b, .pager .nums, .facts .v, .hero-tabs .count, .plate .no, .sp .num { font-variant-numeric: lining-nums tabular-nums; }
 @media (max-width: 760px) { .case .glowbox { left: -20px; right: -20px; } }
 
 .book-cover-link:hover .book-hover-hint, .book-cover-link:focus .book-hover-hint { opacity: 1 !important; }
