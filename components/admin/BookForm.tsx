@@ -224,6 +224,7 @@ function ReviewRow({
   const [busy, setBusy] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteText, setNoteText] = useState(r.adminComment ?? '');
+  const [isEditingNote, setIsEditingNote] = useState(false);
 
   useEffect(() => {
     setNoteText(r.adminComment ?? '');
@@ -239,12 +240,14 @@ function ReviewRow({
 
   async function doApprove() {
     setBusy(true);
+    const trimmed = noteText.trim();
     const fd = new FormData();
     fd.set('bookId', bookId);
     fd.set('reviewId', r.id);
-    fd.set('adminComment', noteText.trim());
+    fd.set('adminComment', trimmed);
     await approveReviewAction(fd);
-    onUpdateReview({ ...r, approved: true, adminComment: noteText.trim() || undefined });
+    onUpdateReview({ ...r, approved: true, adminComment: trimmed || undefined });
+    setIsEditingNote(false);
     setBusy(false);
   }
 
@@ -261,14 +264,16 @@ function ReviewRow({
   async function doSaveComment() {
     setBusy(true);
     setNoteSaved(false);
+    const trimmed = noteText.trim();
     const fd = new FormData();
     fd.set('bookId', bookId);
     fd.set('reviewId', r.id);
-    fd.set('adminComment', noteText.trim());
+    fd.set('adminComment', trimmed);
     await saveReviewCommentAction(fd);
-    onUpdateReview({ ...r, adminComment: noteText.trim() || undefined });
+    onUpdateReview({ ...r, adminComment: trimmed || undefined });
     setBusy(false);
     setNoteSaved(true);
+    setIsEditingNote(false);
     setTimeout(() => {
       setNoteSaved(false);
     }, 3500);
@@ -383,61 +388,117 @@ function ReviewRow({
         </span>
       </div>
       <p style={{ margin: 0, fontSize: 14, color: 'var(--soft-2)', lineHeight: 1.6 }}>{r.text}</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <label style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--muted)' }}>YOUR NOTE / CRM COMMENT (shown publicly under the review)</label>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input
-            className="ad-in"
-            style={{
-              flex: 1,
-              fontSize: 13,
-              borderColor: noteSaved ? '#6dbf78' : undefined,
-              transition: 'border-color .2s ease'
-            }}
-            placeholder="Add a personal note to this review (optional)"
-            value={noteText}
-            onChange={(e) => {
-              setNoteText(e.target.value);
-              if (noteSaved) setNoteSaved(false);
-            }}
-          />
+      {/* ── CRM Comment / Author Note Section ── */}
+      {r.adminComment && !isEditingNote ? (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '10px 14px',
+          background: 'rgba(201,168,96,.08)',
+          border: '1px solid rgba(201,168,96,.25)',
+          borderRadius: 6
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--gold)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Author Note / CRM Comment
+              </span>
+              {noteSaved && (
+                <span style={{ fontSize: 11, color: '#6dbf78', display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                  <Ic k="check" s={12} sw={2.2} /> Saved! ✓
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 13, color: 'var(--cream)', fontStyle: 'italic', lineHeight: 1.5, wordBreak: 'break-word' }}>
+              &ldquo;{r.adminComment}&rdquo;
+            </span>
+          </div>
           <button
             type="button"
             className="ad-sm"
-            onClick={doSaveComment}
-            disabled={busy}
-            style={{
-              whiteSpace: 'nowrap',
-              minWidth: 104,
-              color: noteSaved ? '#6dbf78' : undefined,
-              borderColor: noteSaved ? '#6dbf78' : undefined,
-              background: noteSaved ? 'rgba(100,180,100,.14)' : undefined,
-              fontWeight: noteSaved ? 600 : undefined,
-              transition: 'all .2s ease',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4
+            onClick={() => {
+              setNoteText(r.adminComment ?? '');
+              setIsEditingNote(true);
+              setNoteSaved(false);
             }}
+            style={{ fontSize: 12, padding: '4px 12px', height: 30, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            {busy ? (
-              'Saving…'
-            ) : noteSaved ? (
-              <>
-                <Ic k="check" s={14} sw={2.2} />
-                Saved! ✓
-              </>
-            ) : (
-              'Save note'
-            )}
+            <Ic k="edit" s={13} /> Edit Note
           </button>
         </div>
-        {noteSaved && (
-          <span style={{ fontSize: 12, color: '#6dbf78', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Ic k="check" s={13} sw={2.2} /> Note saved successfully!
-          </span>
-        )}
-      </div>
+      ) : isEditingNote ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          background: 'rgba(201,168,96,.05)',
+          padding: 12,
+          borderRadius: 6,
+          border: '1px solid rgba(201,168,96,.3)'
+        }}>
+          <label style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase', fontWeight: 600 }}>
+            Your Note / CRM Comment (shown publicly under the review)
+          </label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              className="ad-in"
+              autoFocus
+              style={{ flex: 1, fontSize: 13 }}
+              placeholder="Add a personal note to this review (optional)"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  doSaveComment();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="ad-btn pri"
+              onClick={doSaveComment}
+              disabled={busy}
+              style={{ fontSize: 12, padding: '6px 14px', whiteSpace: 'nowrap' }}
+            >
+              <Ic k="check" s={14} sw={2} />{busy ? 'SAVING…' : 'SAVE NOTE'}
+            </button>
+            <button
+              type="button"
+              className="ad-sm"
+              onClick={() => {
+                setNoteText(r.adminComment ?? '');
+                setIsEditingNote(false);
+              }}
+              disabled={busy}
+              style={{ fontSize: 12 }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            className="ad-sm"
+            onClick={() => {
+              setNoteText('');
+              setIsEditingNote(true);
+            }}
+            style={{ fontSize: 12, padding: '4px 12px', height: 30, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Ic k="plus" s={13} /> Add CRM note
+          </button>
+          {noteSaved && (
+            <span style={{ fontSize: 12, color: '#6dbf78', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Ic k="check" s={13} sw={2.2} /> Note saved!
+            </span>
+          )}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {!r.approved && <button type="button" className="ad-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
         {r.approved && <button type="button" className="ad-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
