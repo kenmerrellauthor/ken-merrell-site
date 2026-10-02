@@ -210,6 +210,244 @@ function StarRow({ n }: { n: number }) {
   );
 }
 
+function ReviewRow({
+  r,
+  bookId,
+  onUpdateReview,
+  onDeleteReview,
+}: {
+  r: Review;
+  bookId: string;
+  onUpdateReview: (review: Review) => void;
+  onDeleteReview: (reviewId: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [noteText, setNoteText] = useState(r.adminComment ?? '');
+
+  useEffect(() => {
+    setNoteText(r.adminComment ?? '');
+  }, [r.adminComment]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(r.name);
+  const [editRating, setEditRating] = useState(r.rating);
+  const [hoveredStar, setHoveredStar] = useState(0);
+  const [editText, setEditText] = useState(r.text);
+  const [editNote, setEditNote] = useState(r.adminComment ?? '');
+  const [editError, setEditError] = useState('');
+
+  async function doApprove() {
+    setBusy(true);
+    const fd = new FormData();
+    fd.set('bookId', bookId);
+    fd.set('reviewId', r.id);
+    fd.set('adminComment', noteText.trim());
+    await approveReviewAction(fd);
+    onUpdateReview({ ...r, approved: true, adminComment: noteText.trim() || undefined });
+    setBusy(false);
+  }
+
+  async function doReject() {
+    setBusy(true);
+    const fd = new FormData();
+    fd.set('bookId', bookId);
+    fd.set('reviewId', r.id);
+    await rejectReviewAction(fd);
+    onUpdateReview({ ...r, approved: false });
+    setBusy(false);
+  }
+
+  async function doSaveComment() {
+    setBusy(true);
+    setNoteSaved(false);
+    const fd = new FormData();
+    fd.set('bookId', bookId);
+    fd.set('reviewId', r.id);
+    fd.set('adminComment', noteText.trim());
+    await saveReviewCommentAction(fd);
+    onUpdateReview({ ...r, adminComment: noteText.trim() || undefined });
+    setBusy(false);
+    setNoteSaved(true);
+    setTimeout(() => {
+      setNoteSaved(false);
+    }, 3500);
+  }
+
+  async function doDelete() {
+    if (!confirm('Remove this review permanently?')) return;
+    setBusy(true);
+    const fd = new FormData();
+    fd.set('bookId', bookId);
+    fd.set('reviewId', r.id);
+    await deleteReviewAction(fd);
+    onDeleteReview(r.id);
+    setBusy(false);
+  }
+
+  async function doSaveEdit() {
+    if (!editName.trim()) { setEditError('Reviewer name is required.'); return; }
+    if (!editText.trim()) { setEditError('Review text is required.'); return; }
+    setBusy(true);
+    setEditError('');
+    const fd = new FormData();
+    fd.set('bookId', bookId);
+    fd.set('reviewId', r.id);
+    fd.set('name', editName.trim());
+    fd.set('rating', String(editRating));
+    fd.set('text', editText.trim());
+    fd.set('adminComment', editNote.trim());
+    const res = await updateReviewContentAction({}, fd);
+    setBusy(false);
+    if (res.error) {
+      setEditError(res.error);
+      return;
+    }
+    if (res.review) {
+      onUpdateReview(res.review);
+      setNoteText(res.review.adminComment ?? '');
+    }
+    setIsEditing(false);
+  }
+
+  if (isEditing) {
+    const displayed = hoveredStar || editRating;
+    return (
+      <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(201,168,96,.04)', padding: 16, borderRadius: 6, border: '1px solid rgba(201,168,96,.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="ad-label" style={{ color: 'var(--gold)' }}>UPDATE REVIEW</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
+        </div>
+
+        <div className="ad-grid2">
+          <div className="ad-field">
+            <label className="ad-label">REVIEWER NAME</label>
+            <input className="ad-in" value={editName} onChange={(e) => setEditName(e.target.value)} />
+          </div>
+          <div className="ad-field">
+            <span className="ad-label">STAR RATING</span>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 48 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setEditRating(star)}
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', lineHeight: 0 }}
+                >
+                  <svg width={22} height={22} viewBox="0 0 24 24"
+                    fill={star <= displayed ? '#c9a860' : 'none'}
+                    stroke={star <= displayed ? '#c9a860' : '#4a4137'} strokeWidth="1.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                </button>
+              ))}
+              <span style={{ fontSize: 13, color: 'var(--cream)', marginLeft: 6 }}>{editRating}/5</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="ad-field">
+          <label className="ad-label">REVIEW TEXT</label>
+          <textarea className="ad-in" rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
+        </div>
+
+        <div className="ad-field">
+          <label className="ad-label">YOUR NOTE / CRM COMMENT</label>
+          <input className="ad-in" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="e.g. Verified purchase" />
+        </div>
+
+        {editError && <div className="ad-err" role="alert">{editError}</div>}
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-start' }}>
+          <button type="button" className="ad-btn pri" onClick={doSaveEdit} disabled={busy} style={{ fontSize: 12, padding: '6px 16px' }}>
+            <Ic k="check" s={14} sw={2} />{busy ? 'SAVING…' : 'SAVE CHANGES'}
+          </button>
+          <button type="button" className="ad-sm" onClick={() => setIsEditing(false)} disabled={busy} style={{ fontSize: 12 }}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <StarRow n={r.rating} />
+        <b style={{ fontSize: 14 }}>{r.name}</b>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 8px', background: r.approved ? 'rgba(100,180,100,.15)' : 'rgba(201,168,96,.12)', color: r.approved ? '#6dbf78' : '#c9a860', borderRadius: 2 }}>
+          {r.approved ? 'APPROVED' : 'PENDING'}
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--soft-2)', lineHeight: 1.6 }}>{r.text}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--muted)' }}>YOUR NOTE / CRM COMMENT (shown publicly under the review)</label>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            className="ad-in"
+            style={{
+              flex: 1,
+              fontSize: 13,
+              borderColor: noteSaved ? '#6dbf78' : undefined,
+              transition: 'border-color .2s ease'
+            }}
+            placeholder="Add a personal note to this review (optional)"
+            value={noteText}
+            onChange={(e) => {
+              setNoteText(e.target.value);
+              if (noteSaved) setNoteSaved(false);
+            }}
+          />
+          <button
+            type="button"
+            className="ad-sm"
+            onClick={doSaveComment}
+            disabled={busy}
+            style={{
+              whiteSpace: 'nowrap',
+              minWidth: 104,
+              color: noteSaved ? '#6dbf78' : undefined,
+              borderColor: noteSaved ? '#6dbf78' : undefined,
+              background: noteSaved ? 'rgba(100,180,100,.14)' : undefined,
+              fontWeight: noteSaved ? 600 : undefined,
+              transition: 'all .2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4
+            }}
+          >
+            {busy ? (
+              'Saving…'
+            ) : noteSaved ? (
+              <>
+                <Ic k="check" s={14} sw={2.2} />
+                Saved! ✓
+              </>
+            ) : (
+              'Save note'
+            )}
+          </button>
+        </div>
+        {noteSaved && (
+          <span style={{ fontSize: 12, color: '#6dbf78', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Ic k="check" s={13} sw={2.2} /> Note saved successfully!
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {!r.approved && <button type="button" className="ad-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
+        {r.approved && <button type="button" className="ad-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
+        <button type="button" className="ad-sm" onClick={() => setIsEditing(true)} disabled={busy} style={{ fontSize: 12 }}><Ic k="edit" s={14} />Edit</button>
+        <button type="button" className="ad-sm danger" onClick={doDelete} disabled={busy} style={{ fontSize: 12, marginLeft: 'auto' }}><Ic k="trash" s={14} />Delete</button>
+      </div>
+    </div>
+  );
+}
+
 export default function BookForm({ book, isNew, videos = [] }: { book: Book; isNew: boolean; videos?: Video[] }) {
   const router = useRouter();
 
@@ -224,7 +462,6 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const [confirmDel, setConfirmDel] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [reviews, setReviews] = useState<Review[]>(Array.isArray(book.reviews) ? book.reviews : []);
-  const [commentEdit, setCommentEdit] = useState<Record<string, string>>({});
   const [showAddReview, setShowAddReview] = useState(false);
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -286,171 +523,13 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const activePreviewThumb = videoThumbnail || matchedGalleryVideo?.thumbnail || (previewYoutubeId ? `https://i.ytimg.com/vi/${previewYoutubeId}/mqdefault.jpg` : null);
   const isCustomPreviewThumb = Boolean(videoThumbnail || matchedGalleryVideo?.thumbnail);
 
-  function ReviewRow({ r, bookId }: { r: Review; bookId: string }) {
-    const [busy, setBusy] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editName, setEditName] = useState(r.name);
-    const [editRating, setEditRating] = useState(r.rating);
-    const [hoveredStar, setHoveredStar] = useState(0);
-    const [editText, setEditText] = useState(r.text);
-    const [editNote, setEditNote] = useState(r.adminComment ?? '');
-    const [editError, setEditError] = useState('');
+  const handleUpdateReview = (updatedReview: Review) => {
+    setReviews((prev) => prev.map((x) => x.id === updatedReview.id ? updatedReview : x));
+  };
 
-    const edited = commentEdit[r.id] ?? r.adminComment ?? '';
-    async function doApprove() {
-      setBusy(true);
-      const fd = new FormData();
-      fd.set('bookId', bookId); fd.set('reviewId', r.id);
-      fd.set('adminComment', commentEdit[r.id] ?? r.adminComment ?? '');
-      await approveReviewAction(fd);
-      setReviews((prev) => prev.map((x) => x.id === r.id ? { ...x, approved: true } : x));
-      setBusy(false);
-    }
-    async function doReject() {
-      setBusy(true);
-      const fd = new FormData();
-      fd.set('bookId', bookId); fd.set('reviewId', r.id);
-      await rejectReviewAction(fd);
-      setReviews((prev) => prev.map((x) => x.id === r.id ? { ...x, approved: false } : x));
-      setBusy(false);
-    }
-    async function doSaveComment() {
-      setBusy(true);
-      const fd = new FormData();
-      fd.set('bookId', bookId); fd.set('reviewId', r.id);
-      fd.set('adminComment', edited);
-      await saveReviewCommentAction(fd);
-      setReviews((prev) => prev.map((x) => x.id === r.id ? { ...x, adminComment: edited || undefined } : x));
-      setBusy(false);
-    }
-    async function doDelete() {
-      if (!confirm('Remove this review permanently?')) return;
-      setBusy(true);
-      const fd = new FormData();
-      fd.set('bookId', bookId); fd.set('reviewId', r.id);
-      await deleteReviewAction(fd);
-      setReviews((prev) => prev.filter((x) => x.id !== r.id));
-      setBusy(false);
-    }
-    async function doSaveEdit() {
-      if (!editName.trim()) { setEditError('Reviewer name is required.'); return; }
-      if (!editText.trim()) { setEditError('Review text is required.'); return; }
-      setBusy(true);
-      setEditError('');
-      const fd = new FormData();
-      fd.set('bookId', bookId);
-      fd.set('reviewId', r.id);
-      fd.set('name', editName.trim());
-      fd.set('rating', String(editRating));
-      fd.set('text', editText.trim());
-      fd.set('adminComment', editNote.trim());
-      const res = await updateReviewContentAction({}, fd);
-      setBusy(false);
-      if (res.error) {
-        setEditError(res.error);
-        return;
-      }
-      if (res.review) {
-        setReviews((prev) => prev.map((x) => x.id === r.id ? res.review! : x));
-      }
-      setIsEditing(false);
-    }
-
-    if (isEditing) {
-      const displayed = hoveredStar || editRating;
-      return (
-        <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(201,168,96,.04)', padding: 16, borderRadius: 6, border: '1px solid rgba(201,168,96,.2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="ad-label" style={{ color: 'var(--gold)' }}>UPDATE REVIEW</span>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
-          </div>
-
-          <div className="ad-grid2">
-            <div className="ad-field">
-              <label className="ad-label">REVIEWER NAME</label>
-              <input className="ad-in" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            </div>
-            <div className="ad-field">
-              <span className="ad-label">STAR RATING</span>
-              <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 48 }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setEditRating(star)}
-                    onMouseEnter={() => setHoveredStar(star)}
-                    onMouseLeave={() => setHoveredStar(0)}
-                    style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', lineHeight: 0 }}
-                  >
-                    <svg width={22} height={22} viewBox="0 0 24 24"
-                      fill={star <= displayed ? '#c9a860' : 'none'}
-                      stroke={star <= displayed ? '#c9a860' : '#4a4137'} strokeWidth="1.5">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  </button>
-                ))}
-                <span style={{ fontSize: 13, color: 'var(--cream)', marginLeft: 6 }}>{editRating}/5</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="ad-field">
-            <label className="ad-label">REVIEW TEXT</label>
-            <textarea className="ad-in" rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
-          </div>
-
-          <div className="ad-field">
-            <label className="ad-label">YOUR NOTE / CRM COMMENT</label>
-            <input className="ad-in" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="e.g. Verified purchase" />
-          </div>
-
-          {editError && <div className="ad-err" role="alert">{editError}</div>}
-
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-start' }}>
-            <button type="button" className="ad-btn pri" onClick={doSaveEdit} disabled={busy} style={{ fontSize: 12, padding: '6px 16px' }}>
-              <Ic k="check" s={14} sw={2} />{busy ? 'SAVING…' : 'SAVE CHANGES'}
-            </button>
-            <button type="button" className="ad-sm" onClick={() => setIsEditing(false)} disabled={busy} style={{ fontSize: 12 }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <StarRow n={r.rating} />
-          <b style={{ fontSize: 14 }}>{r.name}</b>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
-          <span style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 8px', background: r.approved ? 'rgba(100,180,100,.15)' : 'rgba(201,168,96,.12)', color: r.approved ? '#6dbf78' : '#c9a860', borderRadius: 2 }}>
-            {r.approved ? 'APPROVED' : 'PENDING'}
-          </span>
-        </div>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--soft-2)', lineHeight: 1.6 }}>{r.text}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{ fontSize: 11, letterSpacing: '.12em', color: 'var(--muted)' }}>YOUR NOTE / CRM COMMENT (shown publicly under the review)</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              className="ad-in"
-              style={{ flex: 1, fontSize: 13 }}
-              placeholder="Add a personal note to this review (optional)"
-              value={edited}
-              onChange={(e) => setCommentEdit({ ...commentEdit, [r.id]: e.target.value })}
-            />
-            <button type="button" className="ad-sm" onClick={doSaveComment} disabled={busy} style={{ whiteSpace: 'nowrap' }}>Save note</button>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {!r.approved && <button type="button" className="ad-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
-          {r.approved && <button type="button" className="ad-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
-          <button type="button" className="ad-sm" onClick={() => setIsEditing(true)} disabled={busy} style={{ fontSize: 12 }}><Ic k="edit" s={14} />Edit</button>
-          <button type="button" className="ad-sm danger" onClick={doDelete} disabled={busy} style={{ fontSize: 12, marginLeft: 'auto' }}><Ic k="trash" s={14} />Delete</button>
-        </div>
-      </div>
-    );
-  }
+  const handleDeleteReview = (reviewId: string) => {
+    setReviews((prev) => prev.filter((x) => x.id !== reviewId));
+  };
 
   /* ── Reviews card — rendered OUTSIDE the main <form> to avoid nesting ── */
   const ReviewsCard = !isNew ? (
@@ -488,13 +567,29 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
       {pending.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
           <span className="ad-label">PENDING APPROVAL</span>
-          {pending.map((r) => <ReviewRow key={r.id} r={r} bookId={book.id} />)}
+          {pending.map((r) => (
+            <ReviewRow
+              key={r.id}
+              r={r}
+              bookId={book.id}
+              onUpdateReview={handleUpdateReview}
+              onDeleteReview={handleDeleteReview}
+            />
+          ))}
         </div>
       )}
       {approved.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: pending.length ? 24 : 16 }}>
           <span className="ad-label">PUBLISHED ({approved.length})</span>
-          {approved.map((r) => <ReviewRow key={r.id} r={r} bookId={book.id} />)}
+          {approved.map((r) => (
+            <ReviewRow
+              key={r.id}
+              r={r}
+              bookId={book.id}
+              onUpdateReview={handleUpdateReview}
+              onDeleteReview={handleDeleteReview}
+            />
+          ))}
         </div>
       )}
     </section>
@@ -502,7 +597,13 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
-      <nav className="crumb" aria-label="Breadcrumb"><Link href="/admin">Books</Link><span>/</span><span style={{ color: 'var(--soft)' }}>{isNew ? 'Add a book' : 'Edit book'}</span></nav>
+      <nav className="crumb" aria-label="Breadcrumb">
+        <Link href="/admin" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--gold)', textDecoration: 'none', fontWeight: 500 }}>
+          <Ic k="back" s={14} /> Back to Books
+        </Link>
+        <span>/</span>
+        <span style={{ color: 'var(--soft)' }}>{isNew ? 'Add a book' : 'Edit book'}</span>
+      </nav>
 
       {/* ── Main book-save form ── */}
       <form action={action} noValidate encType="multipart/form-data" onChange={() => setDirty(true)}>
@@ -515,6 +616,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
               <p>{isNew ? 'Fill in what you have. You can come back and add the rest later.' : 'Changes go live on the book page as soon as you press Save.'}</p>
             </div>
             <div className="ad-actions">
+              <Link href="/admin" className="ad-btn" title="Back to books list">
+                <Ic k="back" s={16} />BACK TO BOOKS
+              </Link>
               {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
               <Save label={isNew ? 'CREATE BOOK' : 'SAVE CHANGES'} />
             </div>
@@ -547,9 +651,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   value={currentBook.tagline}
                   area
                   rows={2}
-                  maxWords={50}
+                  maxWords={20}
                   placeholder="They hanged her husband. They did not silence his widow."
-                  help="A hook or teaser for the book (limit: 50 words). Displays across hero banners and book pages."
+                  help="A hook or teaser for the book (limit: 20 words). Displays across hero banners and book pages."
                 />
                 <Field
                   label="DESCRIPTION"
@@ -557,9 +661,9 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   value={currentBook.description}
                   area
                   rows={7}
-                  maxWords={200}
+                  maxWords={100}
                   placeholder="A paragraph or two that sets up the story."
-                  help="The book synopsis or summary (limit: 200 words) to set up the plot, characters, and stakes."
+                  help="The book synopsis or summary (limit: 100 words) to set up the plot, characters, and stakes."
                 />
                 <Field label="BANNER TITLE" name="displayTitle" value={currentBook.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>
@@ -782,6 +886,25 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   <button type="button" className="ad-sm danger" style={{ border: 0, justifyContent: 'center' }} onClick={() => setConfirmDel(true)}><Ic k="trash" s={16} />Remove this book</button>
                 )
               )}
+            </div>
+          </div>
+
+          {/* ── Form bottom navigation bar ── */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '20px 24px',
+            background: 'rgba(239,231,214,.03)',
+            border: '1px solid rgba(239,231,214,.08)',
+            borderRadius: 8
+          }}>
+            <Link href="/admin" className="ad-btn" title="Back to books list">
+              <Ic k="back" s={16} />BACK TO BOOKS
+            </Link>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
+              <Save label={isNew ? 'CREATE BOOK' : 'SAVE CHANGES'} />
             </div>
           </div>
         </div>

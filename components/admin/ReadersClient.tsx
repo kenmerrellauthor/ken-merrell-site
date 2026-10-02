@@ -34,8 +34,8 @@ export default function ReadersClient({
   readers: Reader[];
   allReaders: Reader[];
   nextBook: string | null;
-  comingBooks?: { id: string; title: string; status?: string; hasSample?: boolean }[];
-  books?: { id: string; title: string; status: 'available' | 'coming'; hasSample?: boolean }[];
+  comingBooks?: { id: string; title: string; status?: string; hasSample?: boolean; amazonUrl?: string }[];
+  books?: { id: string; title: string; status: 'available' | 'coming'; hasSample?: boolean; amazonUrl?: string }[];
   filter: string;
   totalAll: number;
   totalEbook: number;
@@ -68,13 +68,18 @@ export default function ReadersClient({
   const [editError, setEditError] = useState('');
 
   const rows = readerList.filter((r) => {
-    if (filter === 'ebook') return r.format?.toLowerCase().includes('ebook');
-    if (filter === 'paper') return r.format?.toLowerCase().includes('paper');
+    const fmt = (r.format || '').toLowerCase();
+    if (filter === 'ebook') return fmt.includes('ebook');
+    if (filter === 'paper') return fmt.includes('paper');
     return true;
   });
   const composerRows = readerList;
+  const paperbackRows = composerRows.filter((r) => r.format?.toLowerCase().includes('paper'));
+  const ebookRows = composerRows.filter((r) => r.format?.toLowerCase().includes('ebook'));
 
-  const availableBooks = books.length > 0 ? books : comingBooks.map(b => ({ ...b, status: (b.status || 'coming') as 'available' | 'coming' }));
+  const availableBooks = books.length > 0
+    ? books
+    : comingBooks.map(b => ({ ...b, status: (b.status || 'coming') as 'available' | 'coming', amazonUrl: b.amazonUrl || '' }));
   const comingSoonList = availableBooks.filter(b => b.status === 'coming');
   const otherBooksList = availableBooks.filter(b => b.status !== 'coming');
 
@@ -87,22 +92,31 @@ export default function ReadersClient({
   const [subject, setSubject] = useState(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
   const [body, setBody] = useState('');
   const [bookId, setBookId] = useState('');
+  const [amazonUrl, setAmazonUrl] = useState('');
 
   // Recipient selection state — step 2
   const [step, setStep] = useState<'compose' | 'recipients'>('compose');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [sendAll, setSendAll] = useState(true); // default: send to all
+  const [recipMode, setRecipMode] = useState<'all' | 'paperback' | 'ebook' | 'custom'>('all');
 
   // Send state
   const [sendPending, setSendPending] = useState(false);
   const [sendResult, setSendResult] = useState<{ ok?: boolean; error?: string } | null>(null);
 
-  function openComposer() {
+  function openComposer(initialMode: 'all' | 'paperback' | 'ebook' | 'custom' = 'all') {
     setComposerOpen(true);
     setStep('compose');
-    setSendAll(true);
+    setRecipMode(initialMode);
     setSelected(new Set());
     setSendResult(null);
+
+    // If a coming book or active book has amazonUrl and none set yet, pre-fill it
+    if (!amazonUrl) {
+      const defaultBook = comingSoonList.find(b => b.amazonUrl) || availableBooks.find(b => b.amazonUrl);
+      if (defaultBook?.amazonUrl) {
+        setAmazonUrl(defaultBook.amazonUrl);
+      }
+    }
   }
 
   function closeComposer() {
@@ -125,11 +139,18 @@ export default function ReadersClient({
     else setSelected(new Set(composerRows.map((r) => r.id)));
   }
 
-  const recipientEmails = sendAll
-    ? composerRows.map((r) => r.email)
-    : composerRows.filter((r) => selected.has(r.id)).map((r) => r.email);
+  let recipientEmails: string[] = [];
+  if (recipMode === 'all') {
+    recipientEmails = composerRows.map((r) => r.email);
+  } else if (recipMode === 'paperback') {
+    recipientEmails = paperbackRows.map((r) => r.email);
+  } else if (recipMode === 'ebook') {
+    recipientEmails = ebookRows.map((r) => r.email);
+  } else {
+    recipientEmails = composerRows.filter((r) => selected.has(r.id)).map((r) => r.email);
+  }
 
-  const recipientCount = sendAll ? composerRows.length : selected.size;
+  const recipientCount = recipientEmails.length;
 
   async function handleSend() {
     if (recipientEmails.length === 0) return;
@@ -139,6 +160,7 @@ export default function ReadersClient({
     fd.set('subject', subject);
     fd.set('body', body);
     if (bookId) fd.set('bookId', bookId);
+    if (amazonUrl) fd.set('amazonUrl', amazonUrl);
     fd.set('recipients', JSON.stringify(recipientEmails));
     const res = await sendReaderEmailAction({}, fd);
     setSendPending(false);
@@ -226,9 +248,20 @@ export default function ReadersClient({
           </button>
           <a href="/admin/readers.csv" className="ad-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
           {composerRows.length > 0 && (
-            <button type="button" className="ad-btn" onClick={openComposer}>
-              <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
-            </button>
+            <>
+              <button
+                type="button"
+                className="ad-btn"
+                onClick={() => openComposer('paperback')}
+                title="Email readers who applied for paperback copies with Amazon buy link"
+                style={{ borderColor: 'rgba(201,168,96,.4)', color: 'var(--gold)' }}
+              >
+                <Ic k="mail" s={16} sw={1.8} />EMAIL PAPERBACK READERS
+              </button>
+              <button type="button" className="ad-btn" onClick={() => openComposer('all')}>
+                <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -372,9 +405,14 @@ export default function ReadersClient({
                   onChange={(e) => {
                     const id = e.target.value;
                     setBookId(id);
-                    if (id && (!subject || subject === 'A note for my advance readers' || subject.startsWith('Your advance copy of '))) {
-                      const found = availableBooks.find((b) => b.id === id);
-                      if (found) setSubject(`Your advance copy of ${found.title}`);
+                    const found = availableBooks.find((b) => b.id === id);
+                    if (found) {
+                      if (!subject || subject === 'A note for my advance readers' || subject.startsWith('Your advance copy of ')) {
+                        setSubject(`Your advance copy of ${found.title}`);
+                      }
+                      if (found.amazonUrl) {
+                        setAmazonUrl(found.amazonUrl);
+                      }
                     }
                   }}
                 >
@@ -402,6 +440,47 @@ export default function ReadersClient({
                   Automatically generates a formatted PDF from the book's sample text and attaches it to each email.
                 </span>
               </div>
+
+              {/* Amazon Buy Link field for paperback applicants */}
+              <div className="ad-field">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <label className="ad-label" htmlFor="em-amazon">
+                    AMAZON BUY LINK (FOR PAPERBACK READERS)
+                  </label>
+                  {amazonUrl && (
+                    <button
+                      type="button"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold)',
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                      onClick={() => {
+                        if (!body.includes(amazonUrl)) {
+                          setBody((prev) => `${prev.trim()}\n\nOrder Paperback on Amazon:\n${amazonUrl}\n`);
+                        }
+                      }}
+                    >
+                      + Insert link in email body
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="em-amazon"
+                  className="ad-in"
+                  value={amazonUrl}
+                  onChange={(e) => setAmazonUrl(e.target.value)}
+                  placeholder="https://www.amazon.com/dp/…"
+                />
+                <span className="help">
+                  When emailing readers (especially paperback applicants), this link is automatically formatted as an Amazon buy button in the email.
+                </span>
+              </div>
+
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   type="button"
@@ -428,15 +507,15 @@ export default function ReadersClient({
                 <label style={{
                   display: 'flex', alignItems: 'center', gap: 14,
                   padding: '14px 18px', borderRadius: 6, cursor: 'pointer',
-                  border: `1.5px solid ${sendAll ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
-                  background: sendAll ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
+                  border: `1.5px solid ${recipMode === 'all' ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
+                  background: recipMode === 'all' ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
                   transition: 'all .15s ease'
                 }}>
                   <input
                     type="radio"
                     name="recipMode"
-                    checked={sendAll}
-                    onChange={() => setSendAll(true)}
+                    checked={recipMode === 'all'}
+                    onChange={() => setRecipMode('all')}
                     style={{ width: 16, height: 16, accentColor: '#c9a860', cursor: 'pointer' }}
                   />
                   <div style={{ flex: 1 }}>
@@ -447,26 +526,92 @@ export default function ReadersClient({
                       {composerRows.length} reader{composerRows.length !== 1 ? 's' : ''} will receive this email
                     </div>
                   </div>
-                  {sendAll && (
+                  {recipMode === 'all' && (
                     <span style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(201,168,96,.15)', color: '#c9a860', borderRadius: 3, letterSpacing: '.1em' }}>
                       SELECTED
                     </span>
                   )}
                 </label>
 
-                {/* Select individual option */}
+                {/* Paperback readers only */}
                 <label style={{
                   display: 'flex', alignItems: 'center', gap: 14,
                   padding: '14px 18px', borderRadius: 6, cursor: 'pointer',
-                  border: `1.5px solid ${!sendAll ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
-                  background: !sendAll ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
+                  border: `1.5px solid ${recipMode === 'paperback' ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
+                  background: recipMode === 'paperback' ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
                   transition: 'all .15s ease'
                 }}>
                   <input
                     type="radio"
                     name="recipMode"
-                    checked={!sendAll}
-                    onChange={() => setSendAll(false)}
+                    checked={recipMode === 'paperback'}
+                    onChange={() => setRecipMode('paperback')}
+                    style={{ width: 16, height: 16, accentColor: '#c9a860', cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 15, color: 'var(--cream)', fontWeight: 500 }}>
+                        Paperback readers only
+                      </span>
+                      <span style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(201,168,96,.2)', color: 'var(--gold)', borderRadius: 3, fontWeight: 600 }}>
+                        Includes Amazon Buy Link
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
+                      {paperbackRows.length} reader{paperbackRows.length !== 1 ? 's' : ''} who applied for paperback copies
+                      {amazonUrl ? ' · Amazon buy link is active' : ' · (Tip: add Amazon link in Step 1)'}
+                    </div>
+                  </div>
+                  {recipMode === 'paperback' && (
+                    <span style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(201,168,96,.15)', color: '#c9a860', borderRadius: 3, letterSpacing: '.1em' }}>
+                      SELECTED
+                    </span>
+                  )}
+                </label>
+
+                {/* Ebook readers only */}
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 18px', borderRadius: 6, cursor: 'pointer',
+                  border: `1.5px solid ${recipMode === 'ebook' ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
+                  background: recipMode === 'ebook' ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
+                  transition: 'all .15s ease'
+                }}>
+                  <input
+                    type="radio"
+                    name="recipMode"
+                    checked={recipMode === 'ebook'}
+                    onChange={() => setRecipMode('ebook')}
+                    style={{ width: 16, height: 16, accentColor: '#c9a860', cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, color: 'var(--cream)', fontWeight: 500 }}>
+                      Ebook readers only
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
+                      {ebookRows.length} reader{ebookRows.length !== 1 ? 's' : ''} who requested digital copies
+                    </div>
+                  </div>
+                  {recipMode === 'ebook' && (
+                    <span style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(201,168,96,.15)', color: '#c9a860', borderRadius: 3, letterSpacing: '.1em' }}>
+                      SELECTED
+                    </span>
+                  )}
+                </label>
+
+                {/* Select specific readers */}
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 18px', borderRadius: 6, cursor: 'pointer',
+                  border: `1.5px solid ${recipMode === 'custom' ? 'rgba(201,168,96,.5)' : 'rgba(239,231,214,.1)'}`,
+                  background: recipMode === 'custom' ? 'rgba(201,168,96,.07)' : 'rgba(239,231,214,.02)',
+                  transition: 'all .15s ease'
+                }}>
+                  <input
+                    type="radio"
+                    name="recipMode"
+                    checked={recipMode === 'custom'}
+                    onChange={() => setRecipMode('custom')}
                     style={{ width: 16, height: 16, accentColor: '#c9a860', cursor: 'pointer' }}
                   />
                   <div style={{ flex: 1 }}>
@@ -474,12 +619,12 @@ export default function ReadersClient({
                       Select specific readers
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
-                      {!sendAll && selected.size > 0
+                      {recipMode === 'custom' && selected.size > 0
                         ? `${selected.size} reader${selected.size !== 1 ? 's' : ''} selected`
                         : 'Choose individual readers below'}
                     </div>
                   </div>
-                  {!sendAll && selected.size > 0 && (
+                  {recipMode === 'custom' && selected.size > 0 && (
                     <span style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(201,168,96,.15)', color: '#c9a860', borderRadius: 3, letterSpacing: '.1em' }}>
                       {selected.size} SELECTED
                     </span>
@@ -487,8 +632,35 @@ export default function ReadersClient({
                 </label>
               </div>
 
+              {/* Paperback Amazon Buy Link info callout */}
+              {recipMode === 'paperback' && (
+                <div style={{
+                  padding: '14px 18px',
+                  background: 'rgba(201,168,96,.08)',
+                  border: '1px solid rgba(201,168,96,.25)',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12
+                }}>
+                  <span style={{ fontSize: 20 }}>📦</span>
+                  <div style={{ fontSize: 13, color: 'var(--cream)', lineHeight: 1.5 }}>
+                    <b>Amazon Buy Link Included:</b> Readers will receive a prominent &ldquo;ORDER PAPERBACK ON AMAZON&rdquo; button and direct link.
+                    {amazonUrl ? (
+                      <span style={{ display: 'block', color: 'var(--gold)', marginTop: 4, wordBreak: 'break-all' }}>
+                        Active link: {amazonUrl}
+                      </span>
+                    ) : (
+                      <span style={{ display: 'block', color: '#e58a78', marginTop: 4 }}>
+                        ⚠️ No Amazon link specified yet. <button type="button" onClick={() => setStep('compose')} style={{ background: 'none', border: 'none', color: 'var(--gold)', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>Add Amazon link in Step 1</button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Individual reader checklist */}
-              {!sendAll && (
+              {recipMode === 'custom' && (
                 <div style={{
                   border: '1px solid rgba(239,231,214,.08)', borderRadius: 6,
                   overflow: 'hidden', maxHeight: 320, overflowY: 'auto'
@@ -530,8 +702,8 @@ export default function ReadersClient({
                       <span style={{ fontSize: 13, color: 'var(--muted)' }}>{r.email}</span>
                       <span style={{
                         fontSize: 11, padding: '2px 7px',
-                        background: r.format === 'Ebook' ? 'rgba(100,160,220,.12)' : 'rgba(150,120,80,.12)',
-                        color: r.format === 'Ebook' ? '#88b8e8' : '#b89a6a',
+                        background: r.format === 'Ebook' ? 'rgba(100,160,220,.12)' : r.format === 'Paperback' ? 'rgba(150,120,80,.14)' : 'rgba(201,168,96,.16)',
+                        color: r.format === 'Ebook' ? '#88b8e8' : r.format === 'Paperback' ? '#d4b47a' : '#c9a860',
                         borderRadius: 3
                       }}>{r.format}</span>
                     </label>
@@ -651,7 +823,15 @@ export default function ReadersClient({
                 )}
               </span>
               <span style={{ color: 'var(--soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.email}</span>
-              <span style={{ color: 'var(--soft)' }}>{r.format}</span>
+              <span>
+                <span style={{
+                  fontSize: 12, padding: '3px 8px', borderRadius: 3,
+                  background: r.format === 'Ebook' ? 'rgba(100,160,220,.12)' : r.format === 'Paperback' ? 'rgba(150,120,80,.14)' : 'rgba(201,168,96,.16)',
+                  color: r.format === 'Ebook' ? '#88b8e8' : r.format === 'Paperback' ? '#d4b47a' : '#c9a860'
+                }}>
+                  {r.format}
+                </span>
+              </span>
               <span style={{ color: 'var(--muted)', fontSize: 13 }}>{fmtDate(r.createdAt)}</span>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                 <button

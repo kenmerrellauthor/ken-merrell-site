@@ -179,8 +179,8 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       slug,
       title,
       displayTitle,
-      tagline: clampWords(str(form, 'tagline', 2000), 50),
-      description: clampWords(str(form, 'description', 8000), 200),
+      tagline: clampWords(str(form, 'tagline', 2000), 20),
+      description: clampWords(str(form, 'description', 8000), 100),
       genre: str(form, 'genre', 80),
       status: form.get('status') === 'coming' ? 'coming' : 'available',
       featured: isNewBook ? true : form.get('featured') === 'on',
@@ -441,43 +441,61 @@ export async function sendReaderEmailAction(_p: AdminState, form: FormData): Pro
     const { sendMail } = await import('@/lib/email');
     const site = await getSite();
 
+    const bookId = str(form, 'bookId');
+    let book = null;
+    if (bookId) {
+      book = await import('@/lib/store').then((m) => m.getBook(bookId));
+    }
+    const rawAmazonUrl = str(form, 'amazonUrl', 1000);
+    const finalAmazonUrl = cleanUrl(rawAmazonUrl) || (book?.amazonUrl ? cleanUrl(book.amazonUrl) : '');
+
     const esc = (s: string) => s.replace(/[&<>"']/g, (c: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+
+    const amazonBox = finalAmazonUrl ? `
+<div style="margin:28px 0;padding:22px 24px;background:#fbf8f3;border:1px solid #e5dcce;border-radius:6px;text-align:center">
+  <div style="font-size:12px;letter-spacing:.14em;font-weight:700;color:#9b6b28;text-transform:uppercase;margin-bottom:8px">Order Paperback on Amazon</div>
+  <p style="font-size:15px;color:#1b1814;margin:0 0 16px 0;line-height:1.5">You can order your official paperback copy directly on Amazon using the link below:</p>
+  <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#1b1814;color:#f8f5ee;padding:12px 26px;text-decoration:none;font-size:13px;letter-spacing:.12em;font-weight:700;border-radius:4px">
+    ORDER PAPERBACK ON AMAZON &rarr;
+  </a>
+  <div style="margin-top:12px;font-size:12px;color:#8a8173">
+    Direct link: <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="color:#8a8173;text-decoration:underline">${esc(finalAmazonUrl)}</a>
+  </div>
+</div>` : '';
+
     const htmlBody = `<div style="font-family:Georgia,serif;background:#f3f0ea;padding:24px">
 <div style="max-width:560px;margin:0 auto;background:#fff;padding:28px 30px">
 <div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#1b1814">KEN MERRELL</div>
 <h1 style="font-size:22px;font-weight:600;color:#1b1814;margin:18px 0 18px">${esc(subject)}</h1>
 <div style="font-size:16px;line-height:1.75;color:#1b1814;white-space:pre-wrap">${esc(body)}</div>
+${amazonBox}
 <p style="font-size:12px;color:#8a8173;margin-top:28px;border-top:1px solid #ece6da;padding-top:16px">You are receiving this as an advance reader for Ken Merrell.</p>
 </div></div>`;
 
     let attachments: { filename: string; content: Buffer }[] | undefined;
-    const bookId = str(form, 'bookId');
-    if (bookId) {
-      const book = await import('@/lib/store').then((m) => m.getBook(bookId));
-      if (book) {
-        const PDFDocument = (await import('pdfkit')).default;
-        const pdfBuffer = await new Promise<Buffer>((resolve) => {
-          const doc = new PDFDocument({ margin: 50 });
-          const chunks: Buffer[] = [];
-          doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-          doc.on('end', () => resolve(Buffer.concat(chunks)));
-          doc.fontSize(22).font('Helvetica-Bold').text(book.title, { align: 'center' });
-          if (book.tagline) {
-            doc.moveDown(0.5);
-            doc.fontSize(12).font('Helvetica-Oblique').text(book.tagline, { align: 'center' });
-          }
-          doc.moveDown(1.5);
-          if (book.chapterTitle) {
-            doc.fontSize(15).font('Helvetica-Bold').text(book.chapterTitle, { align: 'left' });
-            doc.moveDown(0.8);
-          }
-          const rawText = book.sample?.trim() || book.description?.trim() || 'Advance reader sample manuscript coming soon.';
-          const cleanText = rawText.replace(/\r\n/g, '\n');
-          doc.fontSize(11).font('Helvetica').text(cleanText, { align: 'left', lineGap: 4 });
-          doc.end();
-        });
-        attachments = [{ filename: `${book.title.replace(/[^a-z0-9]/gi, '_')}_Sample.pdf`, content: pdfBuffer }];
-      }
+    if (book) {
+      const PDFDocument = (await import('pdfkit')).default;
+      const pdfBuffer = await new Promise<Buffer>((resolve) => {
+        const doc = new PDFDocument({ margin: 50 });
+        const chunks: Buffer[] = [];
+        doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.fontSize(22).font('Helvetica-Bold').text(book.title, { align: 'center' });
+        if (book.tagline) {
+          doc.moveDown(0.5);
+          doc.fontSize(12).font('Helvetica-Oblique').text(book.tagline, { align: 'center' });
+        }
+        doc.moveDown(1.5);
+        if (book.chapterTitle) {
+          doc.fontSize(15).font('Helvetica-Bold').text(book.chapterTitle, { align: 'left' });
+          doc.moveDown(0.8);
+        }
+        const rawText = book.sample?.trim() || book.description?.trim() || 'Advance reader sample manuscript coming soon.';
+        const cleanText = rawText.replace(/\r\n/g, '\n');
+        doc.fontSize(11).font('Helvetica').text(cleanText, { align: 'left', lineGap: 4 });
+        doc.end();
+      });
+      attachments = [{ filename: `${book.title.replace(/[^a-z0-9]/gi, '_')}_Sample.pdf`, content: pdfBuffer }];
     }
 
     let sent = 0;

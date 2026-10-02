@@ -23,6 +23,7 @@ const P: Record<string, React.ReactNode> = {
   image: <><rect x="3" y="4" width="18" height="16" rx="1.5" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 9" /></>,
   x: <path d="M6 6l12 12M18 6L6 18" />,
   bell: <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>,
+  back: <path d="M19 12H5M12 19l-7-7 7-7" />,
 };
 export function Ic({ k, s = 18, sw = 1.6 }: { k: keyof typeof P | string; s?: number; sw?: number }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden>{P[k]}</svg>;

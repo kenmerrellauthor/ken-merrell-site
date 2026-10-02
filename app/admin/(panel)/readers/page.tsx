@@ -8,14 +8,30 @@ export default async function ReadersAdmin({ searchParams }: { searchParams: Pro
     getBooks()
   ]);
 
-  const rows = all.filter((r) =>
-    f === 'all' || (f === 'ebook' ? r.format === 'Ebook' : r.format === 'Paperback')
-  );
+  const rows = all.filter((r) => {
+    if (f === 'all') return true;
+    const fmt = (r.format || '').toLowerCase();
+    if (f === 'ebook') return fmt.includes('ebook');
+    if (f === 'paper') return fmt.includes('paper');
+    return true;
+  });
   const week = Date.now() - 7 * 86_400_000;
   const next = books.find((b) => b.status === 'coming');
 
-  const comingBooks = books.filter(b => b.status === 'coming').map(b => ({ id: b.id, title: b.title, status: b.status, hasSample: !!b.sample?.trim() }));
-  const allBooksList = books.map(b => ({ id: b.id, title: b.title, status: b.status, hasSample: !!b.sample?.trim() }));
+  const comingBooks = books.filter(b => b.status === 'coming').map(b => ({
+    id: b.id,
+    title: b.title,
+    status: b.status,
+    hasSample: !!b.sample?.trim(),
+    amazonUrl: b.amazonUrl || ''
+  }));
+  const allBooksList = books.map(b => ({
+    id: b.id,
+    title: b.title,
+    status: b.status,
+    hasSample: !!b.sample?.trim(),
+    amazonUrl: b.amazonUrl || ''
+  }));
 
   return (
     <ReadersClient
@@ -26,8 +42,8 @@ export default async function ReadersAdmin({ searchParams }: { searchParams: Pro
       books={allBooksList}
       filter={f}
       totalAll={all.length}
-      totalEbook={all.filter((r) => r.format === 'Ebook').length}
-      totalPaper={all.filter((r) => r.format === 'Paperback').length}
+      totalEbook={all.filter((r) => r.format?.toLowerCase().includes('ebook')).length}
+      totalPaper={all.filter((r) => r.format?.toLowerCase().includes('paper')).length}
       totalNewThisWeek={all.filter((r) => new Date(r.createdAt).getTime() > week).length}
     />
   );

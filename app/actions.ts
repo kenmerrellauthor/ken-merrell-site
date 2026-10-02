@@ -29,13 +29,24 @@ async function origin() {
 export async function submitReader(_prev: FormState, form: FormData): Promise<FormState> {
   const name = sanitizeSingleLine(String(form.get('name') || '')).slice(0, 120);
   const email = sanitizeSingleLine(String(form.get('email') || '')).slice(0, 200);
-  const format = form.get('format') === 'Paperback' ? 'Paperback' : 'Ebook';
+  const formats = form.getAll('format').map(String);
+  const hasEbook = formats.includes('Ebook');
+  const hasPaperback = formats.includes('Paperback');
+  let format = 'Ebook';
+  if (hasEbook && hasPaperback) {
+    format = 'Ebook & Paperback';
+  } else if (hasPaperback) {
+    format = 'Paperback';
+  } else if (hasEbook) {
+    format = 'Ebook';
+  }
   const agreed = form.get('agree') === 'on';
   const values = { name, email, format, agree: agreed ? 'on' : '' };
 
   const errors: Record<string, string> = {};
   if (!name) errors.name = 'Please add your name.';
   if (!isEmail(email)) errors.email = 'Enter a full email address, like jane@example.com';
+  if (!hasEbook && !hasPaperback) errors.format = 'Please select at least one format (Ebook, Paperback, or both).';
   if (!agreed) errors.agree = 'Please agree to post an honest review within two weeks of launch.';
   if (Object.keys(errors).length) {
     const count = Object.keys(errors).length;

@@ -35,7 +35,7 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
           <div className="seal km-seal"><Check s={34} /></div>
           <h3>You’re on the list{state.name ? `, ${state.name}` : ''}.</h3>
           <p>
-            Ken will send your {String(state.format || 'ebook').toLowerCase()} copy{bookTitle ? <> of <em>{bookTitle}</em></> : ' of the next book'} before release. Keep an eye on your inbox, and check spam just in case.
+            Ken will send your {state.format === 'Ebook & Paperback' ? 'ebook & paperback' : String(state.format || 'ebook').toLowerCase()} copy{bookTitle ? <> of <em>{bookTitle}</em></> : ' of the next book'} before release. Keep an eye on your inbox, and check spam just in case.
           </p>
           <div className="next">
             <span><i>i.</i>Your details are saved on Ken’s reader list</span>
@@ -63,11 +63,12 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
         <Err id="ar-email-err" text={state.errors.email} />
       </div>
       <fieldset className="field" style={{ border: 0, margin: 0, padding: '6px 0 0' }}>
-        <legend style={{ padding: '0 0 10px' }}>PREFERRED FORMAT</legend>
+        <legend style={{ padding: '0 0 10px' }}>PREFERRED FORMAT <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>(select one or both)</span></legend>
         <div className="fmt">
-          <label><input type="radio" name="format" value="Ebook" defaultChecked={v.format !== 'Paperback'} />Ebook</label>
-          <label><input type="radio" name="format" value="Paperback" defaultChecked={v.format === 'Paperback'} />Paperback</label>
+          <label><input type="checkbox" name="format" value="Ebook" defaultChecked={!v.format || v.format.includes('Ebook')} />Ebook</label>
+          <label><input type="checkbox" name="format" value="Paperback" defaultChecked={v.format ? v.format.includes('Paperback') : false} />Paperback</label>
         </div>
+        <Err id="ar-format-err" text={state.errors.format} />
       </fieldset>
       <label className="check" style={state.errors.agree ? { color: '#7d2a20' } : undefined}>
         <input type="checkbox" name="agree" defaultChecked={v.agree === 'on'} aria-invalid={!!state.errors.agree} />
