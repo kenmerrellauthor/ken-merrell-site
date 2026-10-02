@@ -25,8 +25,9 @@ export async function sendMail(opts: { to: string; subject: string; html: string
     return false;
   }
   const resend = new Resend(key);
-  const { error } = await resend.emails.send({
-    from: process.env.RESEND_FROM || 'Ken Merrell website <onboarding@resend.dev>',
+  const from = process.env.RESEND_FROM || 'Ken Merrell website <onboarding@resend.dev>';
+  const { data, error } = await resend.emails.send({
+    from,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
@@ -34,9 +35,10 @@ export async function sendMail(opts: { to: string; subject: string; html: string
     attachments: opts.attachments,
   });
   if (error) {
-    console.error('Resend error', error);
+    console.error('[Resend Error]:', error);
     return false;
   }
+  console.log('[Resend Success]: sent email id:', data?.id, 'to:', opts.to);
   return true;
 }
 

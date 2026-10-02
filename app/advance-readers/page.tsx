@@ -86,10 +86,55 @@ export default async function AdvanceReadersPage() {
               <div><b>iii.</b><span>Share an honest review on launch day</span></div>
             </div>
             {coming && (
-              <div style={{ marginTop: 28, padding: '20px 24px', background: 'rgba(201,168,96,.1)', border: '1px solid rgba(201,168,96,.3)', borderRadius: 4 }}>
-                <span style={{ fontFamily: 'var(--serif-c)', fontSize: 10, letterSpacing: '.24em', color: 'var(--gold)', fontWeight: 700 }}>NEXT UPCOMING TITLE</span>
-                <p style={{ margin: '6px 0 0', fontFamily: 'var(--serif-d)', fontSize: 24, fontStyle: 'italic', color: '#f4ecdc' }}>{coming.title}</p>
-                {coming.releaseLabel && <span style={{ fontSize: 13, color: 'var(--muted-2)' }}>Expected {coming.releaseLabel}</span>}
+              <div
+                style={{
+                  marginTop: 28,
+                  padding: '22px 26px',
+                  background: 'rgba(27, 24, 20, 0.04)',
+                  border: '1px solid rgba(138, 107, 45, 0.3)',
+                  borderLeft: '3px solid #7a5f25',
+                  borderRadius: 4
+                }}
+              >
+                <span
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--serif-c)',
+                    fontSize: 11,
+                    letterSpacing: '.22em',
+                    color: '#7a5f25',
+                    fontWeight: 700
+                  }}
+                >
+                  NEXT UPCOMING TITLE
+                </span>
+                <p
+                  style={{
+                    margin: '8px 0 6px',
+                    fontFamily: 'var(--serif-d)',
+                    fontSize: 26,
+                    fontStyle: 'italic',
+                    color: '#1a1612',
+                    lineHeight: 1.25,
+                    fontWeight: 600
+                  }}
+                >
+                  {coming.title}
+                </p>
+                {coming.releaseLabel && (
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      fontFamily: 'var(--serif-b)',
+                      fontSize: 13,
+                      color: '#5a5247',
+                      letterSpacing: '.03em',
+                      fontWeight: 500
+                    }}
+                  >
+                    Expected {coming.releaseLabel}
+                  </span>
+                )}
               </div>
             )}
           </div>

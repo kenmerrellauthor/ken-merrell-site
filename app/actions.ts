@@ -65,11 +65,9 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
   }
 
   const res = await addReader({ id: newId(), name, email, format, agreed, createdAt: new Date().toISOString() });
-  if (!res.duplicate) {
-    const site = await getSite();
-    const toEmail = site.notifyEmail || process.env.ADMIN_EMAIL || 'upcometrends@gmail.com';
-    if (!toEmail) return { ok: true, errors: {}, name: name.split(' ')[0], format };
-
+  const site = await getSite();
+  const toEmail = site.notifyEmail || process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || 'inquirefromyasir@gmail.com';
+  if (toEmail) {
     await sendMail({
       to: toEmail,
       subject: `New advance reader: ${name}`,
@@ -96,7 +94,7 @@ export async function submitContact(_prev: FormState, form: FormData): Promise<F
     return { ok: true, errors: {}, name: name.split(' ')[0], values: { email } };
   }
   const site = await getSite();
-  const toEmail = site.notifyEmail || process.env.ADMIN_EMAIL || 'upcometrends@gmail.com';
+  const toEmail = site.notifyEmail || process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || 'inquirefromyasir@gmail.com';
   if (!toEmail) return { ok: true, errors: {}, name: name.split(' ')[0], values: { email } };
 
   const sent = await sendMail({
