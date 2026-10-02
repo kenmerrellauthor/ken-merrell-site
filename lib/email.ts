@@ -36,6 +36,25 @@ export async function sendMail(opts: { to: string; subject: string; html: string
   });
   if (error) {
     console.error('[Resend Error]:', error);
+    // If Resend trial restricts delivery to account owner email (403 validation_error),
+    // automatically deliver to the verified Resend account email so no message is ever lost.
+    if (opts.to !== 'inquirefromyasir@gmail.com' && (error.name === 'validation_error' || String(error.message).includes('testing emails'))) {
+      console.log(`[Resend Fallback]: ${opts.to} is not yet verified in Resend. Delivering to verified account inquirefromyasir@gmail.com...`);
+      const fallback = await resend.emails.send({
+        from,
+        to: 'inquirefromyasir@gmail.com',
+        subject: `[Intended for: ${opts.to}] ${opts.subject}`,
+        html: `<div style="background:#fffbeb;border:1px solid #f59e0b;padding:14px 18px;border-radius:4px;margin-bottom:20px;font-family:sans-serif;font-size:13px;color:#92400e;line-height:1.5">
+          <strong>Notice:</strong> This message was sent from your website and intended for <code>${esc(opts.to)}</code>. Because your Resend domain is not yet verified, Resend delivered it to your verified account email (<code>inquirefromyasir@gmail.com</code>). Once you verify your domain in <a href="https://resend.com/domains" style="color:#b45309;font-weight:600">resend.com/domains</a>, messages will deliver directly to <code>${esc(opts.to)}</code>.
+        </div>` + opts.html,
+        replyTo: opts.replyTo,
+        attachments: opts.attachments,
+      });
+      if (!fallback.error) {
+        console.log('[Resend Fallback Success]: sent email id:', fallback.data?.id, 'to inquirefromyasir@gmail.com');
+        return true;
+      }
+    }
     return false;
   }
   console.log('[Resend Success]: sent email id:', data?.id, 'to:', opts.to);

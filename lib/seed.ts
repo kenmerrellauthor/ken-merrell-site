@@ -93,7 +93,7 @@ That is the moment I write toward. My stories may begin with a watchful landlord
   photo: null,
   amazonAuthorUrl: '',
   youtubeUrl: '',
-  notifyEmail: 'inquirefromyasir@gmail.com',
+  notifyEmail: 'upcometrends@gmail.com',
   homeQuotes: [
     { text: 'Sooner or later, life puts each of us in a vise.', sub: 'That is the moment I write toward.', who: 'Ken Merrell' },
     { text: '“What will I do when the pressure falls on me?”', sub: 'The question beneath every one of my stories.', who: 'Ken Merrell' },

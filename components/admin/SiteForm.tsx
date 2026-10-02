@@ -1,5 +1,5 @@
 'use client';
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import type { HomeQuote, SiteSettings } from '@/lib/types';
 import { saveSiteAction, type AdminState } from '@/app/admin/actions';
@@ -9,6 +9,172 @@ import { ImagePick } from './ImagePick';
 function Save() {
   const { pending } = useFormStatus();
   return <button type="submit" className="ad-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : 'SAVE CHANGES'}</button>;
+}
+
+function EditableField({
+  label,
+  name,
+  defaultValue = '',
+  placeholder,
+  type = 'text',
+  help,
+  icon,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  placeholder?: string;
+  type?: string;
+  help?: string;
+  icon?: string;
+}) {
+  const [val, setVal] = useState(defaultValue);
+  const [draft, setDraft] = useState(defaultValue);
+  const [editing, setEditing] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hiddenRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = () => {
+    setDraft(val);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const handleSave = () => {
+    const next = draft.trim();
+    setVal(next);
+    if (hiddenRef.current) {
+      hiddenRef.current.value = next;
+    }
+    setEditing(false);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
+    setTimeout(() => {
+      hiddenRef.current?.form?.requestSubmit();
+    }, 60);
+  };
+
+  const handleCancel = () => {
+    setDraft(val);
+    setEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
+  return (
+    <div className="ad-field">
+      {/* Hidden input ensures main form submission always captures the value */}
+      <input ref={hiddenRef} type="hidden" name={name} value={val} />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <label className="ad-label" htmlFor={`f-${name}`}>{label}</label>
+        {justSaved && (
+          <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: '#6dbf78', fontWeight: 600 }}>
+            ✓ SAVED
+          </span>
+        )}
+      </div>
+
+      {!editing ? (
+        /* Saved view: textfield has disappeared, shows display box with Edit button */
+        <div
+          style={{
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            background: '#120f0d',
+            border: '1px solid #3a332b',
+            borderRadius: 3,
+            padding: '8px 14px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+            {icon && (
+              <span style={{ color: 'var(--gold)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <Ic k={icon} s={16} />
+              </span>
+            )}
+            {val ? (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 16, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {val}
+              </span>
+            ) : (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 14, color: 'var(--muted)', fontStyle: 'italic' }}>
+                Not configured (click Edit to add)
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={startEdit}
+            className="ad-sm"
+            style={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              height: 32,
+              padding: '0 12px',
+              fontSize: 12,
+              background: 'rgba(201,168,96,.12)',
+              borderColor: 'rgba(201,168,96,.35)',
+              color: 'var(--gold)',
+              cursor: 'pointer'
+            }}
+          >
+            <Ic k="edit" s={13} />
+            Edit
+          </button>
+        </div>
+      ) : (
+        /* Editing view: textfield appears with Save and Cancel buttons */
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              ref={inputRef}
+              id={`f-${name}`}
+              type={type}
+              className="ad-in"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="ad-btn pri"
+            style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+          >
+            <Ic k="check" s={14} />
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="ad-btn sec"
+            style={{ height: 48, padding: '0 14px', fontSize: 13, flexShrink: 0 }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {help && <span className="help">{help}</span>}
+    </div>
+  );
 }
 
 export default function SiteForm({ site }: { site: SiteSettings }) {
@@ -60,10 +226,32 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
           <section className="ad-card">
             <h2>Links &amp; email</h2>
             <div className="ad-grid2">
-              <div className="ad-field"><label className="ad-label" htmlFor="amz">AMAZON AUTHOR PAGE</label><input id="amz" name="amazonAuthorUrl" type="url" className="ad-in" defaultValue={site.amazonAuthorUrl} placeholder="https://www.amazon.com/stores/…" /></div>
-              <div className="ad-field"><label className="ad-label" htmlFor="yt">YOUTUBE CHANNEL</label><input id="yt" name="youtubeUrl" type="url" className="ad-in" defaultValue={site.youtubeUrl} placeholder="https://www.youtube.com/@…" /></div>
+              <EditableField
+                label="AMAZON AUTHOR PAGE"
+                name="amazonAuthorUrl"
+                type="url"
+                defaultValue={site.amazonAuthorUrl}
+                placeholder="https://www.amazon.com/stores/…"
+                icon="link"
+              />
+              <EditableField
+                label="YOUTUBE CHANNEL"
+                name="youtubeUrl"
+                type="url"
+                defaultValue={site.youtubeUrl}
+                placeholder="https://www.youtube.com/@…"
+                icon="video"
+              />
             </div>
-            <div className="ad-field"><label className="ad-label" htmlFor="ne">WHERE MESSAGES AND SIGNUPS ARE SENT</label><input id="ne" name="notifyEmail" type="email" className="ad-in" defaultValue={site.notifyEmail} placeholder="ken@yourdomain.com" /><span className="help">Never shown on the site. Contact form messages and advance reader signups are emailed here.</span></div>
+            <EditableField
+              label="WHERE MESSAGES AND SIGNUPS ARE SENT"
+              name="notifyEmail"
+              type="email"
+              defaultValue={site.notifyEmail || 'upcometrends@gmail.com'}
+              placeholder="upcometrends@gmail.com"
+              icon="mail"
+              help="Never shown on the site. Contact form messages and advance reader signups are emailed here."
+            />
           </section>
         </div>
       </div>
