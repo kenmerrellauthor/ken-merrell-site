@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function Countdown({ date, label }: { date: string; label: string }) {
+export default function Countdown({ date, label }: { date: string; label?: string }) {
   const router = useRouter();
   const dateStr = date ? (date.length === 10 ? `${date}T00:00:00` : date) : '';
   const target = dateStr ? new Date(dateStr).getTime() : NaN;
@@ -55,12 +55,6 @@ export default function Countdown({ date, label }: { date: string; label: string
         <div className="wide" style={{ borderColor: 'var(--gold)', background: 'rgba(201,168,96,.12)' }}>
           <span className="k" style={{ color: 'var(--gold)' }}>RELEASED</span>
           <span className="v" style={{ fontSize: 24 }}>NOW AVAILABLE</span>
-        </div>
-      )}
-      {label && !isOver && (
-        <div className="wide">
-          <span className="k">EXPECTED</span>
-          <span className="v">{label}</span>
         </div>
       )}
     </div>

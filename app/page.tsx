@@ -110,7 +110,7 @@ export default async function Home() {
             <Eyebrow num={roman[1]} text="COMING SOON" />
             <h2>{coming.title}</h2>
             {coming.tagline && <p className="teaser">{coming.tagline}</p>}
-            <Countdown date={coming.releaseDate} label={coming.releaseLabel || 'Spring 2027'} />
+            <Countdown date={coming.releaseDate} />
             <div className="cta-row">
               <Link href="/advance-readers" className="btn btn-gold" style={{ boxShadow: 'none' }}>BECOME AN ADVANCED READER</Link>
               <span>Join the Advance Readers for a copy before release.</span>
