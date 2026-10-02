@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Ic } from './AdIcons';
 import { logout } from '@/app/admin/actions';
 import NotificationBell from './NotificationBell';
@@ -22,7 +22,61 @@ export default function Sidebar({
 }) {
   const path = usePathname();
   const sp = useSearchParams();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Load saved desktop collapse preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('km_admin_sidebar_collapsed');
+      if (saved === 'true') setCollapsed(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Close mobile drawer on Escape key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
+  // Close mobile drawer on path / query change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path, sp]);
+
+  const handleToggle = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 980) {
+      setMobileOpen((prev) => !prev);
+    } else {
+      setCollapsed((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem('km_admin_sidebar_collapsed', String(next));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+    }
+  };
+
   const soon = path === '/admin' && sp.get('tab') === 'soon';
   const items = [
     { href: '/admin', k: 'books', label: 'Books', on: (path === '/admin' && !soon) || path.startsWith('/admin/books') },
@@ -36,17 +90,18 @@ export default function Sidebar({
     <>
       {/* ── Top Bar across the entire admin ── */}
       <header className="ad-topbar">
-        {/* Left: Mobile toggle & Ken CRM brand logo */}
+        {/* Left: 2-bar menu toggle & Ken CRM brand logo */}
         <div className="ad-topbar-left">
           <button
             type="button"
-            className="ad-sm icon ad-mobile-toggle"
-            aria-label={open ? 'Close admin menu' : 'Open admin menu'}
-            onClick={() => setOpen(!open)}
+            className="ad-header-toggle"
+            aria-label={mobileOpen ? 'Close admin menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={mobileOpen ? 'Close menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={handleToggle}
           >
-            <Ic k={open ? 'close' : 'menu'} />
+            <Ic k={mobileOpen ? 'close' : 'menu'} />
           </button>
-          <Link href="/admin" className="ad-topbar-brand" onClick={() => setOpen(false)}>
+          <Link href="/admin" className="ad-topbar-brand" onClick={() => setMobileOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/logo.png" alt="Ken Merrell" />
             <span className="ad-topbar-tag">SITE ADMIN</span>
@@ -70,9 +125,38 @@ export default function Sidebar({
         </div>
       </header>
 
+      {/* Backdrop for mobile drawer */}
+      {mobileOpen && (
+        <div
+          className="ad-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ── Admin Body: Sidebar navigation + Main page content ── */}
       <div className="ad-body">
-        <aside className={`ad-side${open ? ' open' : ''}`}>
+        <aside className={`ad-side${mobileOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
+          {/* Mobile drawer header with close button */}
+          <div className="ad-side-mobile-head">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/img/logo.png" alt="Ken Merrell" style={{ height: 26, width: 'auto' }} />
+              <span style={{ fontFamily: 'var(--serif-c)', fontSize: 10, fontWeight: 700, letterSpacing: '.2em', color: 'var(--gold)' }}>
+                ADMIN MENU
+              </span>
+            </div>
+            <button
+              type="button"
+              className="ad-sm icon"
+              aria-label="Close admin menu"
+              onClick={() => setMobileOpen(false)}
+              style={{ width: 34, height: 34 }}
+            >
+              <Ic k="close" s={16} />
+            </button>
+          </div>
+
           <nav aria-label="Admin" className="ad-navlist">
             {items.map((it) => (
               <Link
@@ -80,9 +164,11 @@ export default function Sidebar({
                 href={it.href}
                 className={`ad-nav${it.on ? ' on' : ''}`}
                 aria-current={it.on ? 'page' : undefined}
-                onClick={() => setOpen(false)}
+                onClick={() => setMobileOpen(false)}
+                title={it.label}
               >
-                <span className="ic"><Ic k={it.k} /></span>{it.label}
+                <span className="ic"><Ic k={it.k} /></span>
+                <span className="ad-nav-label">{it.label}</span>
                 {!!it.badge && <span className="badge" title="New this week">{it.badge}</span>}
               </Link>
             ))}
@@ -90,8 +176,9 @@ export default function Sidebar({
 
           <div className="ad-foot">
             <form action={logout}>
-              <button type="submit" className="ad-nav">
-                <span className="ic"><Ic k="out" /></span>Sign out
+              <button type="submit" className="ad-nav" title="Sign out">
+                <span className="ic"><Ic k="out" /></span>
+                <span className="ad-nav-label">Sign out</span>
               </button>
             </form>
           </div>
