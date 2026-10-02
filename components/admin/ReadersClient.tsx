@@ -248,20 +248,9 @@ export default function ReadersClient({
           </button>
           <a href="/admin/readers.csv" className="ad-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
           {composerRows.length > 0 && (
-            <>
-              <button
-                type="button"
-                className="ad-btn"
-                onClick={() => openComposer('paperback')}
-                title="Email readers who applied for paperback copies with Amazon buy link"
-                style={{ borderColor: 'rgba(201,168,96,.4)', color: 'var(--gold)' }}
-              >
-                <Ic k="mail" s={16} sw={1.8} />EMAIL PAPERBACK READERS
-              </button>
-              <button type="button" className="ad-btn" onClick={() => openComposer('all')}>
-                <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
-              </button>
-            </>
+            <button type="button" className="ad-btn" onClick={() => openComposer('all')}>
+              <Ic k="mail" s={16} sw={1.8} />EMAIL READERS
+            </button>
           )}
         </div>
       </div>
