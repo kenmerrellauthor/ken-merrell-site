@@ -20,7 +20,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   ]);
   const fresh = readers.filter((r) => new Date(r.createdAt).getTime() > cutoff).length;
   return (
-    <div className="ad-shell">
+    <div className="crm-shell">
       <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0908' }} />}>
         <Sidebar badge={fresh} email={email} notifications={notifications} unreadCount={unreadCount}>
           {children}

@@ -234,15 +234,15 @@ export default function ReadersClient({
   return (
     <>
       {/* ── Header ── */}
-      <div className="ad-top">
+      <div className="crm-top">
         <div>
           <h1>Advance readers</h1>
           <p>Everyone who signed up for early copies. Each new signup is also emailed to you.</p>
         </div>
-        <div className="ad-actions">
+        <div className="crm-actions">
           <button
             type="button"
-            className={`ad-btn${addOpen ? ' pri' : ''}`}
+            className={`crm-btn${addOpen ? ' pri' : ''}`}
             onClick={() => {
               setAddOpen((v) => !v);
               setComposerOpen(false);
@@ -251,11 +251,11 @@ export default function ReadersClient({
             <Ic k={addOpen ? 'x' : 'plus'} s={16} sw={1.8} />
             {addOpen ? 'CANCEL' : 'ADD READER'}
           </button>
-          <a href="/admin/readers.csv" className="ad-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
+          <a href="/admin/readers.csv" className="crm-btn"><Ic k="down" s={16} sw={1.8} />EXPORT CSV</a>
           {composerRows.length > 0 && (
             <button
               type="button"
-              className={`ad-btn${composerOpen ? ' pri' : ''}`}
+              className={`crm-btn${composerOpen ? ' pri' : ''}`}
               onClick={() => {
                 if (composerOpen) {
                   closeComposer();
@@ -274,43 +274,43 @@ export default function ReadersClient({
 
       {/* ── Add Reader Card ── */}
       {addOpen && (
-        <form onSubmit={handleAddReader} className="ad-card" style={{ background: 'rgba(201,168,96,.04)', border: '1px solid rgba(201,168,96,.3)', gap: 16 }}>
+        <form onSubmit={handleAddReader} className="crm-card" style={{ background: 'rgba(201,168,96,.04)', border: '1px solid rgba(201,168,96,.3)', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: 20 }}>Add an advance reader</h2>
-            <button type="button" className="ad-sm icon" onClick={() => setAddOpen(false)} aria-label="Close"><Ic k="x" s={16} /></button>
+            <button type="button" className="crm-sm icon" onClick={() => setAddOpen(false)} aria-label="Close"><Ic k="x" s={16} /></button>
           </div>
           <p className="sub" style={{ margin: 0 }}>Manually add a reader who requested an early copy in person, at a book event, or via email.</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 180px auto', gap: 14, alignItems: 'end' }}>
-            <div className="ad-field">
-              <label className="ad-label" htmlFor="ar-name">NAME</label>
-              <input id="ar-name" className="ad-in" placeholder="e.g. Jane Smith" value={addName} onChange={(e) => setAddName(e.target.value)} />
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="ar-name">NAME</label>
+              <input id="ar-name" className="crm-in" placeholder="e.g. Jane Smith" value={addName} onChange={(e) => setAddName(e.target.value)} />
             </div>
-            <div className="ad-field">
-              <label className="ad-label" htmlFor="ar-email">EMAIL</label>
-              <input id="ar-email" type="email" required className="ad-in" placeholder="reader@example.com" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="ar-email">EMAIL</label>
+              <input id="ar-email" type="email" required className="crm-in" placeholder="reader@example.com" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
             </div>
-            <div className="ad-field">
-              <label className="ad-label" htmlFor="ar-format">PREFERENCE</label>
-              <select id="ar-format" className="ad-in" value={addFormat} onChange={(e) => setAddFormat(e.target.value)}>
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="ar-format">PREFERENCE</label>
+              <select id="ar-format" className="crm-in" value={addFormat} onChange={(e) => setAddFormat(e.target.value)}>
                 <option value="Ebook">Ebook</option>
                 <option value="Paperback">Paperback</option>
                 <option value="Ebook & Paperback">Both</option>
               </select>
             </div>
-            <button type="submit" className="ad-btn pri" disabled={addBusy} style={{ height: 48, alignSelf: 'end' }}>
+            <button type="submit" className="crm-btn pri" disabled={addBusy} style={{ height: 48, alignSelf: 'end' }}>
               <Ic k="plus" s={16} />{addBusy ? 'ADDING…' : 'ADD READER'}
             </button>
           </div>
-          {addError && <div className="ad-err" role="alert">{addError}</div>}
+          {addError && <div className="crm-err" role="alert">{addError}</div>}
         </form>
       )}
 
       {/* ── Stats ── */}
-      <div className="ad-stats">
-        <div className="ad-stat"><span>TOTAL READERS</span><b>{totalAll}</b></div>
-        <div className="ad-stat"><span>NEW THIS WEEK</span><b>{totalNewThisWeek}</b></div>
-        <div className="ad-stat"><span>EBOOK / PAPERBACK</span><b>{totalEbook} / {totalPaper}</b></div>
-        <div className="ad-stat"><span>NEXT BOOK</span><b style={{ fontSize: 26, lineHeight: 1.5 }}>{nextBook || 'None set'}</b></div>
+      <div className="crm-stats">
+        <div className="crm-stat"><span>TOTAL READERS</span><b>{totalAll}</b></div>
+        <div className="crm-stat"><span>NEW THIS WEEK</span><b>{totalNewThisWeek}</b></div>
+        <div className="crm-stat"><span>EBOOK / PAPERBACK</span><b>{totalEbook} / {totalPaper}</b></div>
+        <div className="crm-stat"><span>NEXT BOOK</span><b style={{ fontSize: 26, lineHeight: 1.5 }}>{nextBook || 'None set'}</b></div>
       </div>
 
       {/* ── Email Composer Modal ── */}
@@ -371,7 +371,7 @@ export default function ReadersClient({
                 </div>
               </div>
             </div>
-            <button type="button" className="ad-sm icon" onClick={closeComposer} aria-label="Close composer">
+            <button type="button" className="crm-sm icon" onClick={closeComposer} aria-label="Close composer">
               <Ic k="x" s={16} />
             </button>
           </div>
@@ -379,33 +379,33 @@ export default function ReadersClient({
           {/* Step 1 — Write email */}
           {step === 'compose' && (
             <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div className="ad-field">
-                <label className="ad-label" htmlFor="em-subject">SUBJECT LINE</label>
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="em-subject">SUBJECT LINE</label>
                 <input
                   id="em-subject"
-                  className="ad-in"
+                  className="crm-in"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Your advance copy is ready"
                 />
               </div>
-              <div className="ad-field">
-                <label className="ad-label" htmlFor="em-replyto">REPLY-TO EMAIL (OPTIONAL)</label>
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="em-replyto">REPLY-TO EMAIL (OPTIONAL)</label>
                 <input
                   id="em-replyto"
                   type="email"
-                  className="ad-in"
+                  className="crm-in"
                   value={replyTo}
                   onChange={(e) => setReplyTo(e.target.value)}
                   placeholder="e.g. ken@gmail.com (Leave blank to use default)"
                 />
                 <span className="help">If a reader replies to this email, it will be sent to this address.</span>
               </div>
-              <div className="ad-field">
-                <label className="ad-label" htmlFor="em-body">MESSAGE BODY</label>
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="em-body">MESSAGE BODY</label>
                 <textarea
                   id="em-body"
-                  className="ad-in"
+                  className="crm-in"
                   rows={12}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
@@ -414,11 +414,11 @@ export default function ReadersClient({
                 />
                 <span className="help">Plain text only. Each reader gets a personal email — no one sees others' addresses.</span>
               </div>
-              <div className="ad-field">
-                <label className="ad-label" htmlFor="em-book">ATTACH BOOK SAMPLE (PDF)</label>
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="em-book">ATTACH BOOK SAMPLE (PDF)</label>
                 <select
                   id="em-book"
-                  className="ad-in"
+                  className="crm-in"
                   value={bookId}
                   onChange={(e) => {
                     const id = e.target.value;
@@ -451,9 +451,9 @@ export default function ReadersClient({
               </div>
 
               {/* Amazon Buy Link field for paperback applicants */}
-              <div className="ad-field">
+              <div className="crm-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  <label className="ad-label" htmlFor="em-amazon">
+                  <label className="crm-label" htmlFor="em-amazon">
                     AMAZON BUY LINK (FOR PAPERBACK READERS)
                   </label>
                   {amazonUrl && (
@@ -480,7 +480,7 @@ export default function ReadersClient({
                 </div>
                 <input
                   id="em-amazon"
-                  className="ad-in"
+                  className="crm-in"
                   value={amazonUrl}
                   onChange={(e) => setAmazonUrl(e.target.value)}
                   placeholder="https://www.amazon.com/dp/…"
@@ -493,13 +493,13 @@ export default function ReadersClient({
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   type="button"
-                  className="ad-btn pri"
+                  className="crm-btn pri"
                   disabled={!subject.trim() || !body.trim()}
                   onClick={() => setStep('recipients')}
                 >
                   CHOOSE RECIPIENTS <Ic k="caretDown" s={14} />
                 </button>
-                <button type="button" className="ad-sm" onClick={closeComposer}>Cancel</button>
+                <button type="button" className="crm-sm" onClick={closeComposer}>Cancel</button>
               </div>
             </div>
           )}
@@ -510,7 +510,7 @@ export default function ReadersClient({
               {!sendResult?.ok && (
                 <>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span className="ad-label">WHO RECEIVES THIS EMAIL?</span>
+                <span className="crm-label">WHO RECEIVES THIS EMAIL?</span>
 
                 {/* Send to All option */}
                 <label style={{
@@ -723,9 +723,9 @@ export default function ReadersClient({
             )}
 
               {/* Send result */}
-              {sendResult?.error && <div className="ad-err" role="alert">{sendResult.error}</div>}
+              {sendResult?.error && <div className="crm-err" role="alert">{sendResult.error}</div>}
               {sendResult?.ok && (
-                <div className="ad-ok" role="status" style={{ margin: '20px 0' }}>
+                <div className="crm-ok" role="status" style={{ margin: '20px 0' }}>
                   <Ic k="check" s={16} sw={2} />Email sent to {recipientCount} reader{recipientCount !== 1 ? 's' : ''} successfully!
                 </div>
               )}
@@ -736,7 +736,7 @@ export default function ReadersClient({
                   <>
                     <button
                       type="button"
-                      className="ad-btn pri"
+                      className="crm-btn pri"
                       disabled={sendPending || recipientCount === 0}
                       onClick={handleSend}
                       style={{ fontSize: 13 }}
@@ -746,13 +746,13 @@ export default function ReadersClient({
                         ? 'SENDING…'
                         : `SEND TO ${recipientCount || '—'} READER${recipientCount !== 1 ? 'S' : ''}`}
                     </button>
-                    <button type="button" className="ad-sm" onClick={() => setStep('compose')}>
+                    <button type="button" className="crm-sm" onClick={() => setStep('compose')}>
                       ← Back to email
                     </button>
-                    <button type="button" className="ad-sm" onClick={closeComposer}>Cancel</button>
+                    <button type="button" className="crm-sm" onClick={closeComposer}>Cancel</button>
                   </>
                 ) : (
-                  <button type="button" className="ad-btn" onClick={() => {
+                  <button type="button" className="crm-btn" onClick={() => {
                     setSubject(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
                     setBody('');
                     setReplyTo('');
@@ -768,15 +768,15 @@ export default function ReadersClient({
       )}
 
       {/* ── Filter tabs ── */}
-      <nav className="ad-tabs" aria-label="Filter readers">
+      <nav className="crm-tabs" aria-label="Filter readers">
         <Link href="/admin/readers" className={filter === 'all' ? 'on' : ''}>All readers</Link>
         <Link href="/admin/readers?f=ebook" className={filter === 'ebook' ? 'on' : ''}>Ebook</Link>
         <Link href="/admin/readers?f=paper" className={filter === 'paper' ? 'on' : ''}>Paperback</Link>
       </nav>
 
       {/* ── Table ── */}
-      <div className="ad-table">
-        <div className="ad-tr head" style={{ gridTemplateColumns: COLS }}>
+      <div className="crm-table">
+        <div className="crm-tr head" style={{ gridTemplateColumns: COLS }}>
           <span>NAME</span><span>EMAIL</span><span>FORMAT</span><span>SIGNED UP</span><span style={{ textAlign: 'right' }}>ACTIONS</span>
         </div>
         {rows.length === 0 && (
@@ -788,15 +788,15 @@ export default function ReadersClient({
           const isEditing = editingId === r.id;
           if (isEditing) {
             return (
-              <div key={r.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, minHeight: 74, fontSize: 14, background: 'rgba(201,168,96,.06)' }}>
+              <div key={r.id} className="crm-tr row" style={{ gridTemplateColumns: COLS, minHeight: 74, fontSize: 14, background: 'rgba(201,168,96,.06)' }}>
                 <div>
-                  <input className="ad-in" style={{ height: 38, fontSize: 14 }} placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                  <input className="crm-in" style={{ height: 38, fontSize: 14 }} placeholder="Name" value={editName} onChange={(e) => setEditName(e.target.value)} />
                 </div>
                 <div>
-                  <input className="ad-in" type="email" style={{ height: 38, fontSize: 14 }} placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                  <input className="crm-in" type="email" style={{ height: 38, fontSize: 14 }} placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
                 </div>
                 <div>
-                  <select className="ad-in" style={{ height: 38, fontSize: 13 }} value={editFormat} onChange={(e) => setEditFormat(e.target.value)}>
+                  <select className="crm-in" style={{ height: 38, fontSize: 13 }} value={editFormat} onChange={(e) => setEditFormat(e.target.value)}>
                     <option value="Ebook">Ebook</option>
                     <option value="Paperback">Paperback</option>
                     <option value="Ebook & Paperback">Both</option>
@@ -808,7 +808,7 @@ export default function ReadersClient({
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                   <button
                     type="button"
-                    className="ad-sm icon"
+                    className="crm-sm icon"
                     title="Save changes"
                     disabled={editBusy}
                     onClick={() => handleSaveEdit(r.id)}
@@ -818,7 +818,7 @@ export default function ReadersClient({
                   </button>
                   <button
                     type="button"
-                    className="ad-sm icon"
+                    className="crm-sm icon"
                     title="Cancel"
                     disabled={editBusy}
                     onClick={() => setEditingId(null)}
@@ -831,7 +831,7 @@ export default function ReadersClient({
           }
 
           return (
-            <div key={r.id} className="ad-tr row" style={{ gridTemplateColumns: COLS, height: 68, fontSize: 15 }}>
+            <div key={r.id} className="crm-tr row" style={{ gridTemplateColumns: COLS, height: 68, fontSize: 15 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
                 {new Date(r.createdAt).getTime() > week && (
@@ -852,7 +852,7 @@ export default function ReadersClient({
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                 <button
                   type="button"
-                  className="ad-sm icon"
+                  className="crm-sm icon"
                   aria-label={`Edit ${r.name}`}
                   title={`Edit ${r.name}`}
                   onClick={() => startEdit(r)}
@@ -861,7 +861,7 @@ export default function ReadersClient({
                 </button>
                 <button
                   type="button"
-                  className="ad-sm icon danger"
+                  className="crm-sm icon danger"
                   aria-label={`Remove ${r.name}`}
                   title={`Remove ${r.name}`}
                   onClick={() => removeReader(r.id)}

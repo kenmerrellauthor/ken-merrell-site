@@ -11,7 +11,7 @@ import { parseYouTubeId } from '@/lib/youtube';
 
 function Save({ label = 'SAVE CHANGES' }: { label?: string }) {
   const { pending } = useFormStatus();
-  return <button type="submit" className="ad-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : label}</button>;
+  return <button type="submit" className="crm-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : label}</button>;
 }
 
 function Field({
@@ -48,9 +48,9 @@ function Field({
   const isOverWordLimit = Boolean(maxWords && wordCount > maxWords);
 
   return (
-    <div className="ad-field">
+    <div className="crm-field">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <label className="ad-label" htmlFor={id}>{label}</label>
+        <label className="crm-label" htmlFor={id}>{label}</label>
         {maxWords ? (
           <span style={{
             fontSize: 11,
@@ -71,7 +71,7 @@ function Field({
         <textarea
           id={id}
           name={name}
-          className="ad-in"
+          className="crm-in"
           value={val}
           onChange={(e) => setVal(e.target.value)}
           placeholder={placeholder}
@@ -84,7 +84,7 @@ function Field({
           id={id}
           name={name}
           type={type}
-          className="ad-in"
+          className="crm-in"
           value={val}
           onChange={(e) => setVal(e.target.value)}
           placeholder={placeholder}
@@ -192,9 +192,9 @@ function ReleaseDateField({
   };
 
   return (
-    <div className="ad-field" style={{ gap: 12 }}>
+    <div className="crm-field" style={{ gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <label className="ad-label" htmlFor={id}>{label}</label>
+        <label className="crm-label" htmlFor={id}>{label}</label>
         <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: error ? '#e58a78' : 'var(--gold)' }}>
           FUTURE DATES ONLY
         </span>
@@ -216,7 +216,7 @@ function ReleaseDateField({
               id={id}
               type="date"
               min={today}
-              className="ad-in"
+              className="crm-in"
               value={dateVal}
               onChange={onDateChange}
               style={{
@@ -282,7 +282,7 @@ function ReleaseDateField({
             <input
               ref={timeInputRef}
               type="time"
-              className="ad-in"
+              className="crm-in"
               value={timeVal}
               onChange={onTimeChange}
               style={{
@@ -371,16 +371,16 @@ function AddReviewForm({ bookId, onDone }: { bookId: string; onDone: (review: Re
       onSubmit={handleSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 0 4px', borderTop: '1px solid rgba(239,231,214,.1)' }}
     >
-      <span className="ad-label">ADD A REVIEW MANUALLY</span>
+      <span className="crm-label">ADD A REVIEW MANUALLY</span>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Manually added reviews are immediately published on the book page.</p>
 
-      <div className="ad-grid2">
-        <div className="ad-field">
-          <label className="ad-label" htmlFor="nr-name">REVIEWER NAME</label>
-          <input id="nr-name" name="name" className="ad-in" placeholder="Jane Smith" required />
+      <div className="crm-grid2">
+        <div className="crm-field">
+          <label className="crm-label" htmlFor="nr-name">REVIEWER NAME</label>
+          <input id="nr-name" name="name" className="crm-in" placeholder="Jane Smith" required />
         </div>
-        <div className="ad-field">
-          <span className="ad-label">STAR RATING</span>
+        <div className="crm-field">
+          <span className="crm-label">STAR RATING</span>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 48 }}>
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -408,20 +408,20 @@ function AddReviewForm({ bookId, onDone }: { bookId: string; onDone: (review: Re
         </div>
       </div>
 
-      <div className="ad-field">
-        <label className="ad-label" htmlFor="nr-text">REVIEW TEXT</label>
-        <textarea id="nr-text" name="text" className="ad-in" rows={4} placeholder="Write the review here…" required />
+      <div className="crm-field">
+        <label className="crm-label" htmlFor="nr-text">REVIEW TEXT</label>
+        <textarea id="nr-text" name="text" className="crm-in" rows={4} placeholder="Write the review here…" required />
       </div>
 
-      <div className="ad-field">
-        <label className="ad-label" htmlFor="nr-comment">YOUR NOTE <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — shown publicly under the review)</span></label>
-        <input id="nr-comment" name="adminComment" className="ad-in" placeholder="e.g. Received via email" />
+      <div className="crm-field">
+        <label className="crm-label" htmlFor="nr-comment">YOUR NOTE <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — shown publicly under the review)</span></label>
+        <input id="nr-comment" name="adminComment" className="crm-in" placeholder="e.g. Received via email" />
       </div>
 
-      {error && <div className="ad-err" role="alert">{error}</div>}
+      {error && <div className="crm-err" role="alert">{error}</div>}
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <button type="submit" className="ad-btn pri" disabled={busy} style={{ fontSize: 13 }}>
+        <button type="submit" className="crm-btn pri" disabled={busy} style={{ fontSize: 13 }}>
           <Ic k="check" s={14} sw={2} />{busy ? 'PUBLISHING…' : 'PUBLISH REVIEW'}
         </button>
       </div>
@@ -553,17 +553,17 @@ function ReviewRow({
     return (
       <div style={{ borderBottom: '1px solid rgba(239,231,214,.08)', paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(201,168,96,.04)', padding: 16, borderRadius: 6, border: '1px solid rgba(201,168,96,.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="ad-label" style={{ color: 'var(--gold)' }}>UPDATE REVIEW</span>
+          <span className="crm-label" style={{ color: 'var(--gold)' }}>UPDATE REVIEW</span>
           <span style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString()}</span>
         </div>
 
-        <div className="ad-grid2">
-          <div className="ad-field">
-            <label className="ad-label">REVIEWER NAME</label>
-            <input className="ad-in" value={editName} onChange={(e) => setEditName(e.target.value)} />
+        <div className="crm-grid2">
+          <div className="crm-field">
+            <label className="crm-label">REVIEWER NAME</label>
+            <input className="crm-in" value={editName} onChange={(e) => setEditName(e.target.value)} />
           </div>
-          <div className="ad-field">
-            <span className="ad-label">STAR RATING</span>
+          <div className="crm-field">
+            <span className="crm-label">STAR RATING</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', height: 48 }}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -586,23 +586,23 @@ function ReviewRow({
           </div>
         </div>
 
-        <div className="ad-field">
-          <label className="ad-label">REVIEW TEXT</label>
-          <textarea className="ad-in" rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
+        <div className="crm-field">
+          <label className="crm-label">REVIEW TEXT</label>
+          <textarea className="crm-in" rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
         </div>
 
-        <div className="ad-field">
-          <label className="ad-label">YOUR NOTE / CRM COMMENT</label>
-          <input className="ad-in" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="e.g. Verified purchase" />
+        <div className="crm-field">
+          <label className="crm-label">YOUR NOTE / CRM COMMENT</label>
+          <input className="crm-in" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="e.g. Verified purchase" />
         </div>
 
-        {editError && <div className="ad-err" role="alert">{editError}</div>}
+        {editError && <div className="crm-err" role="alert">{editError}</div>}
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-start' }}>
-          <button type="button" className="ad-btn pri" onClick={doSaveEdit} disabled={busy} style={{ fontSize: 12, padding: '6px 16px' }}>
+          <button type="button" className="crm-btn pri" onClick={doSaveEdit} disabled={busy} style={{ fontSize: 12, padding: '6px 16px' }}>
             <Ic k="check" s={14} sw={2} />{busy ? 'SAVING…' : 'SAVE CHANGES'}
           </button>
-          <button type="button" className="ad-sm" onClick={() => setIsEditing(false)} disabled={busy} style={{ fontSize: 12 }}>
+          <button type="button" className="crm-sm" onClick={() => setIsEditing(false)} disabled={busy} style={{ fontSize: 12 }}>
             Cancel
           </button>
         </div>
@@ -650,7 +650,7 @@ function ReviewRow({
           </div>
           <button
             type="button"
-            className="ad-sm"
+            className="crm-sm"
             onClick={() => {
               setNoteText(r.adminComment ?? '');
               setIsEditingNote(true);
@@ -676,7 +676,7 @@ function ReviewRow({
           </label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
-              className="ad-in"
+              className="crm-in"
               autoFocus
               style={{ flex: 1, fontSize: 13 }}
               placeholder="Add a personal note to this review (optional)"
@@ -691,7 +691,7 @@ function ReviewRow({
             />
             <button
               type="button"
-              className="ad-btn pri"
+              className="crm-btn pri"
               onClick={doSaveComment}
               disabled={busy}
               style={{ fontSize: 12, padding: '6px 14px', whiteSpace: 'nowrap' }}
@@ -700,7 +700,7 @@ function ReviewRow({
             </button>
             <button
               type="button"
-              className="ad-sm"
+              className="crm-sm"
               onClick={() => {
                 setNoteText(r.adminComment ?? '');
                 setIsEditingNote(false);
@@ -716,7 +716,7 @@ function ReviewRow({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             type="button"
-            className="ad-sm"
+            className="crm-sm"
             onClick={() => {
               setNoteText('');
               setIsEditingNote(true);
@@ -733,10 +733,10 @@ function ReviewRow({
         </div>
       )}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {!r.approved && <button type="button" className="ad-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
-        {r.approved && <button type="button" className="ad-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
-        <button type="button" className="ad-sm" onClick={() => setIsEditing(true)} disabled={busy} style={{ fontSize: 12 }}><Ic k="edit" s={14} />Edit</button>
-        <button type="button" className="ad-sm danger" onClick={doDelete} disabled={busy} style={{ fontSize: 12, marginLeft: 'auto' }}><Ic k="trash" s={14} />Delete</button>
+        {!r.approved && <button type="button" className="crm-btn pri" onClick={doApprove} disabled={busy} style={{ fontSize: 12, padding: '6px 14px' }}><Ic k="check" s={14} sw={2} />Approve</button>}
+        {r.approved && <button type="button" className="crm-sm" onClick={doReject} disabled={busy} style={{ fontSize: 12 }}>Unpublish</button>}
+        <button type="button" className="crm-sm" onClick={() => setIsEditing(true)} disabled={busy} style={{ fontSize: 12 }}><Ic k="edit" s={14} />Edit</button>
+        <button type="button" className="crm-sm danger" onClick={doDelete} disabled={busy} style={{ fontSize: 12, marginLeft: 'auto' }}><Ic k="trash" s={14} />Delete</button>
       </div>
     </div>
   );
@@ -827,7 +827,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
 
   /* ── Reviews card — rendered OUTSIDE the main <form> to avoid nesting ── */
   const ReviewsCard = !isNew ? (
-    <section className="ad-card">
+    <section className="crm-card">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <h2 style={{ margin: 0 }}>
           Reader Reviews{' '}
@@ -837,7 +837,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
         </h2>
         <button
           type="button"
-          className="ad-btn pri"
+          className="crm-btn pri"
           style={{ fontSize: 12, padding: '8px 16px' }}
           onClick={() => setShowAddReview((v) => !v)}
         >
@@ -860,7 +860,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
       )}
       {pending.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-          <span className="ad-label">PENDING APPROVAL</span>
+          <span className="crm-label">PENDING APPROVAL</span>
           {pending.map((r) => (
             <ReviewRow
               key={r.id}
@@ -874,7 +874,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
       )}
       {approved.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: pending.length ? 24 : 16 }}>
-          <span className="ad-label">PUBLISHED ({approved.length})</span>
+          <span className="crm-label">PUBLISHED ({approved.length})</span>
           {approved.map((r) => (
             <ReviewRow
               key={r.id}
@@ -904,38 +904,38 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
         <input type="hidden" name="id" value={currentBook.id || book.id} />
         <input type="hidden" name="quotes" value={JSON.stringify(quotes)} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
-          <div className="ad-top">
+          <div className="crm-top">
             <div>
               <h1>{isNew ? 'Add a book' : currentBook.title}</h1>
               <p>{isNew ? 'Fill in what you have. You can come back and add the rest later.' : 'Changes go live on the book page as soon as you press Save.'}</p>
             </div>
-            <div className="ad-actions">
-              <Link href="/admin" className="ad-btn" title="Back to books list">
+            <div className="crm-actions">
+              <Link href="/admin" className="crm-btn" title="Back to books list">
                 <Ic k="back" s={16} />BACK TO BOOKS
               </Link>
-              {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="ad-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
+              {!isNew && <a href={`/books/${currentBook.slug}`} target="_blank" className="crm-btn"><Ic k="ext" s={16} />VIEW PAGE</a>}
               <Save label={isNew ? 'CREATE BOOK' : 'SAVE CHANGES'} />
             </div>
           </div>
           {state.error && (
-            <div className="ad-err" role="alert">
+            <div className="crm-err" role="alert">
               <Ic k="trash" s={18} />
               <span><b>Could not save book:</b> {state.error}</span>
             </div>
           )}
           {(state.ok || savedSuccess) && !dirty && (
-            <div className="ad-ok" role="status">
+            <div className="crm-ok" role="status">
               <Ic k="check" s={18} sw={2} />
               <span><b>Changes saved successfully!</b> {isNew ? 'New book has been created.' : 'Book details updated and live on the website.'}</span>
             </div>
           )}
 
-          <div className="ad-editor">
+          <div className="crm-editor">
             <div className="col">
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>The basics</h2>
                 <Field label="TITLE" name="title" value={currentBook.title} placeholder="Petticoats and Ash" />
-                <div className="ad-grid2">
+                <div className="crm-grid2">
                   <Field label="GENRE LINE" name="genre" value={currentBook.genre} placeholder="Historical suspense · A novel" />
                   <Field label="WEB ADDRESS" name="slug" value={currentBook.slug} placeholder="made from the title" help={`yoursite.com/books/${currentBook.slug || '…'}`} />
                 </div>
@@ -962,7 +962,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <Field label="BANNER TITLE" name="displayTitle" value={currentBook.displayTitle} placeholder="Petticoats *and a*|Traitor's Death" help="How the title looks in big banners. Put small words in *stars* to make them gold italics, and use | to start a new line." />
               </section>
 
-              <section className="ad-card">
+              <section className="crm-card">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                   <div>
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -979,11 +979,11 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 </div>
 
                 {videos.length > 0 && (
-                  <div className="ad-field">
-                    <label className="ad-label" htmlFor="bf-video-select">CHOOSE FROM YOUR VIDEO GALLERY</label>
+                  <div className="crm-field">
+                    <label className="crm-label" htmlFor="bf-video-select">CHOOSE FROM YOUR VIDEO GALLERY</label>
                     <select
                       id="bf-video-select"
-                      className="ad-in"
+                      className="crm-in"
                       value={matchedGalleryVideo?.id || ''}
                       onChange={(e) => {
                         const sel = videos.find(v => v.id === e.target.value);
@@ -1006,13 +1006,13 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                   </div>
                 )}
 
-                <div className="ad-field">
-                  <label className="ad-label" htmlFor="bf-video-url">OR ENTER YOUTUBE URL DIRECTLY</label>
+                <div className="crm-field">
+                  <label className="crm-label" htmlFor="bf-video-url">OR ENTER YOUTUBE URL DIRECTLY</label>
                   <input
                     id="bf-video-url"
                     name="videoUrl"
                     type="text"
-                    className="ad-in"
+                    className="crm-in"
                     placeholder="https://www.youtube.com/watch?v=…"
                     value={videoUrl}
                     onChange={(e) => { setVideoUrl(e.target.value); setDirty(true); }}
@@ -1024,7 +1024,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
 
                 {/* Custom Trailer Thumbnail */}
                 <div style={{ marginTop: 12 }}>
-                  <label className="ad-label">CUSTOM TRAILER THUMBNAIL (OPTIONAL)</label>
+                  <label className="crm-label">CUSTOM TRAILER THUMBNAIL (OPTIONAL)</label>
                   <p className="sub" style={{ marginTop: 2, marginBottom: 10, fontSize: 13 }}>
                     Appears before the video plays on the book reading page. Defaults to the gallery video's custom thumbnail or YouTube cover.
                   </p>
@@ -1074,7 +1074,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                     </div>
                     <button
                       type="button"
-                      className="ad-sm"
+                      className="crm-sm"
                       style={{ height: 32, fontSize: 12 }}
                       onClick={() => { setVideoUrl(''); setVideoThumbnail(''); setDirty(true); }}
                     >
@@ -1084,7 +1084,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 )}
               </section>
 
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Sample chapter</h2>
                 <p className="sub">Paste the text, or upload a Word (.docx) or text file. It is laid out as book pages automatically. Leave a blank line between paragraphs, and put *** on its own line for a scene break.</p>
                 <label className="drop" style={{ position: 'relative' }}>
@@ -1099,7 +1099,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <Field label="OR PASTE THE TEXT" name="sample" value={currentBook.sample} area rows={14} placeholder="Chapter One…" />
               </section>
 
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Where to buy</h2>
                 <Field label="AMAZON LINK" name="amazonUrl" value={currentBook.amazonUrl} placeholder="https://www.amazon.com/dp/…" type="text" />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingTop: 16, borderTop: '1px solid rgba(239,231,214,.06)' }}>
@@ -1110,21 +1110,21 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 {audible && <Field label="AUDIBLE LINK" name="audibleUrl" value={currentBook.audibleUrl} placeholder="https://www.audible.com/pd/…" type="text" />}
               </section>
 
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Details &amp; praise</h2>
-                <div className="ad-grid2">
+                <div className="crm-grid2">
                   <Field label="PUBLISHED" name="published" value={currentBook.published} placeholder="March 2025" />
                   <Field label="PAGES" name="pages" value={currentBook.pages} placeholder="352" />
                   <Field label="FORMATS" name="formats" value={currentBook.formats} placeholder="Print, Ebook, Audio" />
                   <Field label="ISBN" name="isbn" value={currentBook.isbn} placeholder="978-0-000-00000-0" />
                 </div>
-                <div className="ad-field">
-                  <span className="ad-label">READER AND REVIEWER QUOTES</span>
+                <div className="crm-field">
+                  <span className="crm-label">READER AND REVIEWER QUOTES</span>
                   {quotes.map((q, k) => (
                     <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 220px 40px', gap: 12 }}>
-                      <input aria-label={`Quote ${k + 1}`} className="ad-in" placeholder="Quote" value={q.text} onChange={(e) => setQuotes(quotes.map((x, j) => (j === k ? { ...x, text: e.target.value } : x)))} />
-                      <input aria-label={`Quote ${k + 1} source`} className="ad-in" placeholder="Name · Source" value={q.source} onChange={(e) => setQuotes(quotes.map((x, j) => (j === k ? { ...x, source: e.target.value } : x)))} />
-                      <button type="button" className="ad-sm icon" aria-label="Remove quote" onClick={() => { setQuotes(quotes.filter((_, j) => j !== k)); setDirty(true); }} style={{ height: 48 }}><Ic k="trash" s={16} /></button>
+                      <input aria-label={`Quote ${k + 1}`} className="crm-in" placeholder="Quote" value={q.text} onChange={(e) => setQuotes(quotes.map((x, j) => (j === k ? { ...x, text: e.target.value } : x)))} />
+                      <input aria-label={`Quote ${k + 1} source`} className="crm-in" placeholder="Name · Source" value={q.source} onChange={(e) => setQuotes(quotes.map((x, j) => (j === k ? { ...x, source: e.target.value } : x)))} />
+                      <button type="button" className="crm-sm icon" aria-label="Remove quote" onClick={() => { setQuotes(quotes.filter((_, j) => j !== k)); setDirty(true); }} style={{ height: 48 }}><Ic k="trash" s={16} /></button>
                     </div>
                   ))}
                   {quotes.length < 3 && (
@@ -1136,7 +1136,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
             </div>
 
             <div className="col side">
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Status</h2>
                 <label className="choice"><input type="radio" name="status" value="available" checked={status === 'available'} onChange={() => setStatus('available')} /><span><b>Available</b><small>On the shelf with buy links</small></span></label>
                 <label className="choice"><input type="radio" name="status" value="coming" checked={status === 'coming'} onChange={() => setStatus('coming')} /><span><b>Coming soon</b><small>Teaser, countdown and reader signup</small></span></label>
@@ -1153,7 +1153,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 )}
                 {status === 'coming' && (<><input type="hidden" name="featured" value={book.featured ? 'on' : ''} /><input type="hidden" name="isNew" value={book.isNew ? 'on' : ''} /></>)}
               </section>
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Cover</h2>
                 <div style={{ width: 200, alignSelf: 'center' }}>
                   <ImagePick name="cover" current={currentBook.cover} label="Upload a cover" aspect="2 / 3" removeName="removeCover" sizeHint="Recommended: 1600 × 2400" />
@@ -1161,22 +1161,22 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                 <span className="help" style={{ fontSize: 13, color: '#6e6457', lineHeight: 1.5 }}>JPG or PNG, at least 1600 px tall. Without a cover the book shows as a cloth hardback in this color:</span>
                 <input type="color" name="clothColor" defaultValue={currentBook.clothColor} aria-label="Cloth cover color" style={{ width: 64, height: 36, border: '1px solid #3a332b', background: 'none' }} />
               </section>
-              <section className="ad-card">
+              <section className="crm-card">
                 <h2>Banner image</h2>
                 <p className="sub">Optional. Used behind the book on its page and in the homepage banner.</p>
                 <ImagePick name="banner" current={currentBook.banner} label="Upload a banner" aspect="16 / 9" removeName="removeBanner" sizeHint="Recommended: 1600 × 900" />
               </section>
               {!isNew && (
                 confirmDel ? (
-                  <div className="ad-card" style={{ borderColor: 'rgba(198,91,74,.45)' }}>
+                  <div className="crm-card" style={{ borderColor: 'rgba(198,91,74,.45)' }}>
                     <p style={{ margin: 0 }}>Remove <b>{currentBook.title}</b> from the site? This cannot be undone.</p>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <button type="submit" formAction={deleteBookAction} formNoValidate className="ad-btn" style={{ borderColor: '#c65b4a', color: '#e58a78' }}>YES, REMOVE</button>
-                      <button type="button" className="ad-btn" onClick={() => setConfirmDel(false)}>KEEP IT</button>
+                      <button type="submit" formAction={deleteBookAction} formNoValidate className="crm-btn" style={{ borderColor: '#c65b4a', color: '#e58a78' }}>YES, REMOVE</button>
+                      <button type="button" className="crm-btn" onClick={() => setConfirmDel(false)}>KEEP IT</button>
                     </div>
                   </div>
                 ) : (
-                  <button type="button" className="ad-sm danger" style={{ border: 0, justifyContent: 'center' }} onClick={() => setConfirmDel(true)}><Ic k="trash" s={16} />Remove this book</button>
+                  <button type="button" className="crm-sm danger" style={{ border: 0, justifyContent: 'center' }} onClick={() => setConfirmDel(true)}><Ic k="trash" s={16} />Remove this book</button>
                 )
               )}
             </div>

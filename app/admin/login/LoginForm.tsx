@@ -85,20 +85,20 @@ export default function LoginForm() {
       </div>
 
       {error && (
-        <div className="ad-err" role="alert">
+        <div className="crm-err" role="alert">
           {error}
         </div>
       )}
 
-      <div className="ad-field">
-        <label className="ad-label" htmlFor="lg-email">
+      <div className="crm-field">
+        <label className="crm-label" htmlFor="lg-email">
           EMAIL
         </label>
         <input
           id="lg-email"
           name="email"
           type="email"
-          className="ad-in"
+          className="crm-in"
           autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -107,15 +107,15 @@ export default function LoginForm() {
         />
       </div>
 
-      <div className="ad-field">
-        <label className="ad-label" htmlFor="lg-pw">
+      <div className="crm-field">
+        <label className="crm-label" htmlFor="lg-pw">
           PASSWORD
         </label>
         <input
           id="lg-pw"
           name="password"
           type="password"
-          className="ad-in"
+          className="crm-in"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -126,7 +126,7 @@ export default function LoginForm() {
 
       <button
         type="submit"
-        className="ad-btn pri"
+        className="crm-btn pri"
         style={{
           height: 52,
           width: '100%',

@@ -64,7 +64,7 @@ export default function NotificationBell({
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className={`ad-nav${open ? ' on' : ''}`}
+          className={`crm-nav${open ? ' on' : ''}`}
           style={{ width: '100%' }}
           aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
           aria-expanded={open}
@@ -101,7 +101,7 @@ export default function NotificationBell({
           onClick={() => setOpen(!open)}
           aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
           aria-expanded={open}
-          className="ad-sm icon"
+          className="crm-sm icon"
           style={{
             position: 'relative',
             width: 38,

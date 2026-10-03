@@ -8,7 +8,7 @@ import { ImagePick } from './ImagePick';
 
 function Save() {
   const { pending } = useFormStatus();
-  return <button type="submit" className="ad-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : 'SAVE CHANGES'}</button>;
+  return <button type="submit" className="crm-btn pri" disabled={pending}><Ic k="check" s={16} sw={1.8} />{pending ? 'SAVING…' : 'SAVE CHANGES'}</button>;
 }
 
 function EditableField({
@@ -74,12 +74,12 @@ function EditableField({
   };
 
   return (
-    <div className="ad-field">
+    <div className="crm-field">
       {/* Hidden input ensures main form submission always captures the value */}
       <input ref={hiddenRef} type="hidden" name={name} value={val} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <label className="ad-label" htmlFor={`f-${name}`}>{label}</label>
+        <label className="crm-label" htmlFor={`f-${name}`}>{label}</label>
         {justSaved && (
           <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: '#6dbf78', fontWeight: 600 }}>
             ✓ SAVED
@@ -121,7 +121,7 @@ function EditableField({
           <button
             type="button"
             onClick={startEdit}
-            className="ad-sm"
+            className="crm-sm"
             style={{
               flexShrink: 0,
               display: 'inline-flex',
@@ -148,7 +148,7 @@ function EditableField({
               <textarea
                 ref={inputRef}
                 id={`f-${name}`}
-                className="ad-in"
+                className="crm-in"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -161,7 +161,7 @@ function EditableField({
                 ref={inputRef}
                 id={`f-${name}`}
                 type={type}
-                className="ad-in"
+                className="crm-in"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -174,7 +174,7 @@ function EditableField({
             <button
               type="button"
               onClick={handleSave}
-              className="ad-btn pri"
+              className="crm-btn pri"
               style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
             >
               <Ic k="check" s={14} />
@@ -183,7 +183,7 @@ function EditableField({
             <button
               type="button"
               onClick={handleCancel}
-              className="ad-btn sec"
+              className="crm-btn sec"
               style={{ height: 48, padding: '0 14px', fontSize: 13, flexShrink: 0 }}
             >
               Cancel
@@ -238,11 +238,11 @@ function EditableQuote({
   };
 
   return (
-    <div className="ad-field" style={{ paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
+    <div className="crm-field" style={{ paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
       <input ref={hiddenRef} type="hidden" />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span className="ad-label">QUOTE {idx + 1}</span>
+        <span className="crm-label">QUOTE {idx + 1}</span>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {justSaved && (
             <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: '#6dbf78', fontWeight: 600 }}>
@@ -250,7 +250,7 @@ function EditableQuote({
             </span>
           )}
           {!editing && (
-            <button type="button" className="ad-sm icon" aria-label={`Remove quote ${idx + 1}`} onClick={onRemove}>
+            <button type="button" className="crm-sm icon" aria-label={`Remove quote ${idx + 1}`} onClick={onRemove}>
               <Ic k="trash" s={16} />
             </button>
           )}
@@ -290,7 +290,7 @@ function EditableQuote({
           <button
             type="button"
             onClick={startEdit}
-            className="ad-sm"
+            className="crm-sm"
             style={{
               flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
               height: 32, padding: '0 12px', fontSize: 12, background: 'rgba(201,168,96,.12)',
@@ -303,17 +303,17 @@ function EditableQuote({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input className="ad-in" aria-label="Quote" value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} placeholder="The quote" />
-          <div className="ad-grid2">
-            <input className="ad-in" aria-label="Line under the quote" value={draft.sub} onChange={(e) => setDraft({ ...draft, sub: e.target.value })} placeholder="Line under it (or the book title)" />
-            <input className="ad-in" aria-label="Who said it" value={draft.who} onChange={(e) => setDraft({ ...draft, who: e.target.value })} placeholder="Who said it" />
+          <input className="crm-in" aria-label="Quote" value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} placeholder="The quote" />
+          <div className="crm-grid2">
+            <input className="crm-in" aria-label="Line under the quote" value={draft.sub} onChange={(e) => setDraft({ ...draft, sub: e.target.value })} placeholder="Line under it (or the book title)" />
+            <input className="crm-in" aria-label="Who said it" value={draft.who} onChange={(e) => setDraft({ ...draft, who: e.target.value })} placeholder="Who said it" />
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
-            <button type="button" onClick={handleSave} className="ad-btn pri" style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button type="button" onClick={handleSave} className="crm-btn pri" style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Ic k="check" s={14} />
               Save
             </button>
-            <button type="button" onClick={handleCancel} className="ad-btn sec" style={{ height: 48, padding: '0 14px', fontSize: 13 }}>
+            <button type="button" onClick={handleCancel} className="crm-btn sec" style={{ height: 48, padding: '0 14px', fontSize: 13 }}>
               Cancel
             </button>
           </div>
@@ -330,14 +330,14 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
   return (
     <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
       <input type="hidden" name="homeQuotes" value={JSON.stringify(quotes)} />
-      <div className="ad-top">
+      <div className="crm-top">
         <div><h1>Author &amp; bio</h1><p>What visitors see in the About section, the homepage quotes, and where messages are sent.</p></div>
-        <div className="ad-actions"><Save /></div>
+        <div className="crm-actions"><Save /></div>
       </div>
-      {state.error && <div className="ad-err" role="alert">{state.error}</div>}
-      {state.ok && <div className="ad-ok" role="status"><Ic k="check" s={16} sw={2} />Saved. The site is updated.</div>}
-      <div className="ad-editor" style={{ gridTemplateColumns: '340px minmax(0,1fr)' }}>
-        <section className="ad-card">
+      {state.error && <div className="crm-err" role="alert">{state.error}</div>}
+      {state.ok && <div className="crm-ok" role="status"><Ic k="check" s={16} sw={2} />Saved. The site is updated.</div>}
+      <div className="crm-editor" style={{ gridTemplateColumns: '340px minmax(0,1fr)' }}>
+        <section className="crm-card">
           <h2>Author photo</h2>
           <ImagePick 
             name="photo" 
@@ -349,7 +349,7 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
           />
         </section>
         <div className="col">
-          <section className="ad-card">
+          <section className="crm-card">
             <h2>About Ken</h2>
             <EditableField
               label="PULL QUOTE"
@@ -367,7 +367,7 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
               icon="text"
             />
           </section>
-          <section className="ad-card">
+          <section className="crm-card">
             <h2>Homepage quotes</h2>
             <p className="sub">The quotes that swipe under the homepage banner. Three or four work best.</p>
             {quotes.map((q, k) => (
@@ -383,9 +383,9 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
             ))}
             {quotes.length < 6 && <button type="button" className="drop" style={{ alignSelf: 'flex-start', background: 'none' }} onClick={() => setQuotes([...quotes, { text: '', sub: '', who: '' }])}><Ic k="plus" s={15} />Add a quote</button>}
           </section>
-          <section className="ad-card">
+          <section className="crm-card">
             <h2>Links &amp; email</h2>
-            <div className="ad-grid2">
+            <div className="crm-grid2">
               <EditableField
                 label="AMAZON AUTHOR PAGE"
                 name="amazonAuthorUrl"

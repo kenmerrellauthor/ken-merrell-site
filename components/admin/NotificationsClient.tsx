@@ -108,7 +108,7 @@ export default function NotificationsClient({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* ── Top Header ── */}
-      <div className="ad-top">
+      <div className="crm-top">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1>CRM Notifications</h1>
@@ -121,11 +121,11 @@ export default function NotificationsClient({
           <p>Real-time live feed of advance reader signups, book reviews, and audience engagement.</p>
         </div>
 
-        <div className="ad-actions">
+        <div className="crm-actions">
           {unreadCount > 0 && (
             <button
               type="button"
-              className="ad-btn pri"
+              className="crm-btn pri"
               onClick={handleMarkAllRead}
               title="Mark all notifications as read"
             >
@@ -133,7 +133,7 @@ export default function NotificationsClient({
               MARK ALL AS READ
             </button>
           )}
-          <Link href="/admin/readers" className="ad-btn">
+          <Link href="/admin/readers" className="crm-btn">
             <Ic k="readers" s={16} sw={1.8} />
             ADVANCE READERS CRM
           </Link>
@@ -141,27 +141,27 @@ export default function NotificationsClient({
       </div>
 
       {/* ── Summary Stats Cards ── */}
-      <div className="ad-stats">
-        <div className="ad-stat">
+      <div className="crm-stats">
+        <div className="crm-stat">
           <span>TOTAL ALERTS</span>
           <b>{totalCount}</b>
         </div>
-        <div className="ad-stat" style={{ borderLeft: unreadAlerts > 0 ? '3px solid var(--gold)' : undefined }}>
+        <div className="crm-stat" style={{ borderLeft: unreadAlerts > 0 ? '3px solid var(--gold)' : undefined }}>
           <span>UNREAD ALERTS</span>
           <b style={{ color: unreadAlerts > 0 ? 'var(--gold)' : undefined }}>{unreadAlerts}</b>
         </div>
-        <div className="ad-stat">
+        <div className="crm-stat">
           <span>READER SIGNUPS</span>
           <b>{readerCount}</b>
         </div>
-        <div className="ad-stat">
+        <div className="crm-stat">
           <span>REVIEWS & FEEDBACK</span>
           <b>{reviewCount}</b>
         </div>
       </div>
 
       {markedAll && (
-        <div className="ad-ok" role="status">
+        <div className="crm-ok" role="status">
           <Ic k="check" s={16} sw={2} />
           All notifications have been marked as read.
         </div>
@@ -169,7 +169,7 @@ export default function NotificationsClient({
 
       {/* ── Filter Bar & Search ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <nav className="ad-tabs" aria-label="Filter notifications">
+        <nav className="crm-tabs" aria-label="Filter notifications">
           <button
             type="button"
             className={filter === 'all' ? 'on' : ''}
@@ -208,7 +208,7 @@ export default function NotificationsClient({
         <div style={{ position: 'relative', width: 280, maxWidth: '100%' }}>
           <input
             type="text"
-            className="ad-in"
+            className="crm-in"
             style={{ height: 38, fontSize: 14, paddingLeft: 34 }}
             placeholder="Search notifications…"
             value={search}
@@ -376,13 +376,13 @@ export default function NotificationsClient({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
                     {n.type === 'reader' ? (
                       <>
-                        <Link href="/admin/readers" className="ad-sm" style={{ fontSize: 13, height: 34 }}>
+                        <Link href="/admin/readers" className="crm-sm" style={{ fontSize: 13, height: 34 }}>
                           <Ic k="readers" s={14} /> View in Advance Readers CRM
                         </Link>
                         {n.metadata?.email && (
                           <a
                             href={`mailto:${n.metadata.email}?subject=Welcome to Ken Merrell Advance Readers`}
-                            className="ad-sm"
+                            className="crm-sm"
                             style={{ fontSize: 13, height: 34 }}
                           >
                             <Ic k="mail" s={14} /> Email {n.metadata.readerName || 'Reader'}
@@ -392,7 +392,7 @@ export default function NotificationsClient({
                     ) : (
                       <Link
                         href={n.metadata?.bookId ? `/admin/books/${n.metadata.bookId}#reviews` : '/admin'}
-                        className="ad-sm"
+                        className="crm-sm"
                         style={{ fontSize: 13, height: 34 }}
                       >
                         <Ic k="books" s={14} /> View Book Reviews
@@ -402,7 +402,7 @@ export default function NotificationsClient({
                     {n.unread && (
                       <button
                         type="button"
-                        className="ad-sm icon"
+                        className="crm-sm icon"
                         style={{ height: 34, width: 34 }}
                         onClick={() => handleMarkSingle(n.id)}
                         title="Mark as read"

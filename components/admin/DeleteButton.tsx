@@ -34,7 +34,7 @@ export function DeleteButton({
           type="button"
           disabled={isPending}
           onClick={handleDelete}
-          className="ad-sm danger"
+          className="crm-sm danger"
           style={{ height: style?.height ?? 40, padding: '0 10px', fontSize: 12, borderColor: '#c65b4a' }}
           title={`Confirm remove ${itemName}`}
         >
@@ -43,7 +43,7 @@ export function DeleteButton({
         <button
           type="button"
           disabled={isPending}
-          className="ad-sm"
+          className="crm-sm"
           style={{ height: style?.height ?? 40, padding: '0 8px', fontSize: 12 }}
           onClick={() => setConfirming(false)}
           title="Cancel"
@@ -57,7 +57,7 @@ export function DeleteButton({
   return (
     <button
       type="button"
-      className="ad-sm icon danger"
+      className="crm-sm icon danger"
       onClick={() => setConfirming(true)}
       aria-label={`Remove ${itemName}`}
       title={title || `Remove ${itemName}`}

@@ -65,7 +65,7 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
     <form
       onSubmit={handleSave}
       encType="multipart/form-data"
-      className="ad-tr row"
+      className="crm-tr row"
       style={{
         gridTemplateColumns: COLS,
         minWidth: 900,
@@ -115,11 +115,11 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
           name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="ad-in"
+          className="crm-in"
           aria-label="Video title"
           style={{ fontFamily: 'var(--serif-d)', fontSize: 18, fontWeight: 600, height: 44 }}
         />
-        <span className="ad-meta">
+        <span className="crm-meta">
           {video.youtubeId ? `youtube.com/watch?v=${video.youtubeId}` : 'Custom video'}
           {index === 0 ? ' · Featured large on the homepage' : ''}
         </span>
@@ -132,7 +132,7 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
           name="type"
           value={type}
           onChange={(e) => setType(e.target.value as VideoType)}
-          className="ad-in"
+          className="crm-in"
           style={{ height: 44 }}
           aria-label="Video type"
         >
@@ -148,7 +148,7 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
           name="duration"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          className="ad-in"
+          className="crm-in"
           style={{ height: 44 }}
           placeholder="0:00"
           aria-label="Length"
@@ -160,7 +160,7 @@ export function VideoRow({ v, index, total }: { v: Video; index: number; total: 
         <button
           type="submit"
           disabled={isSaving}
-          className="ad-sm"
+          className="crm-sm"
           style={{
             height: 44,
             borderColor: saved ? 'var(--gold)' : undefined,

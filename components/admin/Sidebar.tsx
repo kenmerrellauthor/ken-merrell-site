@@ -30,7 +30,7 @@ export default function Sidebar({
   useEffect(() => {
     if (!userMenuOpen) return;
     const onClick = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest('.ad-topbar-user-wrap')) {
+      if (!(e.target as HTMLElement).closest('.crm-topbar-user-wrap')) {
         setUserMenuOpen(false);
       }
     };
@@ -103,44 +103,44 @@ export default function Sidebar({
   return (
     <>
       {/* ── Top Bar across the entire admin ── */}
-      <header className="ad-topbar">
+      <header className="crm-topbar">
         {/* Left: 2-bar menu toggle & Ken CRM brand logo */}
-        <div className="ad-topbar-left">
+        <div className="crm-topbar-left">
           <button
             type="button"
-            className="ad-header-toggle"
+            className="crm-header-toggle"
             aria-label={mobileOpen ? 'Close admin menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={mobileOpen ? 'Close menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             onClick={handleToggle}
           >
             <Ic k={mobileOpen ? 'close' : 'menu'} />
           </button>
-          <Link href="/admin" className="ad-topbar-brand" onClick={() => setMobileOpen(false)}>
+          <Link href="/admin" className="crm-topbar-brand" onClick={() => setMobileOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/logo.png" alt="Ken Merrell" />
-            <span className="ad-topbar-tag">SITE ADMIN</span>
+            <span className="crm-topbar-tag">SITE ADMIN</span>
           </Link>
         </div>
 
         {/* Right: In a straight line to the opposite side of the Ken CRM logo */}
-        <div className="ad-topbar-right">
-          <a href="/" target="_blank" className="ad-topbar-link" title="Open live site in new tab">
+        <div className="crm-topbar-right">
+          <a href="/" target="_blank" className="crm-topbar-link" title="Open live site in new tab">
             <Ic k="ext" s={14} />
             <span>Live site</span>
           </a>
           <NotificationBell notifications={notifications} unreadCount={unreadCount} align="right" />
-          <div className="ad-topbar-user-wrap" style={{ position: 'relative' }}>
+          <div className="crm-topbar-user-wrap" style={{ position: 'relative' }}>
             <button
               type="button"
-              className="ad-topbar-user"
+              className="crm-topbar-user"
               style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
               onClick={() => setUserMenuOpen((p) => !p)}
               aria-haspopup="true"
               aria-expanded={userMenuOpen}
             >
               <span className="av">KM</span>
-              <div className="ad-topbar-user-info">
-                <span className="ad-topbar-user-name">Ken Merrell</span>
+              <div className="crm-topbar-user-info">
+                <span className="crm-topbar-user-name">Ken Merrell</span>
                 <small>{email}</small>
               </div>
             </button>
@@ -178,17 +178,17 @@ export default function Sidebar({
       {/* Backdrop for mobile drawer */}
       {mobileOpen && (
         <div
-          className="ad-backdrop"
+          className="crm-backdrop"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
       {/* ── Admin Body: Sidebar navigation + Main page content ── */}
-      <div className="ad-body">
-        <aside className={`ad-side${mobileOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
+      <div className="crm-body">
+        <aside className={`crm-side${mobileOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
           {/* Mobile drawer header with close button */}
-          <div className="ad-side-mobile-head">
+          <div className="crm-side-mobile-head">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/img/logo.png" alt="Ken Merrell" style={{ height: 26, width: 'auto' }} />
@@ -198,7 +198,7 @@ export default function Sidebar({
             </div>
             <button
               type="button"
-              className="ad-sm icon"
+              className="crm-sm icon"
               aria-label="Close admin menu"
               onClick={() => setMobileOpen(false)}
               style={{ width: 34, height: 34 }}
@@ -207,34 +207,34 @@ export default function Sidebar({
             </button>
           </div>
 
-          <nav aria-label="Admin" className="ad-navlist">
+          <nav aria-label="Admin" className="crm-navlist">
             {items.map((it) => (
               <Link
                 key={it.k}
                 href={it.href}
-                className={`ad-nav${it.on ? ' on' : ''}`}
+                className={`crm-nav${it.on ? ' on' : ''}`}
                 aria-current={it.on ? 'page' : undefined}
                 onClick={() => setMobileOpen(false)}
                 title={it.label}
               >
                 <span className="ic"><Ic k={it.k} /></span>
-                <span className="ad-nav-label">{it.label}</span>
+                <span className="crm-nav-label">{it.label}</span>
                 {!!it.badge && <span className="badge" title="New this week">{it.badge}</span>}
               </Link>
             ))}
           </nav>
 
-          <div className="ad-foot">
+          <div className="crm-foot">
             <form action={logout}>
-              <button type="submit" className="ad-nav" title="Sign out">
+              <button type="submit" className="crm-nav" title="Sign out">
                 <span className="ic"><Ic k="out" /></span>
-                <span className="ad-nav-label">Sign out</span>
+                <span className="crm-nav-label">Sign out</span>
               </button>
             </form>
           </div>
         </aside>
 
-        <main className="ad-main">{children}</main>
+        <main className="crm-main">{children}</main>
       </div>
     </>
   );
