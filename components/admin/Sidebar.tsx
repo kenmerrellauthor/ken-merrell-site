@@ -224,7 +224,14 @@ export default function Sidebar({
             ))}
           </nav>
 
-          <div className="ad-foot" style={{ flex: 1 }} />
+          <div className="ad-foot">
+            <form action={logout}>
+              <button type="submit" className="ad-nav" title="Sign out">
+                <span className="ic"><Ic k="out" /></span>
+                <span className="ad-nav-label">Sign out</span>
+              </button>
+            </form>
+          </div>
         </aside>
 
         <main className="ad-main">{children}</main>
