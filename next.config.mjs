@@ -8,6 +8,9 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '12mb'
+    },
+    outputFileTracingIncludes: {
+      '/*': ['./node_modules/pdfkit/**/*']
     }
   },
   async headers() {
