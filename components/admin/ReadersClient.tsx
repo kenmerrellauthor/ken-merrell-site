@@ -91,6 +91,7 @@ export default function ReadersClient({
   const [composerOpen, setComposerOpen] = useState(false);
   const [subject, setSubject] = useState(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
   const [body, setBody] = useState('');
+  const [replyTo, setReplyTo] = useState('');
   const [bookId, setBookId] = useState('');
   const [amazonUrl, setAmazonUrl] = useState('');
 
@@ -159,6 +160,7 @@ export default function ReadersClient({
     const fd = new FormData();
     fd.set('subject', subject);
     fd.set('body', body);
+    if (replyTo.trim()) fd.set('replyTo', replyTo.trim());
     if (bookId) fd.set('bookId', bookId);
     if (amazonUrl) fd.set('amazonUrl', amazonUrl);
     fd.set('recipients', JSON.stringify(recipientEmails));
@@ -386,6 +388,18 @@ export default function ReadersClient({
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Your advance copy is ready"
                 />
+              </div>
+              <div className="ad-field">
+                <label className="ad-label" htmlFor="em-replyto">REPLY-TO EMAIL (OPTIONAL)</label>
+                <input
+                  id="em-replyto"
+                  type="email"
+                  className="ad-in"
+                  value={replyTo}
+                  onChange={(e) => setReplyTo(e.target.value)}
+                  placeholder="e.g. ken@gmail.com (Leave blank to use default)"
+                />
+                <span className="help">If a reader replies to this email, it will be sent to this address.</span>
               </div>
               <div className="ad-field">
                 <label className="ad-label" htmlFor="em-body">MESSAGE BODY</label>
@@ -741,6 +755,7 @@ export default function ReadersClient({
                   <button type="button" className="ad-btn" onClick={() => {
                     setSubject(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
                     setBody('');
+                    setReplyTo('');
                     setBookId('');
                     setAmazonUrl('');
                     closeComposer();

@@ -498,10 +498,12 @@ ${amazonBox}
       attachments = [{ filename: `${book.title.replace(/[^a-z0-9]/gi, '_')}_Sample.pdf`, content: pdfBuffer }];
     }
 
+    const replyToInput = str(form, 'replyTo');
+    
     let sent = 0;
     const errors: string[] = [];
     for (const email of valid) {
-      const ok = await sendMail({ to: email, subject, html: htmlBody, replyTo: site.notifyEmail || undefined, attachments });
+      const ok = await sendMail({ to: email, subject, html: htmlBody, replyTo: replyToInput || site.notifyEmail || undefined, attachments });
       if (ok) sent++;
       else errors.push(email);
     }
