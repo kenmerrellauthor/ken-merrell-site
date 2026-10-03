@@ -24,6 +24,20 @@ export default function Sidebar({
   const sp = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.ad-topbar-user-wrap')) {
+        setUserMenuOpen(false);
+      }
+    };
+    // small delay so the toggle click doesn't instantly close it
+    setTimeout(() => window.addEventListener('click', onClick), 0);
+    return () => window.removeEventListener('click', onClick);
+  }, [userMenuOpen]);
 
   // Load saved desktop collapse preference
   useEffect(() => {
@@ -115,12 +129,48 @@ export default function Sidebar({
             <span>Live site</span>
           </a>
           <NotificationBell notifications={notifications} unreadCount={unreadCount} align="right" />
-          <div className="ad-topbar-user">
-            <span className="av">KM</span>
-            <div className="ad-topbar-user-info">
-              <span className="ad-topbar-user-name">Ken Merrell</span>
-              <small>{email}</small>
-            </div>
+          <div className="ad-topbar-user-wrap" style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="ad-topbar-user"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+              onClick={() => setUserMenuOpen((p) => !p)}
+              aria-haspopup="true"
+              aria-expanded={userMenuOpen}
+            >
+              <span className="av">KM</span>
+              <div className="ad-topbar-user-info">
+                <span className="ad-topbar-user-name">Ken Merrell</span>
+                <small>{email}</small>
+              </div>
+            </button>
+            {userMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: 8,
+                  background: '#120f0d', border: '1px solid #3a332b', borderRadius: 6,
+                  padding: '6px', minWidth: 180, zIndex: 100,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+                }}
+              >
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                      background: 'none', border: 'none', color: 'var(--cream)',
+                      cursor: 'pointer', padding: '8px 12px', borderRadius: 4,
+                      fontSize: 14, textAlign: 'left', transition: 'background .15s'
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = 'none')}
+                  >
+                    <Ic k="out" s={14} />
+                    <span>Sign out</span>
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -174,14 +224,7 @@ export default function Sidebar({
             ))}
           </nav>
 
-          <div className="ad-foot">
-            <form action={logout}>
-              <button type="submit" className="ad-nav" title="Sign out">
-                <span className="ic"><Ic k="out" /></span>
-                <span className="ad-nav-label">Sign out</span>
-              </button>
-            </form>
-          </div>
+          <div className="ad-foot" style={{ flex: 1 }} />
         </aside>
 
         <main className="ad-main">{children}</main>
