@@ -19,6 +19,8 @@ function EditableField({
   type = 'text',
   help,
   icon,
+  multiline,
+  rows = 10,
 }: {
   label: string;
   name: string;
@@ -27,12 +29,14 @@ function EditableField({
   type?: string;
   help?: string;
   icon?: string;
+  multiline?: boolean;
+  rows?: number;
 }) {
   const [val, setVal] = useState(defaultValue);
   const [draft, setDraft] = useState(defaultValue);
   const [editing, setEditing] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<any>(null);
   const hiddenRef = useRef<HTMLInputElement>(null);
 
   const startEdit = () => {
@@ -61,7 +65,7 @@ function EditableField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !multiline) {
       e.preventDefault();
       handleSave();
     } else if (e.key === 'Escape') {
@@ -138,41 +142,183 @@ function EditableField({
         </div>
       ) : (
         /* Editing view: textfield appears with Save and Cancel buttons */
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: multiline ? 'flex-start' : 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
-            <input
-              ref={inputRef}
-              id={`f-${name}`}
-              type={type}
-              className="ad-in"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              style={{ width: '100%' }}
-            />
+            {multiline ? (
+              <textarea
+                ref={inputRef}
+                id={`f-${name}`}
+                className="ad-in"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                style={{ width: '100%', resize: 'vertical' }}
+                rows={rows}
+              />
+            ) : (
+              <input
+                ref={inputRef}
+                id={`f-${name}`}
+                type={type}
+                className="ad-in"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                style={{ width: '100%' }}
+              />
+            )}
           </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="ad-btn pri"
-            style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
-          >
-            <Ic k="check" s={14} />
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="ad-btn sec"
-            style={{ height: 48, padding: '0 14px', fontSize: 13, flexShrink: 0 }}
-          >
-            Cancel
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexDirection: multiline ? 'column' : 'row' }}>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="ad-btn pri"
+              style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+            >
+              <Ic k="check" s={14} />
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="ad-btn sec"
+              style={{ height: 48, padding: '0 14px', fontSize: 13, flexShrink: 0 }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
       {help && <span className="help">{help}</span>}
+    </div>
+  );
+}
+
+function EditableQuote({
+  quote,
+  idx,
+  onUpdate,
+  onRemove
+}: {
+  quote: HomeQuote;
+  idx: number;
+  onUpdate: (q: HomeQuote) => void;
+  onRemove: () => void;
+}) {
+  const [draft, setDraft] = useState(quote);
+  const [editing, setEditing] = useState(!quote.text);
+  const [justSaved, setJustSaved] = useState(false);
+  const hiddenRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = () => {
+    setDraft(quote);
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    onUpdate(draft);
+    setEditing(false);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
+    setTimeout(() => {
+      hiddenRef.current?.form?.requestSubmit();
+    }, 60);
+  };
+
+  const handleCancel = () => {
+    if (!quote.text) {
+      onRemove();
+    } else {
+      setDraft(quote);
+      setEditing(false);
+    }
+  };
+
+  return (
+    <div className="ad-field" style={{ paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
+      <input ref={hiddenRef} type="hidden" />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span className="ad-label">QUOTE {idx + 1}</span>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {justSaved && (
+            <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: '#6dbf78', fontWeight: 600 }}>
+              ✓ SAVED
+            </span>
+          )}
+          {!editing && (
+            <button type="button" className="ad-sm icon" aria-label={`Remove quote ${idx + 1}`} onClick={onRemove}>
+              <Ic k="trash" s={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!editing ? (
+        <div
+          style={{
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            background: '#120f0d',
+            border: '1px solid #3a332b',
+            borderRadius: 3,
+            padding: '8px 14px'
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
+            {quote.text ? (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 16, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                "{quote.text}"
+              </span>
+            ) : (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 14, color: 'var(--muted)', fontStyle: 'italic' }}>
+                Empty quote
+              </span>
+            )}
+            {(quote.sub || quote.who) && (
+              <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+                {quote.who ? `— ${quote.who}` : ''} {quote.sub ? `(${quote.sub})` : ''}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={startEdit}
+            className="ad-sm"
+            style={{
+              flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
+              height: 32, padding: '0 12px', fontSize: 12, background: 'rgba(201,168,96,.12)',
+              borderColor: 'rgba(201,168,96,.35)', color: 'var(--gold)', cursor: 'pointer'
+            }}
+          >
+            <Ic k="edit" s={13} />
+            Edit
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <input className="ad-in" aria-label="Quote" value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} placeholder="The quote" />
+          <div className="ad-grid2">
+            <input className="ad-in" aria-label="Line under the quote" value={draft.sub} onChange={(e) => setDraft({ ...draft, sub: e.target.value })} placeholder="Line under it (or the book title)" />
+            <input className="ad-in" aria-label="Who said it" value={draft.who} onChange={(e) => setDraft({ ...draft, who: e.target.value })} placeholder="Who said it" />
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+            <button type="button" onClick={handleSave} className="ad-btn pri" style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Ic k="check" s={14} />
+              Save
+            </button>
+            <button type="button" onClick={handleCancel} className="ad-btn sec" style={{ height: 48, padding: '0 14px', fontSize: 13 }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -205,21 +351,35 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
         <div className="col">
           <section className="ad-card">
             <h2>About Ken</h2>
-            <div className="ad-field"><label className="ad-label" htmlFor="pq">PULL QUOTE</label><input id="pq" name="pullQuote" className="ad-in" defaultValue={site.pullQuote} /></div>
-            <div className="ad-field"><label className="ad-label" htmlFor="bio">BIO</label><textarea id="bio" name="bio" className="ad-in" rows={10} defaultValue={site.bio} /><span className="help">Leave a blank line to start a new paragraph.</span></div>
+            <EditableField
+              label="PULL QUOTE"
+              name="pullQuote"
+              defaultValue={site.pullQuote}
+              icon="quote"
+            />
+            <EditableField
+              label="BIO"
+              name="bio"
+              defaultValue={site.bio}
+              multiline={true}
+              rows={10}
+              help="Leave a blank line to start a new paragraph."
+              icon="text"
+            />
           </section>
           <section className="ad-card">
             <h2>Homepage quotes</h2>
             <p className="sub">The quotes that swipe under the homepage banner. Three or four work best.</p>
             {quotes.map((q, k) => (
-              <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span className="ad-label">QUOTE {k + 1}</span><button type="button" className="ad-sm icon" aria-label={`Remove quote ${k + 1}`} onClick={() => setQuotes(quotes.filter((_, j) => j !== k))}><Ic k="trash" s={16} /></button></div>
-                <input className="ad-in" aria-label="Quote" value={q.text} onChange={(e) => set(k, 'text', e.target.value)} placeholder="The quote" />
-                <div className="ad-grid2">
-                  <input className="ad-in" aria-label="Line under the quote" value={q.sub} onChange={(e) => set(k, 'sub', e.target.value)} placeholder="Line under it (or the book title)" />
-                  <input className="ad-in" aria-label="Who said it" value={q.who} onChange={(e) => set(k, 'who', e.target.value)} placeholder="Who said it" />
-                </div>
-              </div>
+              <EditableQuote
+                key={k}
+                idx={k}
+                quote={q}
+                onUpdate={(newQ) => {
+                  setQuotes(quotes.map((oldQ, j) => j === k ? newQ : oldQ));
+                }}
+                onRemove={() => setQuotes(quotes.filter((_, j) => j !== k))}
+              />
             ))}
             {quotes.length < 6 && <button type="button" className="drop" style={{ alignSelf: 'flex-start', background: 'none' }} onClick={() => setQuotes([...quotes, { text: '', sub: '', who: '' }])}><Ic k="plus" s={15} />Add a quote</button>}
           </section>

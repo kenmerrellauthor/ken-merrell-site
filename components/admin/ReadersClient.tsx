@@ -430,15 +430,6 @@ export default function ReadersClient({
                       ))}
                     </optgroup>
                   )}
-                  {otherBooksList.length > 0 && (
-                    <optgroup label={comingSoonList.length > 0 ? "Other Books in Catalog" : "All Books"}>
-                      {otherBooksList.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.title} {b.hasSample ? '(Sample PDF)' : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
                 </select>
                 <span className="help">
                   Automatically generates a formatted PDF from the book's sample text and attaches it to each email.
