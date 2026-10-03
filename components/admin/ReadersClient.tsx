@@ -738,7 +738,13 @@ export default function ReadersClient({
                     <button type="button" className="ad-sm" onClick={closeComposer}>Cancel</button>
                   </>
                 ) : (
-                  <button type="button" className="ad-btn" onClick={closeComposer}>Done</button>
+                  <button type="button" className="ad-btn" onClick={() => {
+                    setSubject(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
+                    setBody('');
+                    setBookId('');
+                    setAmazonUrl('');
+                    closeComposer();
+                  }}>Done</button>
                 )}
               </div>
             </div>
