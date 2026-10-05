@@ -18,9 +18,9 @@ export default function BooksClient({ books }: { books: any[] }) {
   return (
     <>
       <nav className="crm-tabs" aria-label="Filter books">
-        <button type="button" onClick={() => setTab('all')} className={tab === 'all' ? 'on' : ''} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}>All books ({books.length})</button>
-        <button type="button" onClick={() => setTab('live')} className={tab === 'live' ? 'on' : ''} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}>Available ({live.length})</button>
-        <button type="button" onClick={() => setTab('soon')} className={tab === 'soon' ? 'on' : ''} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}>Coming soon ({soon.length})</button>
+        <button type="button" onClick={() => setTab('all')} className={tab === 'all' ? 'on' : ''}>All books ({books.length})</button>
+        <button type="button" onClick={() => setTab('live')} className={tab === 'live' ? 'on' : ''}>Available ({live.length})</button>
+        <button type="button" onClick={() => setTab('soon')} className={tab === 'soon' ? 'on' : ''}>Coming soon ({soon.length})</button>
       </nav>
 
       <div className="crm-table">

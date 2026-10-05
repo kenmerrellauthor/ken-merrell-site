@@ -174,7 +174,6 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'all' ? 'on' : ''}
             onClick={() => setFilter('all')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             All ({totalCount})
           </button>
@@ -182,7 +181,6 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'reader' ? 'on' : ''}
             onClick={() => setFilter('reader')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Reader signups ({readerCount})
           </button>
@@ -190,7 +188,6 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'review' ? 'on' : ''}
             onClick={() => setFilter('review')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Reviews ({reviewCount})
           </button>
@@ -198,7 +195,6 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'unread' ? 'on' : ''}
             onClick={() => setFilter('unread')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Unread only ({unreadAlerts})
           </button>

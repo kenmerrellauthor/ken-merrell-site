@@ -330,7 +330,7 @@ export default function NotificationBell({
                 alignItems: 'center',
                 gap: 8,
                 fontSize: 12,
-                color: 'var(--gold)',
+                color: '#fff',
                 textDecoration: 'none',
                 letterSpacing: '.14em',
                 fontFamily: 'var(--serif-c)',

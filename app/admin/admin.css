@@ -143,9 +143,9 @@ select.crm-in { appearance: auto; }
 .crm-stat span { font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--muted); }
 .crm-stat b { font-family: var(--serif-d); font-size: 40px; font-weight: 600; line-height: 1; color: var(--cream-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .crm-tabs { display: inline-flex; gap: 6px; padding: 4px; background: #0f0d0b; border: 1px solid rgba(239,231,214,.08); border-radius: 4px; }
-.crm-tabs a { height: 38px; padding: 0 18px; border-radius: 3px; display: flex; align-items: center; color: var(--muted); font-size: 15px; transition: all .15s ease; }
-.crm-tabs a:hover { color: var(--cream); }
-.crm-tabs a.on { background: rgba(201,168,96,.18); color: var(--gold); border: 1px solid rgba(201,168,96,.4); font-weight: 600; }
+.crm-tabs a, .crm-tabs button { height: 38px; padding: 0 18px; border-radius: 3px; display: flex; align-items: center; color: var(--muted); font-size: 15px; transition: all .15s ease; background: transparent; border: 1px solid transparent; cursor: pointer; font-family: var(--serif-b); }
+.crm-tabs a:hover, .crm-tabs button:hover { color: var(--cream); }
+.crm-tabs a.on, .crm-tabs button.on { background: rgba(201,168,96,.18); color: var(--gold); border: 1px solid rgba(201,168,96,.4); font-weight: 600; }
 .crm-table { background: #1a1612; border: 1px solid rgba(239,231,214,.08); border-radius: 4px; overflow-x: auto; }
 .crm-tr { display: grid; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid rgba(239,231,214,.06); min-width: 820px; }
 .crm-tr.head { height: 48px; font-family: var(--serif-c); font-size: 10px; font-weight: 700; letter-spacing: .2em; color: var(--muted); border-bottom-color: rgba(239,231,214,.08); }
