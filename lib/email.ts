@@ -80,12 +80,12 @@ export function contactEmail(m: { name: string; email: string; message: string }
 }
 
 export function verifyReaderEmail(link: string) {
-  return `<div style="font-family:Georgia,serif;background:#f3f0ea;padding:24px">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:28px 30px">
-<div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#1b1814">KEN MERRELL</div>
-<h1 style="font-size:22px;font-weight:600;color:#1b1814;margin:18px 0 8px">Confirm your advance reader subscription</h1>
-<p style="font-size:16px;line-height:1.6;color:#1b1814">Click the button below to confirm your email address and join Ken's advance reader list.</p>
-<p style="margin-top:22px"><a href="${esc(link)}" style="display:inline-block;background:#1b1814;color:#efe7d6;padding:12px 18px;text-decoration:none;font-size:13px">Confirm my email</a></p>
-<p style="font-size:12px;color:#8a8173;margin-top:28px">If you didn't request this, you can safely ignore this email.</p>
+  return `<div style="font-family:Georgia,serif;background:#161310;padding:24px">
+<div style="max-width:560px;margin:0 auto;background:#1a1612;padding:28px 30px;border:1px solid rgba(239,231,214,.08);border-radius:4px">
+<div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#c9a860">KEN MERRELL</div>
+<h1 style="font-size:22px;font-weight:600;color:#fff;margin:18px 0 8px">Confirm your advance reader subscription</h1>
+<p style="font-size:16px;line-height:1.6;color:#efe7d6">Click the button below to confirm your email address and join Ken's advance reader list.</p>
+<p style="margin-top:22px"><a href="${esc(link)}" style="display:inline-block;background:#c9a860;color:#15120f;padding:12px 18px;text-decoration:none;font-size:13px;font-weight:600;border-radius:2px">Confirm my email</a></p>
+<p style="font-size:12px;color:#8f8573;margin-top:28px">If you didn't request this, you can safely ignore this email.</p>
 </div></div>`;
 }
