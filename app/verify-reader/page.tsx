@@ -25,14 +25,18 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header active="advance" />
-        <main style={{ flex: 1, padding: '150px 20px 80px', textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
-          <h1 style={{ fontFamily: 'var(--serif-d)', fontSize: 42, color: '#1b1814', marginBottom: 24 }}>Link Expired or Invalid</h1>
-          <p style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 32 }}>
-            Your verification link has expired or is invalid. Please try signing up again.
-          </p>
-          <Link href="/advance-readers" className="btn btn-dark" style={{ display: 'inline-flex' }}>
-            SIGN UP AGAIN
-          </Link>
+        <main style={{ flex: 1, padding: '150px 20px 80px', textAlign: 'center', maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+          <div className="km-hero-scrim abs" />
+          <div className="km-grain abs" style={{ opacity: 0.5 }} />
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <h1 className="h1" style={{ margin: '0 0 24px' }}>Link Expired or Invalid</h1>
+            <p className="lead" style={{ marginBottom: 32 }}>
+              Your verification link has expired or is invalid. Please try signing up again.
+            </p>
+            <Link href="/advance-readers" className="btn btn-gold" style={{ display: 'inline-flex' }}>
+              SIGN UP AGAIN
+            </Link>
+          </div>
         </main>
         <Footer site={site} />
       </div>
@@ -63,19 +67,23 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Header active="advance" />
-      <main style={{ flex: 1, padding: '150px 20px 80px', textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#4a8858', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+      <main style={{ flex: 1, padding: '150px 20px 80px', textAlign: 'center', maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+        <div className="km-hero-scrim abs" />
+        <div className="km-grain abs" style={{ opacity: 0.5 }} />
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(74,136,88,.15)', border: '1px solid rgba(74,136,88,.4)', color: '#92c99f', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h1 className="h1" style={{ margin: '0 0 24px' }}>Email Verified!</h1>
+          <p className="lead" style={{ marginBottom: 32 }}>
+            Thank you, {name}! Your email has been verified and you've successfully joined the advance reader list. Keep an eye on your inbox for early copies of upcoming books.
+          </p>
+          <Link href="/books" className="btn btn-gold" style={{ display: 'inline-flex' }}>
+            BROWSE KEN'S BOOKS
+          </Link>
         </div>
-        <h1 style={{ fontFamily: 'var(--serif-d)', fontSize: 42, color: '#1b1814', marginBottom: 24 }}>Email Verified!</h1>
-        <p style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 32 }}>
-          Thank you, {name}! Your email has been verified and you've successfully joined the advance reader list. Keep an eye on your inbox for early copies of upcoming books.
-        </p>
-        <Link href="/books" className="btn btn-dark" style={{ display: 'inline-flex' }}>
-          BROWSE KEN'S BOOKS
-        </Link>
       </main>
       <Footer site={site} />
     </div>
