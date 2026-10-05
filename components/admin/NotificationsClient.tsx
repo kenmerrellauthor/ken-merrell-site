@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { CrmNotification } from '@/lib/types';
 import { markReadersSeenAction } from '@/app/admin/actions';
@@ -40,6 +40,7 @@ export default function NotificationsClient({
   initialUnreadCount: number;
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const highlightId = searchParams.get('highlight');
 
   const [items, setItems] = useState<CrmNotification[]>(initialNotifications);
@@ -53,6 +54,14 @@ export default function NotificationsClient({
     setItems(initialNotifications);
     setUnreadCount(initialUnreadCount);
   }, [initialNotifications, initialUnreadCount]);
+
+  // Auto-refresh data every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   // Scroll to highlighted notification if present
   useEffect(() => {

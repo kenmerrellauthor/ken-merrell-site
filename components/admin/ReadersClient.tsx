@@ -4,6 +4,7 @@ import type { Reader } from '@/lib/types';
 import { deleteReaderAction, sendReaderEmailAction, markReadersSeenAction, addReaderAdminAction, updateReaderAction } from '@/app/admin/actions';
 import { Ic } from '@/components/admin/AdIcons';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import NotificationBell from './NotificationBell';
 import type { CrmNotification } from '@/lib/types';
 
@@ -46,10 +47,19 @@ export default function ReadersClient({
 }) {
   const week = Date.now() - 7 * 86_400_000;
   const [readerList, setReaderList] = useState<Reader[]>(allReaders);
+  const router = useRouter();
 
   useEffect(() => {
     setReaderList(allReaders);
   }, [allReaders]);
+
+  useEffect(() => {
+    // Auto-refresh the server component every 5 seconds
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   // Add reader state
   const [addOpen, setAddOpen] = useState(false);
