@@ -64,18 +64,22 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
     return { ok: true, errors: {}, name: name.split(' ')[0], format };
   }
 
-  const res = await addReader({ id: newId(), name, email, format, agreed, createdAt: new Date().toISOString() });
-  const site = await getSite();
-  const toEmail = site.notifyEmail || process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || 'upcometrends@gmail.com';
-  if (toEmail) {
-    await sendMail({
-      to: toEmail,
-      subject: `New advance reader: ${name}`,
-      html: readerEmail({ name, email, format: res.reader.format }, `${await origin()}/admin/readers`),
-      replyTo: email
-    });
-  }
-  return { ok: true, errors: {}, name: name.split(' ')[0], format };
+  const { SignJWT } = await import('jose');
+  const secret = process.env.SESSION_SECRET || 'dev-only-secret-change-me-please-min-32-chars';
+  const token = await new SignJWT({ name, email, format, agreed })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('24h')
+    .sign(new TextEncoder().encode(secret));
+
+  const link = `${await origin()}/verify-reader?token=${token}`;
+  
+  await sendMail({
+    to: email,
+    subject: `Confirm your advance reader subscription`,
+    html: (await import('@/lib/email')).verifyReaderEmail(link),
+  });
+
+  return { ok: true, errors: {}, name: name.split(' ')[0], format, message: 'verify' };
 }
 
 export async function submitContact(_prev: FormState, form: FormData): Promise<FormState> {

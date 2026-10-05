@@ -33,14 +33,14 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
         <div className="frame" />
         <div className="ar-ok">
           <div className="seal km-seal"><Check s={34} /></div>
-          <h3>You’re on the list{state.name ? `, ${state.name}` : ''}.</h3>
+          <h3>Check your email{state.name ? `, ${state.name}` : ''}.</h3>
           <p>
-            Ken will send your {state.format === 'Ebook & Paperback' ? 'ebook & paperback' : String(state.format || 'ebook').toLowerCase()} copy{bookTitle ? <> of <em>{bookTitle}</em></> : ' of the next book'} before release. Keep an eye on your inbox, and check spam just in case.
+            We've sent a verification link to your email address. Please click the link to confirm your subscription and join the list.
           </p>
           <div className="next">
-            <span><i>i.</i>Your details are saved on Ken’s reader list</span>
-            <span><i>ii.</i>Your copy arrives before launch day</span>
-            <span><i>iii.</i>Post your review within two weeks of launch</span>
+            <span><i>i.</i>Open the email we just sent you</span>
+            <span><i>ii.</i>Click the confirm link inside</span>
+            <span><i>iii.</i>Get your advance copy before launch</span>
           </div>
           <Link href="/books" style={{ fontFamily: 'var(--serif-c)', fontSize: 11, fontWeight: 700, letterSpacing: '.2em', color: '#1b1814', borderBottom: '1px solid #1b1814', paddingBottom: 4, marginTop: 8 }}>BROWSE KEN’S BOOKS</Link>
         </div>
