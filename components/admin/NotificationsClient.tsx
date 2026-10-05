@@ -261,7 +261,7 @@ export default function NotificationsClient({
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
-            <div style={{ fontFamily: 'var(--serif-d)', fontSize: 20, color: 'var(--cream)', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--serif-d)', fontSize: 20, color: '#fff', marginBottom: 6 }}>
               {search ? 'No matching notifications' : 'No notifications in this view'}
             </div>
             <p style={{ margin: 0, fontSize: 14 }}>
@@ -323,7 +323,7 @@ export default function NotificationsClient({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'var(--serif-d)', fontSize: 19, fontWeight: 600, color: 'var(--cream-2)' }}>
+                      <span style={{ fontFamily: 'var(--serif-d)', fontSize: 19, fontWeight: 600, color: '#fff' }}>
                         {n.title}
                       </span>
                       {n.unread && (
@@ -353,18 +353,17 @@ export default function NotificationsClient({
                     )}
                   </div>
 
-                  {/* Review Detail or Quote */}
                   {n.detail && (
                     <div
                       style={{
                         marginTop: 12,
                         padding: '12px 16px',
-                        background: 'rgba(0,0,0,.35)',
+                        background: 'rgba(255,255,255,0.08)',
                         borderLeft: '3px solid var(--gold)',
                         borderRadius: '0 4px 4px 0',
                         fontSize: 14,
                         fontStyle: 'italic',
-                        color: 'var(--cream)',
+                        color: '#fff',
                         lineHeight: 1.6,
                       }}
                     >

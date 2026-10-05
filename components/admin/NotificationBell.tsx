@@ -289,7 +289,7 @@ export default function NotificationBell({
                   {/* Text Details */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: n.unread ? 700 : 600, color: 'var(--cream)', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 13, fontWeight: n.unread ? 700 : 600, color: '#fff', lineHeight: 1.3 }}>
                         {n.title}
                       </span>
                       {n.unread && (
