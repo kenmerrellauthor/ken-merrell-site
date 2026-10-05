@@ -174,7 +174,7 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'all' ? 'on' : ''}
             onClick={() => setFilter('all')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             All ({totalCount})
           </button>
@@ -182,7 +182,7 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'reader' ? 'on' : ''}
             onClick={() => setFilter('reader')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Reader signups ({readerCount})
           </button>
@@ -190,7 +190,7 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'review' ? 'on' : ''}
             onClick={() => setFilter('review')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Reviews ({reviewCount})
           </button>
@@ -198,7 +198,7 @@ export default function NotificationsClient({
             type="button"
             className={filter === 'unread' ? 'on' : ''}
             onClick={() => setFilter('unread')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'inherit' }}
           >
             Unread only ({unreadAlerts})
           </button>
@@ -331,12 +331,12 @@ export default function NotificationsClient({
                           NEW
                         </span>
                       )}
-                      <span className={`pill ${n.type === 'reader' ? '' : 'off'}`} style={{ height: 20, fontSize: 10, padding: '0 8px' }}>
+                      <span className={`pill ${n.type === 'reader' ? '' : 'off'}`} style={{ height: 20, fontSize: 10, padding: '0 8px', color: '#fff', background: 'rgba(255,255,255,0.1)' }}>
                         {n.type === 'reader' ? 'ADVANCE READER' : 'BOOK REVIEW'}
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)' }} title={fmtFull(n.createdAt)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#fff' }} title={fmtFull(n.createdAt)}>
                       <span>{fmtRelative(n.createdAt)}</span>
                       <span>·</span>
                       <span>{fmtFull(n.createdAt)}</span>
@@ -344,10 +344,10 @@ export default function NotificationsClient({
                   </div>
 
                   {/* Subtitle / Metadata details */}
-                  <div style={{ fontSize: 14, color: 'var(--soft)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 14, color: '#fff', marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <span>{n.subtitle}</span>
                     {n.metadata?.format && (
-                      <span style={{ color: 'var(--gold)', fontSize: 12, padding: '2px 8px', background: 'rgba(201,168,96,.1)', borderRadius: 3 }}>
+                      <span style={{ color: '#fff', fontSize: 12, padding: '2px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
                         {n.metadata.format}
                       </span>
                     )}
