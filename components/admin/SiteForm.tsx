@@ -303,7 +303,7 @@ function EditableQuote({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input className="crm-in" aria-label="Quote" value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} placeholder="The quote" />
+          <input className="crm-in" aria-label="Quote" maxLength={20} value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} placeholder="The quote" />
           <div className="crm-grid2">
             <input className="crm-in" aria-label="Line under the quote" value={draft.sub} onChange={(e) => setDraft({ ...draft, sub: e.target.value })} placeholder="Line under it (or the book title)" />
             <input className="crm-in" aria-label="Who said it" value={draft.who} onChange={(e) => setDraft({ ...draft, who: e.target.value })} placeholder="Who said it" />
