@@ -90,7 +90,7 @@ export default function QuoteCarousel({ quotes }: { quotes: HomeQuote[] }) {
             className={`q${k === idx ? ' on' : ''}`}
             aria-hidden={k !== idx}
           >
-            <p className="big">{q.text?.length > 40 ? q.text.slice(0, 40) + '...' : q.text}</p>
+            <p className="big">{q.text?.length > 60 ? q.text.slice(0, 60) + '...' : q.text}</p>
             {q.sub && <p className="sub">{q.sub}</p>}
             {q.who && <span className="who">{q.who}</span>}
           </div>
