@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { SocialIcon } from './icons';
 import type { SiteSettings } from '@/lib/types';
 
-export default function Footer({ site }: { site: SiteSettings }) {
+export default function Footer({ site, hideSocial }: { site: SiteSettings; hideSocial?: boolean }) {
   return (
     <footer className="site-footer">
       <div className="km-grain abs" style={{ opacity: 0.5 }} />
@@ -18,7 +18,7 @@ export default function Footer({ site }: { site: SiteSettings }) {
           <Link href="/author">ABOUT KEN</Link>
           <Link href="/#contact">CONTACT</Link>
         </nav>
-        {site.socialLinks && site.socialLinks.length > 0 && (
+        {!hideSocial && site.socialLinks && site.socialLinks.length > 0 && (
           <div className="links">
 
             {site.socialLinks?.map((link, idx) => (
