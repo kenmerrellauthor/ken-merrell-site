@@ -1010,6 +1010,17 @@ button { font: inherit; }
 .reveal-delay-2 { transition-delay: 0.24s; }
 .reveal-delay-3 { transition-delay: 0.36s; }
 
+.anim-line {
+  width: 1px;
+  height: 0;
+  background: linear-gradient(to bottom, rgba(201,168,96,0), rgba(201,168,96,0.8) 50%, rgba(201,168,96,0));
+  transition: height 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+  margin: 0 auto;
+}
+.reveal-on-scroll.is-visible .anim-line {
+  height: 100%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   .book3d { animation-duration: 14s !important; }
@@ -1123,3 +1134,6 @@ button { font: inherit; }
   color: var(--gold);
 }
 
+
+.anim-line { width: 1px; height: 0; background: linear-gradient(to bottom, rgba(201,168,96,0), rgba(201,168,96,0.6) 50%, rgba(201,168,96,0)); transition: height 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s; margin: 0 auto; }
+.reveal-on-scroll.is-visible .anim-line { height: 80px; }

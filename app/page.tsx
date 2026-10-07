@@ -206,9 +206,11 @@ export default async function Home() {
             <p style={{ margin: '0 auto 48px', fontSize: '18px', color: 'var(--muted-2)', maxWidth: '440px', lineHeight: 1.6 }}>
               Follow across the web for the latest updates, upcoming releases, and behind-the-scenes looks.
             </p>
+            <div className="reveal-on-scroll" style={{ position: 'relative', width: 1, height: 80, margin: '0 auto 40px' }}>
+              <div className="anim-line" />
+            </div>
           </div>
           <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
-
             {site.socialLinks?.map((link, idx) => (
               <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
                 <div className="social-card-bg" style={link.image ? { backgroundImage: `url("${link.image}")` } : { background: '#080605', overflow: 'hidden' }}>
