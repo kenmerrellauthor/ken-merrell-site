@@ -206,8 +206,14 @@ export default async function Home() {
             <p style={{ margin: '0 auto 48px', fontSize: '18px', color: 'var(--muted-2)', maxWidth: '440px', lineHeight: 1.6 }}>
               Follow across the web for the latest updates, upcoming releases, and behind-the-scenes looks.
             </p>
-            <div className="reveal-on-scroll" style={{ position: 'relative', width: 1, height: 80, margin: '0 auto 40px' }}>
-              <div className="anim-line" />
+            <div className="reveal-on-scroll network-anim-wrapper">
+              <div className="anim-line-vert" />
+              <div className="anim-node" />
+              <div className="anim-line-horiz" />
+              <div className="anim-drop" />
+              <div className="anim-drop" />
+              <div className="anim-drop" />
+              <div className="anim-drop" />
             </div>
           </div>
           <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
