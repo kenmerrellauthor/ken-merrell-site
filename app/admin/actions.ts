@@ -356,9 +356,24 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
     } catch { /* keep */ }
     let socialLinks: import('@/lib/types').SocialLink[] = site.socialLinks || [];
     try {
-      socialLinks = (JSON.parse(str(form, 'socialLinks', 20000) || '[]') as import('@/lib/types').SocialLink[])
-        .map((s) => ({ platform: String(s.platform || '').trim().slice(0, 100), url: String(s.url || '').trim().slice(0, 500) }))
-        .filter((s) => s.platform && s.url);
+      const parsedLinks = JSON.parse(str(form, 'socialLinks', 20000) || '[]') as import('@/lib/types').SocialLink[];
+      socialLinks = [];
+      for (let i = 0; i < parsedLinks.length; i++) {
+        const s = parsedLinks[i];
+        if (!s.platform || !s.url) continue;
+        let image = s.image;
+        const imgFile = file(form, `socialImage_${i}`);
+        if (imgFile) {
+          image = await uploadImage(imgFile, 'author');
+        } else if (form.get(`removeSocialImage_${i}`) === 'on') {
+          image = undefined;
+        }
+        socialLinks.push({
+          platform: String(s.platform).trim().slice(0, 100),
+          url: String(s.url).trim().slice(0, 500),
+          image
+        });
+      }
     } catch { /* keep */ }
     const notifyEmail = str(form, 'notifyEmail', 200);
     if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(notifyEmail)) return { error: 'The email for messages and signups does not look right.' };

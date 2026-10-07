@@ -76,6 +76,7 @@ export interface HomeQuote {
 export interface SocialLink {
   platform: string;
   url: string;
+  image?: string;
 }
 
 export interface SiteSettings {

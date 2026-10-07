@@ -417,6 +417,11 @@ function EditableSocialLink({
                 {link.url}
               </span>
             )}
+            {link.image && (
+              <span style={{ fontSize: 12, color: 'var(--gold)' }}>
+                ✓ Custom image
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -438,6 +443,14 @@ function EditableSocialLink({
             <input className="crm-in" aria-label="Platform name" value={draft.platform} onChange={(e) => setDraft({ ...draft, platform: e.target.value })} placeholder="Platform (e.g. Instagram)" />
             <input className="crm-in" aria-label="URL" type="url" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} placeholder="https://..." />
           </div>
+          <ImagePick
+            name={`socialImage_${idx}`}
+            current={draft.image || null}
+            label="Upload background image (optional)"
+            aspect="300 / 400"
+            removeName={`removeSocialImage_${idx}`}
+            sizeHint="Recommended: 600 × 800"
+          />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
             <button type="button" onClick={handleSave} className="crm-btn pri" style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Ic k="check" s={14} />

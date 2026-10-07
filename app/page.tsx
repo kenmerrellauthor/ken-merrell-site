@@ -234,10 +234,12 @@ export default async function Home() {
             )}
             {site.socialLinks?.map((link, idx) => (
               <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
-                <div className="social-card-bg" style={{ background: '#080605', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
-                    <SocialIcon platform={link.platform} s={100} />
-                  </div>
+                <div className="social-card-bg" style={link.image ? { backgroundImage: `url(${link.image})` } : { background: '#080605', overflow: 'hidden' }}>
+                  {!link.image && (
+                    <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
+                      <SocialIcon platform={link.platform} s={100} />
+                    </div>
+                  )}
                 </div>
                 <div className="social-card-gradient" />
                 <div className="social-card-content">
@@ -249,7 +251,7 @@ export default async function Home() {
               </a>
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.6, maxWidth: '1200px', margin: '24px auto 0', padding: '0 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.6, maxWidth: '1200px', margin: '24px auto 0', padding: '0 20px' }}>
             <span>Swipe to explore</span>
             <Arrow />
           </div>
