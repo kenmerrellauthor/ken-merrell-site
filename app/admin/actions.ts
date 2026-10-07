@@ -122,6 +122,9 @@ async function sampleFromFile(f: File): Promise<string> {
     return value.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   if (name.endsWith('.pdf')) {
+    if (typeof (global as any).DOMMatrix === 'undefined') {
+      (global as any).DOMMatrix = class DOMMatrix {};
+    }
     const pdfParse = (await import('pdf-parse')) as any;
     const parser = pdfParse.default || pdfParse;
     const { text } = await parser(buf);
