@@ -218,7 +218,11 @@ export default async function Home() {
             )}
             {site.amazonAuthorUrl && (
               <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="Amazon">
-                <div className="social-card-bg" style={{ backgroundImage: `url(${books[0]?.cover || books[0]?.banner || ''})` }} />
+                <div className="social-card-bg" style={{ background: '#080605', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
+                    <SocialIcon platform="Amazon" s={100} />
+                  </div>
+                </div>
                 <div className="social-card-gradient" />
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform="Amazon" s={24} /></div>
@@ -230,7 +234,11 @@ export default async function Home() {
             )}
             {site.socialLinks?.map((link, idx) => (
               <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
-                <div className="social-card-bg" style={{ backgroundImage: `url(${books[(idx + 1) % books.length]?.banner || books[(idx + 1) % books.length]?.cover || ''})` }} />
+                <div className="social-card-bg" style={{ background: '#080605', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
+                    <SocialIcon platform={link.platform} s={100} />
+                  </div>
+                </div>
                 <div className="social-card-gradient" />
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform={link.platform} s={24} /></div>
