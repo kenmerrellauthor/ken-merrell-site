@@ -8,7 +8,7 @@ import Countdown from '@/components/Countdown';
 import { ContactForm } from '@/components/Forms';
 import { Cover, Eyebrow, Seal } from '@/components/Bits';
 import { Case, Cubby, SoonCubby, EmptyCubby } from '@/components/Shelf';
-import { Arrow, Ext } from '@/components/icons';
+import { Arrow, Ext, SocialIcon } from '@/components/icons';
 import ScrollReveal from '@/components/ScrollReveal';
 import { getBooks, getSite, getVideos, isBookNew } from '@/lib/store';
 
@@ -184,13 +184,23 @@ export default async function Home() {
                 <span>Book clubs &amp; reading groups are always welcome.</span>
               </div>
             </div>
-            {site.socialLinks && site.socialLinks.length > 0 && (
+            {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
               <div className="connect-with-us" style={{ marginTop: '2rem' }}>
                 <h3 style={{ fontSize: '12px', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '12px', color: '#a89d88', fontFamily: 'var(--serif-c)', fontWeight: 700 }}>Connect With Us</h3>
                 <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  {site.youtubeUrl && (
+                    <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title="YouTube">
+                      <SocialIcon platform="YouTube" s={16} /> YOUTUBE
+                    </a>
+                  )}
+                  {site.amazonAuthorUrl && (
+                    <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title="Amazon">
+                      <SocialIcon platform="Amazon" s={16} /> AMAZON
+                    </a>
+                  )}
                   {site.socialLinks.map((link, idx) => (
-                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textTransform: 'uppercase', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em' }}>
-                      {link.platform}
+                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title={link.platform}>
+                      <SocialIcon platform={link.platform} s={16} /> {link.platform}
                     </a>
                   ))}
                 </div>
