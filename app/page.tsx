@@ -147,9 +147,13 @@ export default async function Home() {
               <Eyebrow num={roman[2]} text="WATCH" />
               <h2 className="h2">Readings, interviews <em>&amp; trailers</em></h2>
             </div>
-            {site.youtubeUrl && (
-              <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="link-underline">VISIT THE YOUTUBE CHANNEL <Ext /></a>
-            )}
+            {(() => {
+              const ytLink = site.socialLinks?.find(l => l.platform.toLowerCase() === 'youtube');
+              if (!ytLink) return null;
+              return (
+                <a href={ytLink.url} target="_blank" rel="noopener noreferrer" className="link-underline">VISIT THE YOUTUBE CHANNEL <Ext /></a>
+              );
+            })()}
           </div>
           <div className="reveal-on-scroll reveal-delay-1">
             <VideoGrid videos={videos.slice(0, 3)} />
@@ -192,7 +196,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
+      {site.socialLinks && site.socialLinks.length > 0 && (
         <section className="social-band" style={{ padding: '100px 20px', borderTop: '1px solid rgba(201,168,96,.18)', textAlign: 'center', background: '#0a0806', position: 'relative', overflow: 'hidden' }}>
           <div className="km-grain abs" style={{ opacity: 0.3 }} />
           <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -204,34 +208,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
-            {site.youtubeUrl && (
-              <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="YouTube">
-                <div className="social-card-bg" style={{ backgroundImage: `url(${videos[0]?.thumbnail || books[0]?.banner || books[0]?.cover || ''})` }} />
-                <div className="social-card-gradient" />
-                <div className="social-card-content">
-                  <div className="social-card-icon"><SocialIcon platform="YouTube" s={24} /></div>
-                  <div className="social-card-name">
-                    YouTube
-                  </div>
-                </div>
-              </a>
-            )}
-            {site.amazonAuthorUrl && (
-              <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="Amazon">
-                <div className="social-card-bg" style={{ background: '#080605', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
-                    <SocialIcon platform="Amazon" s={100} />
-                  </div>
-                </div>
-                <div className="social-card-gradient" />
-                <div className="social-card-content">
-                  <div className="social-card-icon"><SocialIcon platform="Amazon" s={24} /></div>
-                  <div className="social-card-name">
-                    Amazon
-                  </div>
-                </div>
-              </a>
-            )}
+
             {site.socialLinks?.map((link, idx) => (
               <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
                 <div className="social-card-bg" style={link.image ? { backgroundImage: `url("${link.image}")` } : { background: '#080605', overflow: 'hidden' }}>

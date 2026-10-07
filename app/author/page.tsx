@@ -108,19 +108,10 @@ export default async function AuthorPage() {
               </Link>
             </div>
             
-            {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
+            {site.socialLinks && site.socialLinks.length > 0 && (
               <div style={{ display: 'flex', gap: '1rem', marginTop: 32, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--serif-c)', fontSize: 11, fontWeight: 600, letterSpacing: '.18em', color: 'var(--muted)', textTransform: 'uppercase' }}>Connect:</span>
-                {site.youtubeUrl && (
-                  <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
-                    <SocialIcon platform="YouTube" s={18} /> YOUTUBE
-                  </a>
-                )}
-                {site.amazonAuthorUrl && (
-                  <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon Author Page">
-                    <SocialIcon platform="Amazon" s={18} /> AMAZON
-                  </a>
-                )}
+
                 {site.socialLinks?.map((link, idx) => (
                   <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
                     <SocialIcon platform={link.platform} s={18} /> {link.platform}

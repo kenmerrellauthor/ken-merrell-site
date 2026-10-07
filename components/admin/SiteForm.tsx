@@ -537,25 +537,7 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
             {quotes.length < 6 && <button type="button" className="drop" style={{ alignSelf: 'flex-start', background: 'none' }} onClick={() => setQuotes([...quotes, { text: '', sub: '', who: '' }])}><Ic k="plus" s={15} />Add a quote</button>}
           </section>
           <section className="crm-card">
-            <h2>Links &amp; email</h2>
-            <div className="crm-grid2">
-              <EditableField
-                label="AMAZON AUTHOR PAGE"
-                name="amazonAuthorUrl"
-                type="url"
-                defaultValue={site.amazonAuthorUrl}
-                placeholder="https://www.amazon.com/stores/…"
-                icon="link"
-              />
-              <EditableField
-                label="YOUTUBE CHANNEL"
-                name="youtubeUrl"
-                type="url"
-                defaultValue={site.youtubeUrl}
-                placeholder="https://www.youtube.com/@…"
-                icon="video"
-              />
-            </div>
+            <h2>Email Settings</h2>
             <EditableField
               label="WHERE MESSAGES AND SIGNUPS ARE SENT"
               name="notifyEmail"
