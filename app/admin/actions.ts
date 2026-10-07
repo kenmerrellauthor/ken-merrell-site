@@ -355,16 +355,21 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
         .filter((q) => q.text);
     } catch { /* keep */ }
     let socialLinks: import('@/lib/types').SocialLink[] = site.socialLinks || [];
-    try {
-      const parsedLinks = JSON.parse(str(form, 'socialLinks', 20000) || '[]') as import('@/lib/types').SocialLink[];
+    const parsedLinks = JSON.parse(str(form, 'socialLinks', 20000) || '[]') as import('@/lib/types').SocialLink[];
+    if (parsedLinks.length > 0 || str(form, 'socialLinks', 20000) !== '') {
       socialLinks = [];
       for (let i = 0; i < parsedLinks.length; i++) {
         const s = parsedLinks[i];
         if (!s.platform || !s.url) continue;
-        let image = s.image;
+        const existingLink = site.socialLinks?.find((ex) => ex.platform === s.platform && ex.url === s.url);
+        let image = s.image || existingLink?.image;
         const imgFile = file(form, `socialImage_${i}`);
         if (imgFile) {
-          image = await uploadImage(imgFile, 'author');
+          try {
+            image = await uploadImage(imgFile, 'author');
+          } catch (err: any) {
+            return { error: `Image upload failed for ${s.platform}: ${err.message}` };
+          }
         } else if (form.get(`removeSocialImage_${i}`) === 'on') {
           image = undefined;
         }
@@ -374,7 +379,7 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
           image
         });
       }
-    } catch { /* keep */ }
+    }
     const notifyEmail = str(form, 'notifyEmail', 200);
     if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(notifyEmail)) return { error: 'The email for messages and signups does not look right.' };
     await saveSite({
