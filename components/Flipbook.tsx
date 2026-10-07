@@ -152,7 +152,7 @@ function useSwipe(onNext: () => void, onPrev: () => void) {
 /* ---------- desktop / tablet: the open two-page book ---------- */
 function DesktopBook({ book }: { book: FlipBookProps }) {
   const pages = useMemo<Page[]>(() => {
-    const text = paginate(parseSample(book.sample || ''), 800, 640);
+    const text = paginate(parseSample(book.sample || ''), 950, 750);
     const list: Page[] = [{ kind: 'cover', side: 'right' }, { kind: 'endpaper', side: 'left' }, { kind: 'opener', side: 'right', num: 1 }];
     text.forEach((blocks, k) =>
       list.push({
@@ -243,7 +243,7 @@ function DesktopBook({ book }: { book: FlipBookProps }) {
 
 /* ---------- phone: one page at a time ---------- */
 function PhoneBook({ book }: { book: FlipBookProps }) {
-  const text = useMemo(() => paginate(parseSample(book.sample || ''), 760, 600), [book.sample]);
+  const text = useMemo(() => paginate(parseSample(book.sample || ''), 860, 680), [book.sample]);
   const total = text.length + 2; // opener, text pages, end
   const [i, setI] = useState(0);
   const go = (d: number) => setI((c) => Math.max(0, Math.min(total - 1, c + d)));
