@@ -152,7 +152,7 @@ function useSwipe(onNext: () => void, onPrev: () => void) {
 /* ---------- desktop / tablet: the open two-page book ---------- */
 function DesktopBook({ book }: { book: FlipBookProps }) {
   const pages = useMemo<Page[]>(() => {
-    const text = paginate(parseSample(book.sample || ''), 620, 540);
+    const text = paginate(parseSample(book.sample || ''), 850, 770);
     const list: Page[] = [{ kind: 'cover', side: 'right' }, { kind: 'endpaper', side: 'left' }, { kind: 'opener', side: 'right', num: 1 }];
     text.forEach((blocks, k) =>
       list.push({
