@@ -20,7 +20,7 @@ import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 import { formatStylishTitle } from '@/components/Bits';
 
-export type AdminState = { ok?: boolean; error?: string; fields?: Record<string, string>; id?: string; book?: Book };
+export type AdminState = { ok?: boolean; error?: string; fields?: Record<string, string>; id?: string; book?: Book; site?: import('@/lib/types').SiteSettings };
 
 const cleanUrl = (s: string) => {
   const t = s.trim();
@@ -382,7 +382,7 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
     }
     const notifyEmail = str(form, 'notifyEmail', 200);
     if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(notifyEmail)) return { error: 'The email for messages and signups does not look right.' };
-    await saveSite({
+    const updatedSite = {
       pullQuote: str(form, 'pullQuote', 300).replace(/^[“"]|[”"]$/g, ''),
       bio: str(form, 'bio', 8000),
       photo,
@@ -391,9 +391,10 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
       notifyEmail,
       homeQuotes,
       socialLinks
-    });
+    };
+    await saveSite(updatedSite);
     refresh();
-    return { ok: true };
+    return { ok: true, site: updatedSite };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Could not save.' };
   }

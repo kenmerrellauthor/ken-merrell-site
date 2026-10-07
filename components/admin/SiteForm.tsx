@@ -1,5 +1,5 @@
 'use client';
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useRef, useState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import type { HomeQuote, SiteSettings, SocialLink } from '@/lib/types';
 import { saveSiteAction, type AdminState } from '@/app/admin/actions';
@@ -470,6 +470,14 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
   const [state, action] = useActionState<AdminState, FormData>(saveSiteAction, {});
   const [quotes, setQuotes] = useState<HomeQuote[]>(site.homeQuotes);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(site.socialLinks || []);
+
+  useEffect(() => {
+    if (state.site) {
+      if (state.site.homeQuotes) setQuotes(state.site.homeQuotes);
+      if (state.site.socialLinks) setSocialLinks(state.site.socialLinks);
+    }
+  }, [state.site]);
+
   const set = (k: number, key: keyof HomeQuote, v: string) => setQuotes(quotes.map((q, j) => (j === k ? { ...q, [key]: v } : q)));
   return (
     <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
