@@ -40,7 +40,11 @@ export function paginate(blocks: Block[], budget: number, firstBudget = budget):
     if (b.kind === 'p') {
       const room = cap - used - 25;
       if (room > 15) {
-        const sentences = b.text.match(/[^.!?”"“‘']+[.!?]+[”"’']?\s*|.+$/g) || [b.text];
+        const parts = b.text.split(/([.!?]+[”"’']?\s*)/);
+        const sentences = [];
+        for (let i = 0; i < parts.length; i += 2) {
+          if (parts[i]) sentences.push(parts[i] + (parts[i+1] || ''));
+        }
         let head = '';
         while (sentences.length && (head + sentences[0]).length <= room) head += sentences.shift()!;
         if (head.trim()) {
