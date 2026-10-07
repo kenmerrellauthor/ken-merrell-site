@@ -202,23 +202,44 @@ export default async function Home() {
             <p style={{ margin: '0 auto 48px', fontSize: '18px', color: 'var(--muted-2)', maxWidth: '440px', lineHeight: 1.6 }}>
               Follow across the web for the latest updates, upcoming releases, and behind-the-scenes looks.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {site.youtubeUrl && (
-                <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
-                  <SocialIcon platform="YouTube" s={20} /> YOUTUBE
-                </a>
-              )}
-              {site.amazonAuthorUrl && (
-                <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon">
-                  <SocialIcon platform="Amazon" s={20} /> AMAZON
-                </a>
-              )}
-              {site.socialLinks?.map((link, idx) => (
-                <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
-                  <SocialIcon platform={link.platform} s={20} /> {link.platform}
-                </a>
-              ))}
-            </div>
+          </div>
+          <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
+            {site.youtubeUrl && (
+              <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="YouTube">
+                <div className="social-card-bg" style={{ backgroundImage: `url(${videos[0]?.thumbUrl || books[0]?.banner || books[0]?.cover || ''})` }} />
+                <div className="social-card-gradient" />
+                <div className="social-card-content">
+                  <div className="social-card-icon"><SocialIcon platform="YouTube" s={24} /></div>
+                  <div className="social-card-name">
+                    YouTube <span className="social-card-arrow"><Arrow /></span>
+                  </div>
+                </div>
+              </a>
+            )}
+            {site.amazonAuthorUrl && (
+              <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="Amazon">
+                <div className="social-card-bg" style={{ backgroundImage: `url(${books[0]?.cover || books[0]?.banner || ''})` }} />
+                <div className="social-card-gradient" />
+                <div className="social-card-content">
+                  <div className="social-card-icon"><SocialIcon platform="Amazon" s={24} /></div>
+                  <div className="social-card-name">
+                    Amazon <span className="social-card-arrow"><Arrow /></span>
+                  </div>
+                </div>
+              </a>
+            )}
+            {site.socialLinks?.map((link, idx) => (
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
+                <div className="social-card-bg" style={{ backgroundImage: `url(${books[(idx + 1) % books.length]?.banner || books[(idx + 1) % books.length]?.cover || ''})` }} />
+                <div className="social-card-gradient" />
+                <div className="social-card-content">
+                  <div className="social-card-icon"><SocialIcon platform={link.platform} s={24} /></div>
+                  <div className="social-card-name">
+                    {link.platform} <span className="social-card-arrow"><Arrow /></span>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         </section>
       )}
