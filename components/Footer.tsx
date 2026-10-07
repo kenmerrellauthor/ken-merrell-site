@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { YouTube } from './icons';
+import { YouTube, SocialIcon } from './icons';
 import type { SiteSettings } from '@/lib/types';
 
 export default function Footer({ site }: { site: SiteSettings }) {
@@ -25,7 +25,9 @@ export default function Footer({ site }: { site: SiteSettings }) {
               <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="sq"><YouTube /></a>
             )}
             {site.socialLinks?.map((link, idx) => (
-              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textTransform: 'uppercase' }}>{link.platform}</a>
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="sq" aria-label={link.platform} title={link.platform}>
+                <SocialIcon platform={link.platform} />
+              </a>
             ))}
           </div>
         )}

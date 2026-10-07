@@ -16,3 +16,20 @@ export const Check = ({ s = 30 }: P) => <svg {...base(s, 2)} strokeLinecap="roun
 export const Warn = ({ s = 14 }: P) => <svg {...base(s, 2)} strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5v.01" /></svg>;
 export const Person = ({ s = 56 }: P) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#6e6457" strokeWidth={1} aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>;
 export const YouTube = ({ s = 18 }: P) => <svg {...base(s)}><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" /><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" /></svg>;
+export const Instagram = ({ s = 18 }: P) => <svg {...base(s)}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>;
+export const Facebook = ({ s = 18 }: P) => <svg {...base(s)}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>;
+export const Twitter = ({ s = 18 }: P) => <svg {...base(s)}><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>;
+export const TikTok = ({ s = 18 }: P) => <svg {...base(s)}><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v3a3 3 0 0 1-3-3v9a8 8 0 1 1-8-8v3a5 5 0 0 0 1 9.9z"></path></svg>;
+export const LinkIcon = ({ s = 18 }: P) => <svg {...base(s)}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>;
+export const Goodreads = ({ s = 18 }: P) => <svg {...base(s)}><path d="M8 4h8v11a4 4 0 0 1-8 0V4z"></path><line x1="12" y1="4" x2="12" y2="20"></line></svg>;
+
+export const SocialIcon = ({ platform, s = 18 }: { platform: string; s?: number }) => {
+  const p = platform.toLowerCase();
+  if (p.includes('instagram') || p.includes('insta')) return <Instagram s={s} />;
+  if (p.includes('facebook') || p.includes('fb')) return <Facebook s={s} />;
+  if (p.includes('twitter') || p.includes('x')) return <Twitter s={s} />;
+  if (p.includes('tiktok')) return <TikTok s={s} />;
+  if (p.includes('youtube')) return <YouTube s={s} />;
+  if (p.includes('goodreads')) return <Goodreads s={s} />;
+  return <LinkIcon s={s} />;
+};

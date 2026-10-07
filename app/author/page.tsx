@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Eyebrow } from '@/components/Bits';
-import { Arrow, ArrowLeft, Person } from '@/components/icons';
+import { Arrow, ArrowLeft, Person, SocialIcon } from '@/components/icons';
 import { getBooks, getSite } from '@/lib/store';
 
 export const revalidate = 60;
@@ -107,6 +107,17 @@ export default async function AuthorPage() {
                 WRITE TO KEN
               </Link>
             </div>
+            
+            {(site.socialLinks && site.socialLinks.length > 0) && (
+              <div style={{ display: 'flex', gap: 16, marginTop: 32, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--serif-c)', fontSize: 11, fontWeight: 600, letterSpacing: '.18em', color: 'var(--muted)', textTransform: 'uppercase' }}>Connect:</span>
+                {site.socialLinks.map((link, idx) => (
+                  <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label={link.platform} title={link.platform}>
+                    <SocialIcon platform={link.platform} s={20} />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>
