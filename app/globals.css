@@ -457,7 +457,7 @@ button { font: inherit; }
 .site-footer nav { display: flex; gap: 44px; flex-wrap: wrap; justify-content: center; font-family: var(--serif-c); font-size: 12px; font-weight: 600; letter-spacing: .22em; }
 .site-footer nav a { color: var(--soft-2); }
 .site-footer nav a:hover { color: var(--gold); }
-.site-footer .links { display: flex; gap: 12px; }
+.site-footer .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .site-footer .links a { height: 46px; padding: 0 18px; border: 1px solid #3a332b; display: flex; align-items: center; gap: 10px; font-family: var(--serif-c); font-size: 11px; letter-spacing: .18em; color: var(--soft-2); }
 .site-footer .links a.sq { width: 46px; padding: 0; justify-content: center; }
 .site-footer .bottom { position: relative; align-self: stretch; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid rgba(239,231,214,.08); font-size: 14px; color: #6e6457; }
