@@ -187,20 +187,20 @@ export default async function Home() {
             {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
               <div className="connect-with-us" style={{ marginTop: '2rem' }}>
                 <h3 style={{ fontSize: '12px', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '12px', color: '#a89d88', fontFamily: 'var(--serif-c)', fontWeight: 700 }}>Connect With Us</h3>
-                <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   {site.youtubeUrl && (
-                    <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title="YouTube">
-                      <SocialIcon platform="YouTube" s={16} /> YOUTUBE
+                    <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
+                      <SocialIcon platform="YouTube" s={18} /> YOUTUBE
                     </a>
                   )}
                   {site.amazonAuthorUrl && (
-                    <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title="Amazon">
-                      <SocialIcon platform="Amazon" s={16} /> AMAZON
+                    <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon">
+                      <SocialIcon platform="Amazon" s={18} /> AMAZON
                     </a>
                   )}
                   {site.socialLinks.map((link, idx) => (
-                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }} title={link.platform}>
-                      <SocialIcon platform={link.platform} s={16} /> {link.platform}
+                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
+                      <SocialIcon platform={link.platform} s={18} /> {link.platform}
                     </a>
                   ))}
                 </div>

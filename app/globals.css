@@ -79,6 +79,8 @@ button { font: inherit; }
 .btn-text:hover { color: var(--gold-hi); }
 .btn-dark { background: #1b1814; color: #f4ecdc; }
 .btn-dark:hover { color: #fff; background: #2a241e; }
+.btn-social { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--serif-c); font-size: 11px; font-weight: 700; letter-spacing: .18em; padding: 14px 22px; border: 1px solid rgba(201,168,96,.35); background: rgba(15,13,11,.4); color: var(--cream); text-transform: uppercase; transition: all .2s ease; text-decoration: none; }
+.btn-social:hover { background: var(--gold); color: #15120f; border-color: var(--gold); }
 .btn:disabled { opacity: .5; cursor: wait; }
 .link-underline { font-family: var(--serif-c); font-size: 13px; font-weight: 600; letter-spacing: .2em; display: inline-flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--gold); }
 

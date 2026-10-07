@@ -20,13 +20,19 @@ export default function Footer({ site }: { site: SiteSettings }) {
         </nav>
         {(site.amazonAuthorUrl || site.youtubeUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
           <div className="links">
-            {site.amazonAuthorUrl && <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer">AMAZON AUTHOR PAGE</a>}
             {site.youtubeUrl && (
-              <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="sq"><YouTube /></a>
+              <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
+                <SocialIcon platform="YouTube" s={18} />
+              </a>
+            )}
+            {site.amazonAuthorUrl && (
+              <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon">
+                <SocialIcon platform="Amazon" s={18} />
+              </a>
             )}
             {site.socialLinks?.map((link, idx) => (
-              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="sq" aria-label={link.platform} title={link.platform}>
-                <SocialIcon platform={link.platform} />
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
+                <SocialIcon platform={link.platform} s={18} />
               </a>
             ))}
           </div>
