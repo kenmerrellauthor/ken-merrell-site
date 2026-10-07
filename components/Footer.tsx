@@ -18,12 +18,15 @@ export default function Footer({ site }: { site: SiteSettings }) {
           <Link href="/author">ABOUT KEN</Link>
           <Link href="/#contact">CONTACT</Link>
         </nav>
-        {(site.amazonAuthorUrl || site.youtubeUrl) && (
+        {(site.amazonAuthorUrl || site.youtubeUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
           <div className="links">
             {site.amazonAuthorUrl && <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer">AMAZON AUTHOR PAGE</a>}
             {site.youtubeUrl && (
               <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="sq"><YouTube /></a>
             )}
+            {site.socialLinks?.map((link, idx) => (
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textTransform: 'uppercase' }}>{link.platform}</a>
+            ))}
           </div>
         )}
       </div>

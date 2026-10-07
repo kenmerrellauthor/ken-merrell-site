@@ -73,12 +73,18 @@ export interface HomeQuote {
   who: string;
 }
 
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
 export interface SiteSettings {
   pullQuote: string;
   bio: string;
   photo: string | null;
   amazonAuthorUrl: string;
   youtubeUrl: string;
+  socialLinks?: SocialLink[];
   notifyEmail: string;
   homeQuotes: HomeQuote[];
   lastSeenReaders?: string;

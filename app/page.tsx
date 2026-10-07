@@ -184,6 +184,18 @@ export default async function Home() {
                 <span>Book clubs &amp; reading groups are always welcome.</span>
               </div>
             </div>
+            {site.socialLinks && site.socialLinks.length > 0 && (
+              <div className="connect-with-us" style={{ marginTop: '2rem' }}>
+                <h3 style={{ fontSize: '12px', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '12px', color: '#a89d88', fontFamily: 'var(--serif-c)', fontWeight: 700 }}>Connect With Us</h3>
+                <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  {site.socialLinks.map((link, idx) => (
+                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textTransform: 'uppercase', color: '#1b1814', textDecoration: 'none', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em' }}>
+                      {link.platform}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="contact-right reveal-on-scroll reveal-delay-1">
             <h3>Send a message</h3>

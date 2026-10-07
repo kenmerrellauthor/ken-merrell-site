@@ -1,7 +1,7 @@
 'use client';
 import { useActionState, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import type { HomeQuote, SiteSettings } from '@/lib/types';
+import type { HomeQuote, SiteSettings, SocialLink } from '@/lib/types';
 import { saveSiteAction, type AdminState } from '@/app/admin/actions';
 import { Ic } from './AdIcons';
 import { ImagePick } from './ImagePick';
@@ -328,13 +328,140 @@ function EditableQuote({
   );
 }
 
+function EditableSocialLink({
+  link,
+  idx,
+  onUpdate,
+  onRemove
+}: {
+  link: import('@/lib/types').SocialLink;
+  idx: number;
+  onUpdate: (s: import('@/lib/types').SocialLink) => void;
+  onRemove: () => void;
+}) {
+  const [draft, setDraft] = useState(link);
+  const [editing, setEditing] = useState(!link.platform || !link.url);
+  const [justSaved, setJustSaved] = useState(false);
+  const hiddenRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = () => {
+    setDraft(link);
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    onUpdate(draft);
+    setEditing(false);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
+    setTimeout(() => {
+      hiddenRef.current?.form?.requestSubmit();
+    }, 60);
+  };
+
+  const handleCancel = () => {
+    if (!link.platform || !link.url) {
+      onRemove();
+    } else {
+      setDraft(link);
+      setEditing(false);
+    }
+  };
+
+  return (
+    <div className="crm-field" style={{ paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
+      <input ref={hiddenRef} type="hidden" />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span className="crm-label">SOCIAL LINK {idx + 1}</span>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {justSaved && (
+            <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: '#6dbf78', fontWeight: 600 }}>
+              ✓ SAVED
+            </span>
+          )}
+          {!editing && (
+            <button type="button" className="crm-sm icon" aria-label={`Remove link ${idx + 1}`} onClick={onRemove}>
+              <Ic k="trash" s={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!editing ? (
+        <div
+          style={{
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            background: '#120f0d',
+            border: '1px solid #3a332b',
+            borderRadius: 3,
+            padding: '8px 14px'
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
+            {link.platform ? (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 16, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {link.platform}
+              </span>
+            ) : (
+              <span style={{ fontFamily: 'var(--serif-b)', fontSize: 14, color: 'var(--muted)', fontStyle: 'italic' }}>
+                Empty link
+              </span>
+            )}
+            {link.url && (
+              <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {link.url}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={startEdit}
+            className="crm-sm"
+            style={{
+              flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
+              height: 32, padding: '0 12px', fontSize: 12, background: 'rgba(201,168,96,.12)',
+              borderColor: 'rgba(201,168,96,.35)', color: 'var(--gold)', cursor: 'pointer'
+            }}
+          >
+            <Ic k="edit" s={13} />
+            Edit
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="crm-grid2">
+            <input className="crm-in" aria-label="Platform name" value={draft.platform} onChange={(e) => setDraft({ ...draft, platform: e.target.value })} placeholder="Platform (e.g. Instagram)" />
+            <input className="crm-in" aria-label="URL" type="url" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} placeholder="https://..." />
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+            <button type="button" onClick={handleSave} className="crm-btn pri" style={{ height: 48, padding: '0 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Ic k="check" s={14} />
+              Save
+            </button>
+            <button type="button" onClick={handleCancel} className="crm-btn sec" style={{ height: 48, padding: '0 14px', fontSize: 13 }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SiteForm({ site }: { site: SiteSettings }) {
   const [state, action] = useActionState<AdminState, FormData>(saveSiteAction, {});
   const [quotes, setQuotes] = useState<HomeQuote[]>(site.homeQuotes);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(site.socialLinks || []);
   const set = (k: number, key: keyof HomeQuote, v: string) => setQuotes(quotes.map((q, j) => (j === k ? { ...q, [key]: v } : q)));
   return (
     <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
       <input type="hidden" name="homeQuotes" value={JSON.stringify(quotes)} />
+      <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
       <div className="crm-top">
         <div><h1>Author &amp; bio</h1><p>What visitors see in the About section, the homepage quotes, and where messages are sent.</p></div>
         <div className="crm-actions"><Save /></div>
@@ -417,6 +544,22 @@ export default function SiteForm({ site }: { site: SiteSettings }) {
               icon="mail"
               help="Never shown on the site. Contact form messages and advance reader signups are emailed here."
             />
+          </section>
+          <section className="crm-card">
+            <h2>Social Media Links</h2>
+            <p className="sub">Custom social media links displayed on the site.</p>
+            {socialLinks.map((s, k) => (
+              <EditableSocialLink
+                key={k}
+                idx={k}
+                link={s}
+                onUpdate={(newS) => {
+                  setSocialLinks(socialLinks.map((oldS, j) => j === k ? newS : oldS));
+                }}
+                onRemove={() => setSocialLinks(socialLinks.filter((_, j) => j !== k))}
+              />
+            ))}
+            <button type="button" className="drop" style={{ alignSelf: 'flex-start', background: 'none' }} onClick={() => setSocialLinks([...socialLinks, { platform: '', url: '' }])}><Ic k="plus" s={15} />Add a link</button>
           </section>
         </div>
       </div>

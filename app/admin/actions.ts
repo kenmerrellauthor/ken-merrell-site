@@ -354,6 +354,12 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
         .map((q) => ({ text: String(q.text || '').trim().slice(0, 300), sub: String(q.sub || '').trim().slice(0, 200), who: String(q.who || '').trim().slice(0, 100) }))
         .filter((q) => q.text);
     } catch { /* keep */ }
+    let socialLinks: import('@/lib/types').SocialLink[] = site.socialLinks || [];
+    try {
+      socialLinks = (JSON.parse(str(form, 'socialLinks', 20000) || '[]') as import('@/lib/types').SocialLink[])
+        .map((s) => ({ platform: String(s.platform || '').trim().slice(0, 100), url: String(s.url || '').trim().slice(0, 500) }))
+        .filter((s) => s.platform && s.url);
+    } catch { /* keep */ }
     const notifyEmail = str(form, 'notifyEmail', 200);
     if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(notifyEmail)) return { error: 'The email for messages and signups does not look right.' };
     await saveSite({
@@ -363,7 +369,8 @@ export async function saveSiteAction(_p: AdminState, form: FormData): Promise<Ad
       amazonAuthorUrl: str(form, 'amazonAuthorUrl', 500),
       youtubeUrl: str(form, 'youtubeUrl', 500),
       notifyEmail,
-      homeQuotes
+      homeQuotes,
+      socialLinks
     });
     refresh();
     return { ok: true };
