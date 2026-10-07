@@ -1,9 +1,17 @@
 export type Block = { kind: 'p'; text: string; cont?: boolean; noIndent?: boolean } | { kind: 'break' };
 
 export function parseSample(text: string): Block[] {
-  const joinedText = text.replace(/\s+/g, ' ').trim();
-  if (!joinedText) return [];
-  return [{ kind: 'p', text: joinedText, noIndent: true }];
+  const blocks: Block[] = [];
+  const raw = text
+    .replace(/\r\n/g, '\n')
+    .split(/\n\s*\n/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  for (const t of raw) {
+    blocks.push({ kind: 'p', text: t.replace(/\s+/g, ' '), noIndent: true });
+  }
+  return blocks;
 }
 
 const cost = (b: Block) => (b.kind === 'break' ? 60 : b.text.length + 25);
@@ -31,7 +39,7 @@ export function paginate(blocks: Block[], budget: number, firstBudget = budget):
     }
     if (b.kind === 'p') {
       const room = cap - used - 25;
-      if (room > 60) {
+      if (room > 15) {
         const sentences = b.text.match(/[^.!?”"]+[.!?]+[”"]?\s*|.+$/g) || [b.text];
         let head = '';
         while (sentences.length && (head + sentences[0]).length <= room) head += sentences.shift()!;
@@ -41,19 +49,17 @@ export function paginate(blocks: Block[], budget: number, firstBudget = budget):
           push();
           continue;
         }
-        // If the first sentence alone exceeds room, split by words when room is sufficiently large
-        if (room > 90) {
-          const words = b.text.split(/\s+/);
-          let wordHead = '';
-          while (words.length && (wordHead + (wordHead ? ' ' : '') + words[0]).length <= room) {
-            wordHead += (wordHead ? ' ' : '') + words.shift()!;
-          }
-          if (wordHead.trim() && words.length) {
-            cur.push({ kind: 'p', text: wordHead.trim(), cont: b.cont, noIndent: b.noIndent });
-            queue.unshift({ kind: 'p', text: words.join(' ').trim(), cont: true });
-            push();
-            continue;
-          }
+        // If the first sentence alone exceeds room, split by words
+        const words = b.text.split(/\s+/);
+        let wordHead = '';
+        while (words.length && (wordHead + (wordHead ? ' ' : '') + words[0]).length <= room) {
+          wordHead += (wordHead ? ' ' : '') + words.shift()!;
+        }
+        if (wordHead.trim() && words.length) {
+          cur.push({ kind: 'p', text: wordHead.trim(), cont: b.cont, noIndent: b.noIndent });
+          queue.unshift({ kind: 'p', text: words.join(' ').trim(), cont: true });
+          push();
+          continue;
         }
       }
       if (!cur.length) {
