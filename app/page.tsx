@@ -206,7 +206,7 @@ export default async function Home() {
           <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
             {site.youtubeUrl && (
               <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="social-card" title="YouTube">
-                <div className="social-card-bg" style={{ backgroundImage: `url(${videos[0]?.thumbUrl || books[0]?.banner || books[0]?.cover || ''})` }} />
+                <div className="social-card-bg" style={{ backgroundImage: `url(${videos[0]?.thumbnail || books[0]?.banner || books[0]?.cover || ''})` }} />
                 <div className="social-card-gradient" />
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform="YouTube" s={24} /></div>
