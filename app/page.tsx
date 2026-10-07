@@ -210,15 +210,12 @@ export default async function Home() {
               <div className="anim-line-vert" />
               <div className="anim-node" />
               <div className="anim-line-horiz" />
-              <div className="anim-drop" />
-              <div className="anim-drop" />
-              <div className="anim-drop" />
-              <div className="anim-drop" />
             </div>
           </div>
-          <div className="social-scroller" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="social-scroller" style={{ position: 'relative', zIndex: 1, paddingTop: '50px' }}>
             {site.socialLinks?.map((link, idx) => (
               <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
+                <div className="card-drop-wire reveal-on-scroll" style={{ transitionDelay: `${0.8 + (idx * 0.15)}s` }} />
                 <div className="social-card-bg" style={link.image ? { backgroundImage: `url("${link.image}")` } : { background: '#080605', overflow: 'hidden' }}>
                   {!link.image && (
                     <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
