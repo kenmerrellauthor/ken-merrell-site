@@ -121,8 +121,13 @@ async function sampleFromFile(f: File): Promise<string> {
     const { value } = await mammoth.extractRawText({ buffer: buf });
     return value.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
+  if (name.endsWith('.pdf')) {
+    const pdfParse = (await import('pdf-parse')).default;
+    const { text } = await pdfParse(buf);
+    return text.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
   if (name.endsWith('.txt') || name.endsWith('.md')) return buf.toString('utf8').trim();
-  throw new Error('Upload the sample as a Word (.docx) or text (.txt) file. For a PDF or Google Doc, copy the text and paste it in.');
+  throw new Error('Upload the sample as a PDF (.pdf), Word (.docx) or text (.txt) file.');
 }
 
 export async function saveBookAction(_p: AdminState, form: FormData): Promise<AdminState> {

@@ -1086,14 +1086,14 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
 
               <section className="crm-card">
                 <h2>Sample chapter</h2>
-                <p className="sub">Paste the text, or upload a Word (.docx) or text file. It is laid out as book pages automatically. Leave a blank line between paragraphs, and put *** on its own line for a scene break.</p>
+                <p className="sub">Paste the text, or upload a PDF (.pdf), Word (.docx) or text file. It is laid out as book pages automatically. Leave a blank line between paragraphs, and put *** on its own line for a scene break.</p>
                 <label className="drop" style={{ position: 'relative' }}>
                   <span style={{ display: 'flex', color: 'var(--gold)' }}><Ic k="file" s={24} sw={1.4} /></span>
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <span style={{ color: 'var(--cream)' }}>{fileName || 'Upload the chapter file'}</span>
-                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{fileName ? 'It will replace the text below when you save.' : words ? `Current sample: about ${words.toLocaleString()} words` : 'Word (.docx) or .txt'}</span>
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{fileName ? 'It will replace the text below when you save.' : words ? `Current sample: about ${words.toLocaleString()} words` : 'PDF (.pdf), Word (.docx) or .txt'}</span>
                   </span>
-                  <input type="file" name="sampleFile" accept=".docx,.txt,.md" onChange={(e) => setFileName(e.target.files?.[0]?.name || '')} />
+                  <input type="file" name="sampleFile" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFileName(e.target.files?.[0]?.name || '')} />
                 </label>
                 <Field label="CHAPTER TITLE" name="chapterTitle" value={currentBook.chapterTitle} placeholder="Optional, e.g. The Gallows Road" />
                 <Field label="OR PASTE THE TEXT" name="sample" value={currentBook.sample} area rows={14} placeholder="Chapter One…" />
