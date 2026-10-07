@@ -26,7 +26,7 @@ import {
   FaGithub, 
   FaDiscord, 
   FaRedditAlien,
-  FaSnapchatGhost,
+  FaSnapchat,
   FaPinterestP,
   FaTwitch,
   FaLink
@@ -44,7 +44,7 @@ export const SocialIcon = ({ platform, s = 18 }: { platform: string; s?: number 
   if (p.includes('github') || p.includes('git')) return <FaGithub size={s} />;
   if (p.includes('discord')) return <FaDiscord size={s} />;
   if (p.includes('reddit')) return <FaRedditAlien size={s} />;
-  if (p.includes('snapchat') || p.includes('snap')) return <FaSnapchatGhost size={s} />;
+  if (p.includes('snapchat') || p.includes('snap')) return <FaSnapchat size={s} />;
   if (p.includes('pinterest')) return <FaPinterestP size={s} />;
   if (p.includes('twitch')) return <FaTwitch size={s} />;
   return <FaLink size={s} />;
