@@ -211,7 +211,7 @@ export default async function Home() {
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform="YouTube" s={24} /></div>
                   <div className="social-card-name">
-                    YouTube <span className="social-card-arrow"><Arrow /></span>
+                    YouTube
                   </div>
                 </div>
               </a>
@@ -223,7 +223,7 @@ export default async function Home() {
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform="Amazon" s={24} /></div>
                   <div className="social-card-name">
-                    Amazon <span className="social-card-arrow"><Arrow /></span>
+                    Amazon
                   </div>
                 </div>
               </a>
@@ -235,13 +235,13 @@ export default async function Home() {
                 <div className="social-card-content">
                   <div className="social-card-icon"><SocialIcon platform={link.platform} s={24} /></div>
                   <div className="social-card-name">
-                    {link.platform} <span className="social-card-arrow"><Arrow /></span>
+                    {link.platform}
                   </div>
                 </div>
               </a>
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.5 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.6, maxWidth: '1200px', margin: '24px auto 0', padding: '0 20px' }}>
             <span>Swipe to explore</span>
             <Arrow />
           </div>
