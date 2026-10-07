@@ -351,11 +351,11 @@ function EditableSocialLink({
 
   const handleSave = () => {
     onUpdate(draft);
-    setEditing(false);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2500);
     setTimeout(() => {
       hiddenRef.current?.form?.requestSubmit();
+      setTimeout(() => setEditing(false), 200);
     }, 60);
   };
 
