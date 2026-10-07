@@ -1,25 +1,9 @@
 export type Block = { kind: 'p'; text: string; cont?: boolean; noIndent?: boolean } | { kind: 'break' };
 
 export function parseSample(text: string): Block[] {
-  const blocks: Block[] = [];
-  const raw = text
-    .replace(/\r\n/g, '\n')
-    .split(/\n\s*\n/)
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  let nextNoIndent = true; // First paragraph has no indent
-
-  for (const t of raw) {
-    if (/^(\*\s*){3,}$|^#{1,}$|^~+$/.test(t)) {
-      blocks.push({ kind: 'break' });
-      nextNoIndent = true; // Next paragraph after break has no indent
-    } else {
-      blocks.push({ kind: 'p', text: t.replace(/\s+/g, ' '), noIndent: nextNoIndent });
-      nextNoIndent = false;
-    }
-  }
-  return blocks;
+  const joinedText = text.replace(/\s+/g, ' ').trim();
+  if (!joinedText) return [];
+  return [{ kind: 'p', text: joinedText, noIndent: true }];
 }
 
 const cost = (b: Block) => (b.kind === 'break' ? 60 : b.text.length + 25);
