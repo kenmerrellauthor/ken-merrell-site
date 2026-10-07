@@ -198,7 +198,7 @@ export default async function Home() {
                       <SocialIcon platform="Amazon" s={18} /> AMAZON
                     </a>
                   )}
-                  {site.socialLinks.map((link, idx) => (
+                  {site.socialLinks?.map((link, idx) => (
                     <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
                       <SocialIcon platform={link.platform} s={18} /> {link.platform}
                     </a>
