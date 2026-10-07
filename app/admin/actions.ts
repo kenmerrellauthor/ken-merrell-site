@@ -122,8 +122,9 @@ async function sampleFromFile(f: File): Promise<string> {
     return value.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   if (name.endsWith('.pdf')) {
-    const pdfParse = (await import('pdf-parse')).default;
-    const { text } = await pdfParse(buf);
+    const pdfParse = (await import('pdf-parse')) as any;
+    const parser = pdfParse.default || pdfParse;
+    const { text } = await parser(buf);
     return text.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   if (name.endsWith('.txt') || name.endsWith('.md')) return buf.toString('utf8').trim();
