@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { YouTube, SocialIcon } from './icons';
+import { SocialIcon } from './icons';
 import type { SiteSettings } from '@/lib/types';
 
 export default function Footer({ site }: { site: SiteSettings }) {
