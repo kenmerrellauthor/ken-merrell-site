@@ -1061,12 +1061,12 @@ button { font: inherit; }
   background-size: cover;
   background-position: center;
   transition: transform 0.6s ease, filter 0.6s ease;
-  filter: grayscale(0.5) brightness(0.45) contrast(1.1);
+  filter: grayscale(0.5) brightness(0.25) contrast(1.1);
   z-index: 0;
 }
 .social-card:hover .social-card-bg {
   transform: scale(1.05);
-  filter: grayscale(0) brightness(0.75) contrast(1.05);
+  filter: grayscale(0) brightness(0.55) contrast(1.05);
 }
 .social-card-gradient {
   position: absolute;
