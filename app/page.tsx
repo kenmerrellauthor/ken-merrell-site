@@ -220,7 +220,6 @@ export default async function Home() {
                 </div>
                 <div className="social-card-gradient" />
                 <div className="social-card-content">
-                  <div className="social-card-icon"><SocialIcon platform={link.platform} s={24} /></div>
                   <div className="social-card-name">
                     {link.platform}
                   </div>
