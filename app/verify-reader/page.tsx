@@ -55,7 +55,7 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     const h = await headers();
     const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
     const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
+    const origin = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://kenmerrell.com') || `${proto}://${host}`;
     await sendMail({
       to: toEmail,
       subject: `New advance reader: ${name}`,
