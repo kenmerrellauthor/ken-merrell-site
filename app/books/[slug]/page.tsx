@@ -87,7 +87,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     ['FORMATS', book.formats],
     ['ISBN', book.isbn]
   ].filter(([, v]) => v);
-  const envUrl = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://kenmerrell.com')?.trim();
+  const envUrl = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
   const vercelUrl = process.env.VERCEL_URL?.trim();
   const rawBase = envUrl || (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000');
   const baseOrigin = rawBase.startsWith('http') ? rawBase : `https://${rawBase}`;

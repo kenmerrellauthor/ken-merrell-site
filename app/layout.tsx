@@ -13,7 +13,7 @@ import '@fontsource/source-serif-4/latin-400-italic.css';
 import './globals.css';
 
 function getSiteUrl(): URL {
-  const envUrl = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://kenmerrell.com')?.trim();
+  const envUrl = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
   const vercelUrl = process.env.VERCEL_URL?.trim();
   const raw = envUrl || (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000');
   try {
