@@ -22,20 +22,16 @@ export type FlipBookProps = {
 };
 
 function Blocks({ blocks, firstPage, mobile }: { blocks: Block[]; firstPage: boolean; mobile?: boolean }) {
-  let seenP = false;
   return (
     <>
       {blocks.map((b, k) => {
         if (b.kind === 'break') {
-          seenP = false;
           return (
             <div key={k} className="brk" aria-hidden style={mobile ? { display: 'flex', justifyContent: 'center', gap: 14, padding: '12px 0' } : undefined}>
               <span /><span /><span />
             </div>
           );
         }
-        const isFirstOfPage = !seenP;
-        seenP = true;
         if (firstPage && k === 0 && !b.cont) {
           const text = b.text || '';
           const m = text.match(/^([“"‘']?[A-Za-z0-9])(\S*)\s*([^\s]+(?:\s+[^\s]+){0,2})?(.*)$/s);
@@ -52,7 +48,7 @@ function Blocks({ blocks, firstPage, mobile }: { blocks: Block[]; firstPage: boo
             </p>
           );
         }
-        return <p key={k} className={b.cont && isFirstOfPage ? 'cont' : isFirstOfPage && k === 0 ? 'first' : undefined}>{b.text}</p>;
+        return <p key={k} className={b.cont ? 'cont' : b.noIndent ? 'first' : undefined}>{b.text}</p>;
       })}
     </>
   );

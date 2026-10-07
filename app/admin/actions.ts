@@ -119,7 +119,7 @@ async function sampleFromFile(f: File): Promise<string> {
   const buf = Buffer.from(await f.arrayBuffer());
   if (name.endsWith('.docx')) {
     const { value } = await mammoth.extractRawText({ buffer: buf });
-    return value.replace(/\n{3,}/g, '\n\n').trim();
+    return value.replace(/\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   if (name.endsWith('.txt') || name.endsWith('.md')) return buf.toString('utf8').trim();
   throw new Error('Upload the sample as a Word (.docx) or text (.txt) file. For a PDF or Google Doc, copy the text and paste it in.');
