@@ -241,6 +241,10 @@ export default async function Home() {
               </a>
             ))}
           </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.5 }}>
+            <span>Swipe to explore</span>
+            <Arrow />
+          </div>
         </section>
       )}
 
