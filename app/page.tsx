@@ -184,28 +184,6 @@ export default async function Home() {
                 <span>Book clubs &amp; reading groups are always welcome.</span>
               </div>
             </div>
-            {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
-              <div className="connect-with-us" style={{ marginTop: '2rem' }}>
-                <h3 style={{ fontSize: '12px', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '12px', color: '#a89d88', fontFamily: 'var(--serif-c)', fontWeight: 700 }}>Connect With Us</h3>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  {site.youtubeUrl && (
-                    <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
-                      <SocialIcon platform="YouTube" s={18} /> YOUTUBE
-                    </a>
-                  )}
-                  {site.amazonAuthorUrl && (
-                    <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon">
-                      <SocialIcon platform="Amazon" s={18} /> AMAZON
-                    </a>
-                  )}
-                  {site.socialLinks?.map((link, idx) => (
-                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
-                      <SocialIcon platform={link.platform} s={18} /> {link.platform}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
           <div className="contact-right reveal-on-scroll reveal-delay-1">
             <h3>Send a message</h3>
@@ -213,6 +191,37 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {(site.youtubeUrl || site.amazonAuthorUrl || (site.socialLinks && site.socialLinks.length > 0)) && (
+        <section className="social-band" style={{ padding: '100px 20px', borderTop: '1px solid rgba(201,168,96,.18)', textAlign: 'center', background: '#0a0806', position: 'relative', overflow: 'hidden' }}>
+          <div className="km-grain abs" style={{ opacity: 0.3 }} />
+          <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2 style={{ fontFamily: 'var(--serif-d)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 600, color: 'var(--cream-2)', margin: '0 0 16px', lineHeight: 1 }}>
+              <em>Connect</em> with Ken
+            </h2>
+            <p style={{ margin: '0 auto 48px', fontSize: '18px', color: 'var(--muted-2)', maxWidth: '440px', lineHeight: 1.6 }}>
+              Follow across the web for the latest updates, upcoming releases, and behind-the-scenes looks.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {site.youtubeUrl && (
+                <a href={site.youtubeUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="YouTube">
+                  <SocialIcon platform="YouTube" s={20} /> YOUTUBE
+                </a>
+              )}
+              {site.amazonAuthorUrl && (
+                <a href={site.amazonAuthorUrl} target="_blank" rel="noopener noreferrer" className="btn-social" title="Amazon">
+                  <SocialIcon platform="Amazon" s={20} /> AMAZON
+                </a>
+              )}
+              {site.socialLinks?.map((link, idx) => (
+                <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="btn-social" title={link.platform}>
+                  <SocialIcon platform={link.platform} s={20} /> {link.platform}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
 
       <Footer site={site} />
