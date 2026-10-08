@@ -70,16 +70,27 @@ async function writeLocal<T>(table: Table, rows: T[]) {
 async function all<T extends { id: string }>(table: Table): Promise<T[]> {
   const db = supabase();
   if (!db) return readLocal<T>(table);
-  const { data, error } = await db.from(table).select('id, data');
-  if (error) throw new Error(`Supabase read ${table}: ${error.message}`);
-  const rows = data ?? [];
-  if (!rows.length && seeds[table].length) {
-    await db.from(table).insert(seeds[table].map((r) => ({ id: r.id, data: r })));
-    return seeds[table] as unknown as T[];
+  try {
+    const { data, error } = await db.from(table).select('id, data');
+    if (error) {
+      console.warn(`Supabase read ${table} error (${error.message}), falling back to local.`);
+      return readLocal<T>(table);
+    }
+    const rows = data ?? [];
+    if (!rows.length && seeds[table].length) {
+      try {
+        await db.from(table).insert(seeds[table].map((r) => ({ id: r.id, data: r })));
+      } catch {
+        /* ignore seed error */
+      }
+      return seeds[table] as unknown as T[];
+    }
+    return rows.map((r) => r.data as T);
+  } catch (err: any) {
+    console.warn(`Supabase read ${table} exception (${err?.message || err}), falling back to local.`);
+    return readLocal<T>(table);
   }
-  return rows.map((r) => r.data as T);
 }
-
 
 async function upsert<T extends { id: string }>(table: Table, row: T) {
   const db = supabase();
@@ -90,8 +101,23 @@ async function upsert<T extends { id: string }>(table: Table, row: T) {
     else rows.push(row);
     return writeLocal(table, rows);
   }
-  const { error } = await db.from(table).upsert({ id: row.id, data: row });
-  if (error) throw new Error(`Supabase write ${table}: ${error.message}`);
+  try {
+    const { error } = await db.from(table).upsert({ id: row.id, data: row });
+    if (error) {
+      console.warn(`Supabase write ${table} error (${error.message}), falling back to local.`);
+      const rows = await readLocal<T>(table);
+      const i = rows.findIndex((r) => r.id === row.id);
+      if (i >= 0) rows[i] = row;
+      else rows.push(row);
+      return writeLocal(table, rows);
+    }
+  } catch {
+    const rows = await readLocal<T>(table);
+    const i = rows.findIndex((r) => r.id === row.id);
+    if (i >= 0) rows[i] = row;
+    else rows.push(row);
+    return writeLocal(table, rows);
+  }
 }
 
 async function upsertMany<T extends { id: string }>(table: Table, rows: T[]) {
@@ -102,8 +128,21 @@ async function upsertMany<T extends { id: string }>(table: Table, rows: T[]) {
     rows.forEach((r) => map.set(r.id, r));
     return writeLocal(table, [...map.values()]);
   }
-  const { error } = await db.from(table).upsert(rows.map((r) => ({ id: r.id, data: r })));
-  if (error) throw new Error(`Supabase write ${table}: ${error.message}`);
+  try {
+    const { error } = await db.from(table).upsert(rows.map((r) => ({ id: r.id, data: r })));
+    if (error) {
+      console.warn(`Supabase writeMany ${table} error (${error.message}), falling back to local.`);
+      const cur = await readLocal<T>(table);
+      const map = new Map(cur.map((r) => [r.id, r]));
+      rows.forEach((r) => map.set(r.id, r));
+      return writeLocal(table, [...map.values()]);
+    }
+  } catch {
+    const cur = await readLocal<T>(table);
+    const map = new Map(cur.map((r) => [r.id, r]));
+    rows.forEach((r) => map.set(r.id, r));
+    return writeLocal(table, [...map.values()]);
+  }
 }
 
 async function remove(table: Table, id: string) {
@@ -112,8 +151,17 @@ async function remove(table: Table, id: string) {
     const rows = await readLocal<{ id: string }>(table);
     return writeLocal(table, rows.filter((r) => r.id !== id));
   }
-  const { error } = await db.from(table).delete().eq('id', id);
-  if (error) throw new Error(`Supabase delete ${table}: ${error.message}`);
+  try {
+    const { error } = await db.from(table).delete().eq('id', id);
+    if (error) {
+      console.warn(`Supabase delete ${table} error (${error.message}), falling back to local.`);
+      const rows = await readLocal<{ id: string }>(table);
+      return writeLocal(table, rows.filter((r) => r.id !== id));
+    }
+  } catch {
+    const rows = await readLocal<{ id: string }>(table);
+    return writeLocal(table, rows.filter((r) => r.id !== id));
+  }
 }
 
 export const newId = () => crypto.randomBytes(6).toString('hex');

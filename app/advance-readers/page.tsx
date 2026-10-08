@@ -28,9 +28,16 @@ export const metadata: Metadata = {
   }
 };
 
-export default async function AdvanceReadersPage() {
+export default async function AdvanceReadersPage({
+  searchParams
+}: {
+  searchParams?: Promise<{ book?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
   const [site, books] = await Promise.all([getSite(), getBooks()]);
-  const coming = books.find((b) => b.status === 'coming');
+  const comingBooks = books.filter((b) => b.status === 'coming');
+  const matched = resolvedParams.book ? comingBooks.find((b) => b.slug === resolvedParams.book) : null;
+  const coming = matched || comingBooks[0] || books.find((b) => b.status === 'coming');
 
   return (
     <>

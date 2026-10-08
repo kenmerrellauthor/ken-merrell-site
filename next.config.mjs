@@ -5,12 +5,12 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   serverExternalPackages: ['pdfkit'],
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/pdfkit/**/*']
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '12mb'
-    },
-    outputFileTracingIncludes: {
-      '/*': ['./node_modules/pdfkit/**/*']
     }
   },
   async headers() {

@@ -59,7 +59,8 @@ export const seedBooks: Book[] = [
   book({
     id: 'b2', slug: 'petticoats-and-a-traitors-death', title: 'Petticoats and a Traitor’s Death', order: 2,
     displayTitle: 'Petticoats *and a*|Traitor’s Death', tagline: 'They hanged her husband.\nThey did not silence his widow.',
-    featured: true, cover: '/img/covers/petticoats-and-a-traitors-death.jpg', banner: '/img/banners/traitor.jpg',
+    featured: true, status: 'coming', releaseDate: '2026-11-29T18:00:00', releaseLabel: 'Next Release',
+    cover: '/img/covers/petticoats-and-a-traitors-death.jpg', banner: '/img/banners/traitor.jpg',
     audibleUrl: '#', amazonUrl: '#', formats: 'Print, Ebook, Audio'
   }),
   book({

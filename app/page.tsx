@@ -10,6 +10,7 @@ import { Cover, Eyebrow, Seal } from '@/components/Bits';
 import { Case, Cubby, SoonCubby, EmptyCubby } from '@/components/Shelf';
 import { Arrow, Ext, SocialIcon } from '@/components/icons';
 import ScrollReveal from '@/components/ScrollReveal';
+import ComingSoonSection from '@/components/ComingSoonSection';
 import { getBooks, getSite, getVideos, isBookNew } from '@/lib/store';
 
 export const revalidate = 60;
@@ -17,7 +18,8 @@ export const revalidate = 60;
 export default async function Home() {
   const [books, videos, site] = await Promise.all([getBooks(), getVideos(), getSite()]);
   const available = books.filter((b) => b.status === 'available');
-  const coming = books.find((b) => b.status === 'coming') || {
+  const comingBooks = books.filter((b) => b.status === 'coming');
+  const coming = comingBooks[0] || {
     id: 'b8',
     slug: 'upcoming',
     title: '[Upcoming title]',
@@ -103,41 +105,10 @@ export default async function Home() {
       </section>
 
       {/* II · COMING SOON */}
-      <section id="coming" className="coming">
-          <div className="km-grain abs" style={{ opacity: 0.5 }} />
-          <div className="ghost" aria-hidden>Soon</div>
-          <div className="copy reveal-on-scroll">
-            <Eyebrow num={roman[1]} text="COMING SOON" />
-            <h2>{coming.title}</h2>
-            {coming.tagline && <p className="teaser">{coming.tagline}</p>}
-            <Countdown date={coming.releaseDate} />
-            <div className="cta-row">
-              <Link href="/advance-readers" className="btn btn-gold" style={{ boxShadow: 'none' }}>BECOME AN ADVANCED READER</Link>
-              <span>Join the Advance Readers for a copy before release.</span>
-            </div>
-          </div>
-          <div className="soon-cover reveal-on-scroll reveal-delay-2">
-            <div className="km-gold-glow" style={{ position: 'absolute', left: -160, right: -160, top: -100, bottom: -100 }} />
-            <div className="pages km-pages" />
-            <div className="face">
-              {coming.cover ? (
-                <Cover book={coming} w={380} h={570} />
-              ) : (
-                <>
-                  <div className="km-linen abs" />
-                  <div style={{ position: 'absolute', inset: 18, border: '1px solid rgba(201,168,96,.7)' }} />
-                  <div style={{ position: 'absolute', inset: 24, border: '1px solid rgba(201,168,96,.28)' }} />
-                  <div style={{ position: 'absolute', inset: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '15% 20px 11%', textAlign: 'center' }}>
-                    <span style={{ fontFamily: 'var(--serif-c)', fontSize: 12, letterSpacing: '.4em', color: '#a89d88' }}>A NEW NOVEL</span>
-                    <Seal size={132} font={34} />
-                    <span style={{ fontFamily: 'var(--serif-c)', fontSize: 12, letterSpacing: '.4em', color: '#a89d88' }}>COVER REVEAL SOON</span>
-                  </div>
-                </>
-              )}
-              <div className="km-spine abs" />
-            </div>
-          </div>
-        </section>
+      <ComingSoonSection
+        books={comingBooks.length > 0 ? comingBooks : [coming]}
+        romanNumber={roman[1]}
+      />
 
       {/* III · VIDEOS */}
       {videos.length > 0 && (
