@@ -513,24 +513,25 @@ export async function sendReaderEmailAction(_p: AdminState, form: FormData): Pro
     const esc = (s: string) => s.replace(/[&<>"']/g, (c: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
 
     const amazonBox = finalAmazonUrl ? `
-<div style="margin:28px 0;padding:22px 24px;background:#fbf8f3;border:1px solid #e5dcce;border-radius:6px;text-align:center">
-  <div style="font-size:12px;letter-spacing:.14em;font-weight:700;color:#9b6b28;text-transform:uppercase;margin-bottom:8px">Order Paperback on Amazon</div>
-  <p style="font-size:15px;color:#1b1814;margin:0 0 16px 0;line-height:1.5">You can order your official paperback copy directly on Amazon using the link below:</p>
-  <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#1b1814;color:#f8f5ee;padding:12px 26px;text-decoration:none;font-size:13px;letter-spacing:.12em;font-weight:700;border-radius:4px">
+<div style="margin:28px 0;padding:22px 24px;background:#211c16;border:1px solid rgba(201,168,96,0.35);border-radius:6px;text-align:center">
+  <div style="font-size:12px;letter-spacing:.14em;font-weight:700;color:#c9a860;text-transform:uppercase;margin-bottom:8px">Order Paperback on Amazon</div>
+  <p style="font-size:15px;color:#efe7d6;margin:0 0 16px 0;line-height:1.6">You can order your official paperback copy directly on Amazon using the link below:</p>
+  <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#c9a860;color:#12100d;padding:12px 26px;text-decoration:none;font-size:13px;letter-spacing:.12em;font-weight:700;border-radius:3px">
     ORDER PAPERBACK ON AMAZON &rarr;
   </a>
-  <div style="margin-top:12px;font-size:12px;color:#8a8173">
-    Direct link: <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="color:#8a8173;text-decoration:underline">${esc(finalAmazonUrl)}</a>
+  <div style="margin-top:12px;font-size:12px;color:#8f8573">
+    Direct link: <a href="${esc(finalAmazonUrl)}" target="_blank" rel="noopener noreferrer" style="color:#c9a860;text-decoration:underline">${esc(finalAmazonUrl)}</a>
   </div>
 </div>` : '';
 
-    const htmlBody = `<div style="font-family:Georgia,serif;background:#f3f0ea;padding:24px">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:28px 30px">
-<div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#1b1814">KEN MERRELL</div>
-<h1 style="font-size:22px;font-weight:600;color:#1b1814;margin:18px 0 18px">${esc(subject)}</h1>
-<div style="font-size:16px;line-height:1.75;color:#1b1814;white-space:pre-wrap">${esc(body)}</div>
+    const htmlBody = `<div style="font-family:Georgia,serif;background:#12100d;padding:28px 16px">
+<div style="max-width:580px;margin:0 auto;background:#1a1612;border:1px solid rgba(201,168,96,0.25);border-radius:6px;padding:32px 30px;box-shadow:0 12px 36px rgba(0,0,0,0.4)">
+<div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.14em;color:#c9a860;font-weight:700">KEN MERRELL</div>
+<div style="font-size:11px;letter-spacing:.16em;color:#8f8573;text-transform:uppercase;margin-top:2px">Author &amp; Novelist</div>
+<h1 style="font-size:22px;font-weight:600;color:#ffffff;margin:22px 0 18px;line-height:1.35">${esc(subject)}</h1>
+<div style="font-size:15px;line-height:1.75;color:#efe7d6;white-space:pre-wrap">${esc(body)}</div>
 ${amazonBox}
-<p style="font-size:12px;color:#8a8173;margin-top:28px;border-top:1px solid #ece6da;padding-top:16px">You are receiving this as an advance reader for Ken Merrell.</p>
+<p style="font-size:12px;color:#8f8573;margin-top:28px;border-top:1px solid rgba(239,231,214,0.08);padding-top:16px">You are receiving this as an advance reader for Ken Merrell.</p>
 </div></div>`;
 
     let attachments: { filename: string; content: Buffer }[] | undefined;

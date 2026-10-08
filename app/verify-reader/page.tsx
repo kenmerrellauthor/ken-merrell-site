@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { jwtVerify } from 'jose';
 import { addReader, newId, getSite } from '@/lib/store';
-import { readerEmail, sendMail } from '@/lib/email';
+import { readerEmail, sendMail, welcomeReaderEmail } from '@/lib/email';
 import { headers } from 'next/headers';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -69,6 +69,14 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
       subject: `New advance reader: ${name}${bookTitle ? ` (${bookTitle})` : ''}`,
       html: readerEmail({ name, email, format: res.reader.format, bookTitle: res.reader.bookTitle || bookTitle }, `${origin}/admin/readers`),
       replyTo: email
+    });
+
+    // Send dark-gold themed confirmation & welcome email to the verified reader
+    await sendMail({
+      to: email,
+      subject: bookTitle ? `You're on the wishlist for "${bookTitle}" · Ken Merrell` : `Welcome to Ken Merrell's Advance Reader Wishlist`,
+      html: welcomeReaderEmail({ name, bookTitle, booksUrl: `${origin}/books` }),
+      replyTo: toEmail || undefined
     });
   }
 
