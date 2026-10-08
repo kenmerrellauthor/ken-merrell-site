@@ -91,10 +91,8 @@ export default function Sidebar({
     }
   };
 
-  const soon = path === '/admin' && sp.get('tab') === 'soon';
   const items = [
-    { href: '/admin', k: 'books', label: 'Books', on: (path === '/admin' && !soon) || path.startsWith('/admin/books') },
-    { href: '/admin?tab=soon', k: 'soon', label: 'Coming soon', on: soon },
+    { href: '/admin', k: 'books', label: 'Books', on: path === '/admin' || path.startsWith('/admin/books') },
     { href: '/admin/videos', k: 'video', label: 'Videos', on: path.startsWith('/admin/videos') },
     { href: '/admin/about', k: 'user', label: 'Author & bio', on: path.startsWith('/admin/about') },
     { href: '/admin/readers', k: 'readers', label: 'Advance readers', on: path.startsWith('/admin/readers'), badge }
