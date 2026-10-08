@@ -105,10 +105,11 @@ export default function ComingSoonSection({
   const initialIndex = items.findIndex((it) => !it.isPlaceholder);
   const [activeIndex, setActiveIndex] = useState(initialIndex >= 0 ? initialIndex : 2);
 
-  // Swipe / Drag support (touch & mouse)
+  // Swipe / Drag gesture tracking
+  const [dragOffset, setDragOffset] = useState(0);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
-  const dragDistance = useRef(0);
+  const currentDrag = useRef(0);
 
   const prevSlide = useCallback(() => {
     setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
@@ -121,27 +122,47 @@ export default function ComingSoonSection({
   const handleDragStart = (clientX: number) => {
     isDragging.current = true;
     dragStartX.current = clientX;
-    dragDistance.current = 0;
+    currentDrag.current = 0;
   };
 
   const handleDragMove = (clientX: number) => {
     if (!isDragging.current) return;
-    dragDistance.current = clientX - dragStartX.current;
+    const diff = clientX - dragStartX.current;
+    currentDrag.current = diff;
+    // Damped elastic feedback during drag
+    setDragOffset(diff * 0.35);
   };
 
   const handleDragEnd = () => {
     if (!isDragging.current) return;
     isDragging.current = false;
-    if (dragDistance.current < -45) {
+    const diff = currentDrag.current;
+    setDragOffset(0);
+    if (diff < -45) {
       nextSlide();
-    } else if (dragDistance.current > 45) {
+    } else if (diff > 45) {
       prevSlide();
     }
-    dragDistance.current = 0;
+    currentDrag.current = 0;
   };
 
-  // Live countdown state
+  // Active item & smooth crossfade state
   const activeItem = items[activeIndex];
+  const [displayItem, setDisplayItem] = useState(activeItem);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    if (activeItem.id !== displayItem.id) {
+      setIsFading(true);
+      const timer = setTimeout(() => {
+        setDisplayItem(activeItem);
+        setIsFading(false);
+      }, 160);
+      return () => clearTimeout(timer);
+    }
+  }, [activeItem, displayItem.id]);
+
+  // Live countdown state
   const [countdown, setCountdown] = useState<{ days: string; hours: string; mins: string }>({
     days: '52',
     hours: '09',
@@ -150,12 +171,11 @@ export default function ComingSoonSection({
 
   useEffect(() => {
     const calcCountdown = () => {
-      if (!activeItem.releaseDate) {
-        // Fallback default ~52 days matching the design picture
+      if (!displayItem.releaseDate) {
         setCountdown({ days: '52', hours: '09', mins: '09' });
         return;
       }
-      const raw = activeItem.releaseDate.trim();
+      const raw = displayItem.releaseDate.trim();
       const dateStr = raw.length === 10 ? `${raw}T00:00:00` : raw;
       const targetTime = new Date(dateStr).getTime();
       if (Number.isNaN(targetTime)) {
@@ -177,15 +197,7 @@ export default function ComingSoonSection({
     calcCountdown();
     const interval = setInterval(calcCountdown, 1000 * 60);
     return () => clearInterval(interval);
-  }, [activeItem.releaseDate]);
-
-  // Compute circular offsets for 5 slots: -2, -1, 0, 1, 2
-  const visibleIndices: { offset: number; index: number }[] = [-2, -1, 0, 1, 2].map((offset) => {
-    const len = items.length;
-    let idx = (activeIndex + offset) % len;
-    if (idx < 0) idx += len;
-    return { offset, index: idx };
-  });
+  }, [displayItem.releaseDate]);
 
   return (
     <section id="coming" className="cs-section" aria-label="Coming Soon">
@@ -203,9 +215,9 @@ export default function ComingSoonSection({
         <h2 className="cs-main-heading">A new chapter is coming.</h2>
       </div>
 
-      {/* 3D Coverflow Stage (Mouse and Touch Swipeable) */}
+      {/* 3D Coverflow Stage (Touch & Mouse Swipeable) */}
       <div
-        className="cs-stage-container"
+        className={`cs-stage-container ${dragOffset !== 0 ? 'cs-dragging' : ''}`}
         onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
         onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
         onTouchEnd={handleDragEnd}
@@ -217,18 +229,40 @@ export default function ComingSoonSection({
         {/* 3D Shelf Table / Reflective Surface Glow */}
         <div className="cs-floor-reflection" />
 
-        {/* The 5 Positioned Books */}
+        {/* The Books Track (Persistent DOM nodes with stable key={item.id} for 60fps continuous glide) */}
         <div className="cs-stage-track">
-          {visibleIndices.map(({ offset, index }) => {
-            const item = items[index];
+          {items.map((item, index) => {
+            const len = items.length;
+            let offset = (index - activeIndex) % len;
+            if (offset > len / 2) offset -= len;
+            if (offset < -len / 2) offset += len;
+
             const isCenter = offset === 0;
+            let slotClass = '';
+            if (offset === 0) slotClass = 'cs-slot-0 cs-slot-center';
+            else if (offset === -1) slotClass = 'cs-slot--1';
+            else if (offset === 1) slotClass = 'cs-slot-1';
+            else if (offset === -2) slotClass = 'cs-slot--2';
+            else if (offset === 2) slotClass = 'cs-slot-2';
+            else if (offset < -2) slotClass = 'cs-slot-hidden-left';
+            else slotClass = 'cs-slot-hidden-right';
 
             return (
               <div
-                key={`${item.id}-${offset}`}
-                className={`cs-book-slot cs-slot-${offset} ${isCenter ? 'cs-slot-center' : ''}`}
+                key={item.id}
+                className={`cs-book-slot ${slotClass}`}
+                style={
+                  dragOffset !== 0
+                    ? {
+                        transform: `translate3d(calc(var(--slot-x, 0px) + ${dragOffset}px), var(--slot-y, 0px), var(--slot-z, 0px)) scale(var(--slot-scale, 1)) rotateY(var(--slot-rot, 0deg))`,
+                        transition: 'none',
+                      }
+                    : undefined
+                }
                 onClick={() => {
-                  if (!isCenter) setActiveIndex(index);
+                  if (!isCenter && Math.abs(currentDrag.current) < 10) {
+                    setActiveIndex(index);
+                  }
                 }}
                 role="button"
                 tabIndex={0}
@@ -255,22 +289,22 @@ export default function ComingSoonSection({
         </div>
       </div>
 
-      {/* Active Book Details & Call to Action (Updates dynamically on swipe) */}
+      {/* Active Book Details & Call to Action (Smoothly crossfades on book change) */}
       <div className="cs-details-wrap">
-        <div className="cs-details-content" key={activeItem.id}>
+        <div className={`cs-details-content ${isFading ? 'cs-details-fading' : ''}`}>
           {/* Label: e.g. "— NEXT RELEASE —" */}
           <div className="cs-release-label">
             <span className="cs-sub-dash">—</span>
-            <span className="cs-sub-text">{activeItem.releaseLabel || 'NEXT RELEASE'}</span>
+            <span className="cs-sub-text">{displayItem.releaseLabel || 'NEXT RELEASE'}</span>
             <span className="cs-sub-dash">—</span>
           </div>
 
           {/* Title */}
-          <h3 className="cs-book-title">{activeItem.title}</h3>
+          <h3 className="cs-book-title">{displayItem.title}</h3>
 
           {/* Tagline / Hook */}
-          {activeItem.tagline && (
-            <p className="cs-book-tagline">{activeItem.tagline}</p>
+          {displayItem.tagline && (
+            <p className="cs-book-tagline">{displayItem.tagline}</p>
           )}
 
           {/* Live Countdown */}
@@ -294,7 +328,7 @@ export default function ComingSoonSection({
           {/* Gold CTA Button */}
           <div className="cs-btn-row">
             <Link
-              href={`/advance-readers${activeItem.slug ? `?book=${encodeURIComponent(activeItem.slug)}` : ''}`}
+              href={`/advance-readers${displayItem.slug ? `?book=${encodeURIComponent(displayItem.slug)}` : ''}`}
               className="cs-gold-btn"
             >
               BECOME AN ADVANCE READER
