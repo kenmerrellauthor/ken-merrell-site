@@ -26,8 +26,8 @@ export default function ComingSoonSection({
   books,
   romanNumber = 'II.'
 }: ComingSoonSectionProps) {
-  // Prepare list of carousel items. Ensure at least 5 items for the signature 5-book perspective arc.
-  const realItems: CarouselItem[] = books.map((b, idx) => ({
+  // Only show books that are actually present in the CRM / data
+  const items: CarouselItem[] = (books || []).map((b, idx) => ({
     id: b.id,
     slug: b.slug,
     title: b.title,
@@ -40,70 +40,14 @@ export default function ComingSoonSection({
     variant: ((idx % 4) + 1) as 1 | 2 | 3 | 4,
   }));
 
-  const leftPlaceholders: CarouselItem[] = [
-    {
-      id: 'vol-left-1',
-      slug: 'upcoming-volume-1',
-      title: 'Upcoming Ken Merrell Novel',
-      tagline: 'Ken Merrell’s next immersive tale of early American secrets and resilience.',
-      releaseDate: '',
-      releaseLabel: 'Cover Reveal Soon',
-      cover: null,
-      isPlaceholder: true,
-      variant: 1,
-    },
-    {
-      id: 'vol-left-2',
-      slug: 'upcoming-volume-2',
-      title: 'Upcoming Ken Merrell Novel',
-      tagline: 'The story continues. Keep an eye out for exclusive advance reader opportunities.',
-      releaseDate: '',
-      releaseLabel: 'Cover Reveal Soon',
-      cover: null,
-      isPlaceholder: true,
-      variant: 2,
-    },
-  ];
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const rightPlaceholders: CarouselItem[] = [
-    {
-      id: 'vol-right-1',
-      slug: 'upcoming-volume-3',
-      title: 'Upcoming Ken Merrell Novel',
-      tagline: 'Another gripping chapter of historical suspense from author Ken Merrell.',
-      releaseDate: '',
-      releaseLabel: 'Cover Reveal Soon',
-      cover: null,
-      isPlaceholder: true,
-      variant: 3,
-    },
-    {
-      id: 'vol-right-2',
-      slug: 'upcoming-volume-4',
-      title: 'Upcoming Ken Merrell Novel',
-      tagline: 'Behind the scenes chapters and early reviews coming to the advance reading team.',
-      releaseDate: '',
-      releaseLabel: 'Cover Reveal Soon',
-      cover: null,
-      isPlaceholder: true,
-      variant: 4,
-    },
-  ];
-
-  let items: CarouselItem[] = [];
-  if (realItems.length === 1) {
-    items = [leftPlaceholders[0], leftPlaceholders[1], realItems[0], rightPlaceholders[0], rightPlaceholders[1]];
-  } else if (realItems.length === 2) {
-    items = [leftPlaceholders[0], leftPlaceholders[1], realItems[0], realItems[1], rightPlaceholders[1]];
-  } else {
-    items = realItems;
-    while (items.length < 5) {
-      items.push(rightPlaceholders[items.length % rightPlaceholders.length]);
+  // Keep activeIndex within bounds if books list changes
+  useEffect(() => {
+    if (items.length > 0 && activeIndex >= items.length) {
+      setActiveIndex(0);
     }
-  }
-
-  const initialIndex = items.findIndex((it) => !it.isPlaceholder);
-  const [activeIndex, setActiveIndex] = useState(initialIndex >= 0 ? initialIndex : 2);
+  }, [items.length, activeIndex]);
 
   // Swipe / Drag gesture tracking
   const [dragOffset, setDragOffset] = useState(0);
@@ -112,14 +56,17 @@ export default function ComingSoonSection({
   const currentDrag = useRef(0);
 
   const prevSlide = useCallback(() => {
+    if (items.length <= 1) return;
     setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
   }, [items.length]);
 
   const nextSlide = useCallback(() => {
+    if (items.length <= 1) return;
     setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
   }, [items.length]);
 
   const handleDragStart = (clientX: number) => {
+    if (items.length <= 1) return;
     isDragging.current = true;
     dragStartX.current = clientX;
     currentDrag.current = 0;
@@ -146,13 +93,13 @@ export default function ComingSoonSection({
     currentDrag.current = 0;
   };
 
-  // Active item & smooth crossfade state
-  const activeItem = items[activeIndex];
+  const safeIndex = items.length > 0 ? (activeIndex % items.length + items.length) % items.length : 0;
+  const activeItem = items[safeIndex] || items[0];
   const [displayItem, setDisplayItem] = useState(activeItem);
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    if (activeItem.id !== displayItem.id) {
+    if (activeItem && activeItem.id !== displayItem?.id) {
       setIsFading(true);
       const timer = setTimeout(() => {
         setDisplayItem(activeItem);
@@ -160,7 +107,7 @@ export default function ComingSoonSection({
       }, 160);
       return () => clearTimeout(timer);
     }
-  }, [activeItem, displayItem.id]);
+  }, [activeItem, displayItem?.id]);
 
   // Live countdown state
   const [countdown, setCountdown] = useState<{ days: string; hours: string; mins: string }>({
@@ -199,6 +146,10 @@ export default function ComingSoonSection({
     return () => clearInterval(interval);
   }, [displayItem.releaseDate]);
 
+  if (!items || items.length === 0) {
+    return null;
+  }
+
   return (
     <section id="coming" className="cs-section" aria-label="Coming Soon">
       {/* Background Ambience & Lighting */}
@@ -217,14 +168,14 @@ export default function ComingSoonSection({
 
       {/* 3D Coverflow Stage (Touch & Mouse Swipeable) */}
       <div
-        className={`cs-stage-container ${dragOffset !== 0 ? 'cs-dragging' : ''}`}
-        onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-        onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-        onTouchEnd={handleDragEnd}
-        onMouseDown={(e) => handleDragStart(e.clientX)}
-        onMouseMove={(e) => handleDragMove(e.clientX)}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
+        className={`cs-stage-container ${dragOffset !== 0 ? 'cs-dragging' : ''} ${items.length <= 1 ? 'cs-stage-single' : ''}`}
+        onTouchStart={(e) => items.length > 1 && handleDragStart(e.touches[0].clientX)}
+        onTouchMove={(e) => items.length > 1 && handleDragMove(e.touches[0].clientX)}
+        onTouchEnd={items.length > 1 ? handleDragEnd : undefined}
+        onMouseDown={(e) => items.length > 1 && handleDragStart(e.clientX)}
+        onMouseMove={(e) => items.length > 1 && handleDragMove(e.clientX)}
+        onMouseUp={items.length > 1 ? handleDragEnd : undefined}
+        onMouseLeave={items.length > 1 ? handleDragEnd : undefined}
       >
         {/* 3D Shelf Table / Reflective Surface Glow */}
         <div className="cs-floor-reflection" />
@@ -233,9 +184,12 @@ export default function ComingSoonSection({
         <div className="cs-stage-track">
           {items.map((item, index) => {
             const len = items.length;
-            let offset = (index - activeIndex) % len;
-            if (offset > len / 2) offset -= len;
-            if (offset < -len / 2) offset += len;
+            let offset = 0;
+            if (len > 1) {
+              offset = (index - safeIndex) % len;
+              if (offset > len / 2) offset -= len;
+              if (offset < -len / 2) offset += len;
+            }
 
             const isCenter = offset === 0;
             let slotClass = '';
@@ -277,7 +231,7 @@ export default function ComingSoonSection({
                 <div className="cs-book-inner">
                   <Book3D
                     book={item.book || (item.cover ? ({ cover: item.cover, title: item.title } as Book) : null)}
-                    placeholderTitle={item.isPlaceholder ? item.title : undefined}
+                    placeholderTitle={!item.cover ? item.title : undefined}
                     variant={item.variant}
                     isCenter={isCenter}
                     priority={isCenter}
@@ -337,17 +291,19 @@ export default function ComingSoonSection({
         </div>
 
         {/* Pagination Indicator Dots */}
-        <div className="cs-pagination" aria-label="Book pagination">
-          {items.map((it, idx) => (
-            <button
-              key={it.id}
-              type="button"
-              className={`cs-dot ${idx === activeIndex ? 'cs-dot-active' : ''}`}
-              onClick={() => setActiveIndex(idx)}
-              aria-label={`Switch to book ${idx + 1}: ${it.title}`}
-            />
-          ))}
-        </div>
+        {items.length > 1 && (
+          <div className="cs-pagination" aria-label="Book pagination">
+            {items.map((it, idx) => (
+              <button
+                key={it.id}
+                type="button"
+                className={`cs-dot ${idx === safeIndex ? 'cs-dot-active' : ''}`}
+                onClick={() => setActiveIndex(idx)}
+                aria-label={`Switch to book ${idx + 1}: ${it.title}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

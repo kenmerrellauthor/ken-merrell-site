@@ -105,10 +105,12 @@ export default async function Home() {
       </section>
 
       {/* II · COMING SOON */}
-      <ComingSoonSection
-        books={comingBooks.length > 0 ? comingBooks : [coming]}
-        romanNumber={roman[1]}
-      />
+      {comingBooks.length > 0 && (
+        <ComingSoonSection
+          books={comingBooks}
+          romanNumber={roman[1]}
+        />
+      )}
 
       {/* III · VIDEOS */}
       {videos.length > 0 && (
