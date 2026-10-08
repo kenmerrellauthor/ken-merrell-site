@@ -58,7 +58,7 @@ export default async function Home() {
   if (available.length < 4) {
     shelfCubbies = [
       ...available.map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />),
-      <SoonCubby key="soon" href="/#coming" label={coming.releaseLabel || 'More to come'} />
+      <SoonCubby key="soon" href="/books" label="Browse All Books" />
     ];
     while (shelfCubbies.length < 4) {
       shelfCubbies.push(<EmptyCubby key={`empty-${shelfCubbies.length}`} />);
@@ -68,7 +68,7 @@ export default async function Home() {
   } else if (available.length < 8) {
     shelfCubbies = [
       ...available.slice(0, 7).map((b, k) => <Cubby key={b.id} book={b} no={k + 1} isNew={Boolean(b.isNew)} />),
-      <SoonCubby key="soon" href="/#coming" label={coming.releaseLabel || 'More to come'} />
+      <SoonCubby key="soon" href="/books" label="Browse All Books" />
     ];
     while (shelfCubbies.length < 8) {
       shelfCubbies.push(<EmptyCubby key={`empty-${shelfCubbies.length}`} />);

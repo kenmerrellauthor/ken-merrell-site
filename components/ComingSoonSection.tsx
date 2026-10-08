@@ -115,7 +115,7 @@ export default function ComingSoonSection({
       if (!isDragging.current) {
         nextSlide();
       }
-    }, 4800);
+    }, 10000);
     return () => clearInterval(autoTimer);
   }, [items.length, isHovered, nextSlide]);
 

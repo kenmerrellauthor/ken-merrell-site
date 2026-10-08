@@ -38,13 +38,13 @@ export function EmptyCubby({ small, text = 'Room for the next one' }: { small?: 
   );
 }
 
-export function SoonCubby({ href, label = 'More to come' }: { href: string; label?: string }) {
+export function SoonCubby({ href = '/books', label = 'Browse All Books' }: { href?: string; label?: string }) {
   return (
-    <Link href={href} className="cubby km-cubby" aria-label="Coming soon">
+    <Link href={href} className="cubby km-cubby" aria-label="Browse all books in the bookshelf collection">
       <div className="km-lamp abs" />
       <div className="lamp-fix" />
       <div className="cubby-head">
-        <span className="cubby-no">COMING SOON</span>
+        <span className="cubby-no">THE BOOKSHELF</span>
         <span className="cubby-title">{label}</span>
       </div>
       <div className="shadow" />
@@ -56,7 +56,7 @@ export function SoonCubby({ href, label = 'More to come' }: { href: string; labe
             <div className="seal km-seal" style={{ width: 60, height: 60, boxShadow: '0 6px 12px rgba(0,0,0,.5)' }}>
               <div className="ring" style={{ width: 48, height: 48, fontSize: 15 }}>KM</div>
             </div>
-            <span style={{ fontFamily: 'var(--serif-c)', fontSize: 8, letterSpacing: '.3em', color: '#a89d88' }}>COMING SOON</span>
+            <span style={{ fontFamily: 'var(--serif-c)', fontSize: 8, letterSpacing: '.3em', color: '#a89d88' }}>ALL BOOKS</span>
           </div>
         </div>
         <div style={{ position: 'relative', width: 196, height: 26, background: '#4b1d1b', boxShadow: '8px 3px 10px rgba(0,0,0,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -70,7 +70,7 @@ export function SoonCubby({ href, label = 'More to come' }: { href: string; labe
       </div>
       <div className="lip km-wood km-lip">
         <div className="plate km-brass">
-          <span className="plate-btn">FOR MORE BOOKS →</span>
+          <span className="plate-btn">VIEW ALL BOOKS →</span>
         </div>
       </div>
     </Link>
