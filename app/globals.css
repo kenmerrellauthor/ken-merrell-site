@@ -352,14 +352,14 @@ button { font: inherit; }
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   -webkit-user-select: none;
   touch-action: pan-y;
 }
 
 .cs-stage-container:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .cs-stage-track {
@@ -370,6 +370,7 @@ button { font: inherit; }
   align-items: center;
   justify-content: center;
   transform-style: preserve-3d;
+  cursor: default;
 }
 
 .cs-book-slot {
@@ -386,7 +387,7 @@ button { font: inherit; }
   will-change: transform, opacity, filter;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  cursor: pointer;
+  cursor: default;
   outline: none;
 }
 
