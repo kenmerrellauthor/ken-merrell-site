@@ -215,7 +215,7 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
       ? b.videos.filter(v => v && typeof v.url === 'string' && v.url.trim()).map((v, i) => ({
           id: v.id || `bv-${i + 1}`,
           url: v.url.trim(),
-          title: v.title?.trim() || `${b.title || 'Book'} — Video ${i + 1}`,
+          title: typeof v.title === 'string' ? v.title.trim() : '',
           type: v.type || (i === 0 ? 'Trailer' : 'Reading'),
           thumbnail: v.thumbnail ?? null,
           duration: v.duration || '',
@@ -224,7 +224,7 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
           ? [{
               id: 'bv-1',
               url: b.videoUrl.trim(),
-              title: `${b.title || 'Book'} — Official Trailer`,
+              title: (b as any).videoTitle ? String((b as any).videoTitle).trim() : '',
               type: 'Trailer',
               thumbnail: b.videoThumbnail ?? null,
               duration: '',

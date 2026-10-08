@@ -758,7 +758,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
       return [{
         id: 'bv-1',
         url: b.videoUrl,
-        title: `${b.title || 'Book'} — Official Trailer`,
+        title: (b as any).videoTitle || '',
         type: 'Trailer',
         thumbnail: b.videoThumbnail || null
       }];
@@ -1010,7 +1010,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                           {
                             id: `bv-${Date.now()}`,
                             url: '',
-                            title: `${currentBook.title || 'Book'} — Video ${newIdx}`,
+                            title: '',
                             type: newIdx === 1 ? 'Trailer' : 'Reading',
                             thumbnail: null,
                             duration: ''
@@ -1069,7 +1069,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                           {
                             id: `bv-${Date.now()}`,
                             url: '',
-                            title: `${currentBook.title || 'Book'} — Official Trailer`,
+                            title: '',
                             type: 'Trailer',
                             thumbnail: null,
                             duration: ''
@@ -1235,7 +1235,7 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
                               <input
                                 type="text"
                                 className="crm-in"
-                                placeholder="e.g. Official Book Trailer"
+                                placeholder="Enter video title (e.g. Official Book Trailer)"
                                 value={vid.title}
                                 onChange={(e) => {
                                   const newTitle = e.target.value;

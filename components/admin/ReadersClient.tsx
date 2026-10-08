@@ -101,7 +101,7 @@ export default function ReadersClient({
 
   // Composer state
   const [composerOpen, setComposerOpen] = useState(false);
-  const [subject, setSubject] = useState(nextBook ? `Your advance copy of ${nextBook}` : 'A note for my advance readers');
+  const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [replyTo, setReplyTo] = useState('');
   const [bookId, setBookId] = useState('');
@@ -444,13 +444,8 @@ export default function ReadersClient({
                     const id = e.target.value;
                     setBookId(id);
                     const found = availableBooks.find((b) => b.id === id);
-                    if (found) {
-                      if (!subject || subject === 'A note for my advance readers' || subject.startsWith('Your advance copy of ')) {
-                        setSubject(`Your advance copy of ${found.title}`);
-                      }
-                      if (found.amazonUrl) {
-                        setAmazonUrl(found.amazonUrl);
-                      }
+                    if (found && found.amazonUrl) {
+                      setAmazonUrl(found.amazonUrl);
                     }
                   }}
                 >
