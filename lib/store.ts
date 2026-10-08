@@ -386,8 +386,17 @@ export async function getReaders(): Promise<Reader[]> {
 export async function addReader(r: Reader) {
   const existing = (await getReaders()).find((x) => x.email.toLowerCase() === r.email.toLowerCase());
   if (existing) {
+    let changed = false;
+    let updated = { ...existing };
     if (existing.format !== r.format && !existing.format.includes(r.format)) {
-      const updated = { ...existing, format: existing.format + ' & ' + r.format };
+      updated.format = existing.format + ' & ' + r.format;
+      changed = true;
+    }
+    if (r.bookTitle && (!existing.bookTitle || !existing.bookTitle.includes(r.bookTitle))) {
+      updated.bookTitle = existing.bookTitle ? `${existing.bookTitle}, ${r.bookTitle}` : r.bookTitle;
+      changed = true;
+    }
+    if (changed) {
       await upsert('readers', updated);
       return { duplicate: false as const, reader: updated };
     }

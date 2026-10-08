@@ -43,10 +43,18 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     );
   }
 
-  const { name, email, format, agreed } = payload;
+  const { name, email, format, agreed, bookTitle } = payload;
   
   // Add to DB
-  const res = await addReader({ id: newId(), name, email, format, agreed, createdAt: new Date().toISOString() });
+  const res = await addReader({
+    id: newId(),
+    name,
+    email,
+    format,
+    agreed,
+    bookTitle: bookTitle || undefined,
+    createdAt: new Date().toISOString()
+  });
   
   // Notify admin
   const site = await getSite();
@@ -58,8 +66,8 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     const origin = (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com') || `${proto}://${host}`;
     await sendMail({
       to: toEmail,
-      subject: `New advance reader: ${name}`,
-      html: readerEmail({ name, email, format: res.reader.format }, `${origin}/admin/readers`),
+      subject: `New advance reader: ${name}${bookTitle ? ` (${bookTitle})` : ''}`,
+      html: readerEmail({ name, email, format: res.reader.format, bookTitle: res.reader.bookTitle || bookTitle }, `${origin}/admin/readers`),
       replyTo: email
     });
   }
@@ -78,7 +86,7 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
           </div>
           <h1 className="h1" style={{ margin: '0 0 24px' }}>Email Verified!</h1>
           <p className="lead" style={{ marginBottom: 32 }}>
-            Thank you, {name}! Your email has been verified and you've successfully joined the advance reader list. Keep an eye on your inbox for early copies of upcoming books.
+            Thank you, {name}! Your email ({email}) has been verified and you've successfully joined the advance reader wishlist{bookTitle ? ` for "${bookTitle}"` : ''}. Keep an eye on your inbox for early copies before launch day.
           </p>
           <Link href="/books" className="btn btn-gold" style={{ display: 'inline-flex' }}>
             BROWSE KEN'S BOOKS

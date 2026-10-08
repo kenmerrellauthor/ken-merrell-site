@@ -17,8 +17,8 @@ export async function GET() {
   const rows = await getReaders();
   const dateStr = new Date().toISOString().slice(0, 10);
   const csv = [
-    'Name,Email,Format,Agreed to review,Signed up',
-    ...rows.map((r) => [r.name, r.email, r.format, r.agreed ? 'Yes' : 'No', r.createdAt].map(cell).join(','))
+    'Name,Email,Book Wishlist,Format,Agreed to review,Signed up',
+    ...rows.map((r) => [r.name, r.email, r.bookTitle || 'General list', r.format, r.agreed ? 'Yes' : 'No', r.createdAt].map(cell).join(','))
   ].join('\r\n');
 
   return new Response(csv, {

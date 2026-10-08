@@ -35,12 +35,12 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
           <div className="seal km-seal"><Check s={34} /></div>
           <h3>Check your email{state.name ? `, ${state.name}` : ''}.</h3>
           <p>
-            We've sent a verification link to your email address. Please click the link to confirm your subscription and join the list.
+            We've sent a verification link to your email address. Please click the link to confirm your subscription and join the advance reader wishlist{bookTitle ? ` for "${bookTitle}"` : ''}.
           </p>
           <div className="next">
             <span><i>i.</i>Open the email we just sent you</span>
             <span><i>ii.</i>Click the confirm link inside</span>
-            <span><i>iii.</i>Get your advance copy before launch</span>
+            <span><i>iii.</i>Get your advance copy of {bookTitle || 'the book'} before launch</span>
           </div>
           <Link href="/books" style={{ fontFamily: 'var(--serif-c)', fontSize: 11, fontWeight: 700, letterSpacing: '.2em', color: '#1b1814', borderBottom: '1px solid #1b1814', paddingBottom: 4, marginTop: 8 }}>BROWSE KEN’S BOOKS</Link>
         </div>
@@ -50,7 +50,13 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
   return (
     <form action={action} className="ar-card" noValidate>
       <div className="frame" />
-      <div className="ttl">Join the list</div>
+      <input type="hidden" name="bookTitle" value={bookTitle || ''} />
+      <div className="ttl">{bookTitle ? `Wishlist: ${bookTitle}` : 'Join the list'}</div>
+      {bookTitle && (
+        <div style={{ fontSize: 12, color: '#7a5f25', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', marginTop: -6, marginBottom: 14 }}>
+          Advance Reader Wishlist
+        </div>
+      )}
       {state.message && <div className="alert" role="alert"><Warn /><span>{state.message}</span></div>}
       <div className="field">
         <label htmlFor="ar-name">FULL NAME</label>

@@ -93,6 +93,19 @@ export default function ComingSoonSection({
     currentDrag.current = 0;
   };
 
+  // Auto-swipe & manual gesture tracking
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (items.length <= 1 || isHovered) return;
+    const autoTimer = setInterval(() => {
+      if (!isDragging.current) {
+        nextSlide();
+      }
+    }, 4800);
+    return () => clearInterval(autoTimer);
+  }, [items.length, isHovered, nextSlide]);
+
   const safeIndex = items.length > 0 ? (activeIndex % items.length + items.length) % items.length : 0;
   const activeItem = items[safeIndex] || items[0];
   const [displayItem, setDisplayItem] = useState(activeItem);
@@ -151,7 +164,13 @@ export default function ComingSoonSection({
   }
 
   return (
-    <section id="coming" className="cs-section" aria-label="Coming Soon">
+    <section
+      id="coming"
+      className="cs-section"
+      aria-label="Coming Soon"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Background Ambience & Lighting */}
       <div className="cs-bg-mesh" />
       <div className="cs-bg-lightbeam" />
@@ -163,10 +182,9 @@ export default function ComingSoonSection({
           <span className="cs-eyebrow-dash">—</span>
           <span className="cs-eyebrow-text">COMING SOON</span>
         </div>
-        <h2 className="cs-main-heading">A new chapter is coming.</h2>
       </div>
 
-      {/* 3D Coverflow Stage (Touch & Mouse Swipeable) */}
+      {/* 3D Coverflow Stage (Touch & Mouse Swipeable + Auto-sliding) */}
       <div
         className={`cs-stage-container ${dragOffset !== 0 ? 'cs-dragging' : ''} ${items.length <= 1 ? 'cs-stage-single' : ''}`}
         onTouchStart={(e) => items.length > 1 && handleDragStart(e.touches[0].clientX)}

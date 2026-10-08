@@ -407,6 +407,7 @@ export async function addReaderAdminAction(_p: AdminState, form: FormData): Prom
     const name = str(form, 'name', 120);
     const email = str(form, 'email', 200).toLowerCase();
     const format = str(form, 'format', 50) || 'Ebook';
+    const bookTitle = str(form, 'bookTitle', 200);
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       return { error: 'Please enter a valid email address.' };
     }
@@ -415,6 +416,7 @@ export async function addReaderAdminAction(_p: AdminState, form: FormData): Prom
       name: name || email.split('@')[0],
       email,
       format,
+      bookTitle: bookTitle || undefined,
       agreed: true,
       createdAt: new Date().toISOString()
     };
@@ -434,11 +436,12 @@ export async function updateReaderAction(_p: AdminState, form: FormData): Promis
     const name = str(form, 'name', 120);
     const email = str(form, 'email', 200).toLowerCase();
     const format = str(form, 'format', 50) || 'Ebook';
+    const bookTitle = str(form, 'bookTitle', 200);
     if (!id) return { error: 'Missing reader ID.' };
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       return { error: 'Please enter a valid email address.' };
     }
-    const updated = await updateReader(id, { name: name || email.split('@')[0], email, format });
+    const updated = await updateReader(id, { name: name || email.split('@')[0], email, format, bookTitle: bookTitle || undefined });
     revalidatePath('/admin/readers');
     revalidatePath('/admin');
     return { ok: true, reader: updated };

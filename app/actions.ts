@@ -12,6 +12,7 @@ export type FormState = {
   values?: Record<string, string>;
   name?: string;
   format?: string;
+  bookTitle?: string;
 };
 
 async function ip() {
@@ -29,6 +30,7 @@ async function origin() {
 export async function submitReader(_prev: FormState, form: FormData): Promise<FormState> {
   const name = sanitizeSingleLine(String(form.get('name') || '')).slice(0, 120);
   const email = sanitizeSingleLine(String(form.get('email') || '')).slice(0, 200);
+  const bookTitle = sanitizeSingleLine(String(form.get('bookTitle') || '')).slice(0, 200);
   const formats = form.getAll('format').map(String);
   const hasEbook = formats.includes('Ebook');
   const hasPaperback = formats.includes('Paperback');
@@ -41,7 +43,7 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
     format = 'Ebook';
   }
   const agreed = form.get('agree') === 'on';
-  const values = { name, email, format, agree: agreed ? 'on' : '' };
+  const values = { name, email, format, agree: agreed ? 'on' : '', bookTitle };
 
   const errors: Record<string, string> = {};
   if (!name) errors.name = 'Please add your name.';
@@ -61,12 +63,12 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
   const spam = await isSpam(form, await ip());
   if (spam) {
     // Return harmless success for bots to prevent them probing filters
-    return { ok: true, errors: {}, name: name.split(' ')[0], format };
+    return { ok: true, errors: {}, name: name.split(' ')[0], format, bookTitle };
   }
 
   const { SignJWT } = await import('jose');
   const secret = process.env.SESSION_SECRET || 'dev-only-secret-change-me-please-min-32-chars';
-  const token = await new SignJWT({ name, email, format, agreed })
+  const token = await new SignJWT({ name, email, format, agreed, bookTitle })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
     .sign(new TextEncoder().encode(secret));
@@ -75,11 +77,11 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
   
   await sendMail({
     to: email,
-    subject: `Confirm your advance reader subscription`,
-    html: (await import('@/lib/email')).verifyReaderEmail(link),
+    subject: bookTitle ? `Confirm your advance reader subscription for ${bookTitle}` : `Confirm your advance reader subscription`,
+    html: (await import('@/lib/email')).verifyReaderEmail(link, bookTitle),
   });
 
-  return { ok: true, errors: {}, name: name.split(' ')[0], format, message: 'verify' };
+  return { ok: true, errors: {}, name: name.split(' ')[0], format, bookTitle, message: 'verify' };
 }
 
 export async function submitContact(_prev: FormState, form: FormData): Promise<FormState> {

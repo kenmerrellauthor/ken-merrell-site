@@ -97,6 +97,7 @@ export interface Reader {
   email: string;
   format: 'Ebook' | 'Paperback' | string;
   agreed?: boolean;
+  bookTitle?: string;
   createdAt: string;
 }
 

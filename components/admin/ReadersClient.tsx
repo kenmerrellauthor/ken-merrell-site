@@ -16,7 +16,7 @@ const fmtDate = (iso: string) => {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const COLS = 'minmax(0,1.1fr) minmax(0,1.3fr) 130px 140px 90px';
+const COLS = 'minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.2fr) 120px 130px 80px';
 
 export default function ReadersClient({
   readers,
@@ -66,6 +66,7 @@ export default function ReadersClient({
   const [addName, setAddName] = useState('');
   const [addEmail, setAddEmail] = useState('');
   const [addFormat, setAddFormat] = useState('Ebook');
+  const [addBookTitle, setAddBookTitle] = useState('');
   const [addBusy, setAddBusy] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -74,6 +75,7 @@ export default function ReadersClient({
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editFormat, setEditFormat] = useState('Ebook');
+  const [editBookTitle, setEditBookTitle] = useState('');
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -197,6 +199,7 @@ export default function ReadersClient({
     fd.set('name', addName.trim());
     fd.set('email', addEmail.trim());
     fd.set('format', addFormat);
+    fd.set('bookTitle', addBookTitle.trim());
     const res = await addReaderAdminAction({}, fd);
     setAddBusy(false);
     if (res.error) {
@@ -209,6 +212,7 @@ export default function ReadersClient({
     setAddName('');
     setAddEmail('');
     setAddFormat('Ebook');
+    setAddBookTitle('');
     setAddOpen(false);
   }
 
@@ -217,6 +221,7 @@ export default function ReadersClient({
     setEditName(r.name);
     setEditEmail(r.email);
     setEditFormat(r.format || 'Ebook');
+    setEditBookTitle(r.bookTitle || '');
     setEditError('');
   }
 
@@ -229,6 +234,7 @@ export default function ReadersClient({
     fd.set('name', editName.trim());
     fd.set('email', editEmail.trim());
     fd.set('format', editFormat);
+    fd.set('bookTitle', editBookTitle.trim());
     const res = await updateReaderAction({}, fd);
     setEditBusy(false);
     if (res.error) {
@@ -290,7 +296,7 @@ export default function ReadersClient({
             <button type="button" className="crm-sm icon" onClick={() => setAddOpen(false)} aria-label="Close"><Ic k="x" s={16} /></button>
           </div>
           <p className="sub" style={{ margin: 0 }}>Manually add a reader who requested an early copy in person, at a book event, or via email.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 180px auto', gap: 14, alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr 140px auto', gap: 14, alignItems: 'end' }}>
             <div className="crm-field">
               <label className="crm-label" htmlFor="ar-name">NAME</label>
               <input id="ar-name" className="crm-in" placeholder="e.g. Jane Smith" value={addName} onChange={(e) => setAddName(e.target.value)} />
@@ -298,6 +304,10 @@ export default function ReadersClient({
             <div className="crm-field">
               <label className="crm-label" htmlFor="ar-email">EMAIL</label>
               <input id="ar-email" type="email" required className="crm-in" placeholder="reader@example.com" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
+            </div>
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="ar-book">BOOK WISHLIST</label>
+              <input id="ar-book" className="crm-in" placeholder="e.g. Petticoats and a Traitor's Death" value={addBookTitle} onChange={(e) => setAddBookTitle(e.target.value)} />
             </div>
             <div className="crm-field">
               <label className="crm-label" htmlFor="ar-format">PREFERENCE</label>
@@ -787,7 +797,7 @@ export default function ReadersClient({
       {/* ── Table ── */}
       <div className="crm-table">
         <div className="crm-tr head" style={{ gridTemplateColumns: COLS }}>
-          <span>NAME</span><span>EMAIL</span><span>FORMAT</span><span>SIGNED UP</span><span style={{ textAlign: 'right' }}>ACTIONS</span>
+          <span>NAME</span><span>EMAIL</span><span>BOOK WISHLIST</span><span>FORMAT</span><span>SIGNED UP</span><span style={{ textAlign: 'right' }}>ACTIONS</span>
         </div>
         {rows.length === 0 && (
           <div style={{ padding: 28, color: 'var(--muted)' }}>
@@ -804,6 +814,9 @@ export default function ReadersClient({
                 </div>
                 <div>
                   <input className="crm-in" type="email" style={{ height: 38, fontSize: 14 }} placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                </div>
+                <div>
+                  <input className="crm-in" style={{ height: 38, fontSize: 13 }} placeholder="Book Wishlist" value={editBookTitle} onChange={(e) => setEditBookTitle(e.target.value)} />
                 </div>
                 <div>
                   <select className="crm-in" style={{ height: 38, fontSize: 13 }} value={editFormat} onChange={(e) => setEditFormat(e.target.value)}>
@@ -848,7 +861,38 @@ export default function ReadersClient({
                   <span className="pill gold" style={{ height: 20, fontSize: 11, flexShrink: 0 }}>New</span>
                 )}
               </span>
-              <span style={{ color: 'var(--soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.email}</span>
+              <span style={{ color: 'var(--soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div>{r.email}</div>
+                {r.bookTitle && (
+                  <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 2, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    ★ Wishlist: {r.bookTitle}
+                  </div>
+                )}
+              </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {r.bookTitle ? (
+                  <span
+                    className="pill gold"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      fontWeight: 600
+                    }}
+                    title={`Joined wishlist for: ${r.bookTitle}`}
+                  >
+                    {r.bookTitle}
+                  </span>
+                ) : (
+                  <span style={{ color: 'var(--muted)', fontSize: 12 }}>General list</span>
+                )}
+              </span>
               <span>
                 <span style={{
                   fontSize: 12, padding: '3px 8px', borderRadius: 3,

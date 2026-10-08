@@ -61,10 +61,17 @@ export async function sendMail(opts: { to: string; subject: string; html: string
   return true;
 }
 
-export function readerEmail(r: { name: string; email: string; format: string }, adminUrl: string) {
+export function readerEmail(r: { name: string; email: string; format: string; bookTitle?: string }, adminUrl: string) {
+  const rows: [string, string][] = [
+    ['Name', r.name],
+    ['Email', r.email],
+    ['Book Wishlist', r.bookTitle || 'General advance list'],
+    ['Format', r.format],
+    ['Review', 'Agreed to review']
+  ];
   return shell(
-    `New advance reader: ${r.name}`,
-    [['Name', r.name], ['Email', r.email], ['Format', r.format], ['Review', 'Agreed to review']],
+    `New advance reader: ${r.name}${r.bookTitle ? ` (${r.bookTitle})` : ''}`,
+    rows,
     `<p style="margin-top:22px"><a href="${esc(adminUrl)}" style="background:#1b1814;color:#efe7d6;padding:12px 18px;text-decoration:none;font-size:13px">See all readers in your admin</a></p>`,
     'Passed spam check. Also saved to your reader list.'
   );
@@ -79,12 +86,12 @@ export function contactEmail(m: { name: string; email: string; message: string }
   );
 }
 
-export function verifyReaderEmail(link: string) {
+export function verifyReaderEmail(link: string, bookTitle?: string) {
   return `<div style="font-family:Georgia,serif;background:#161310;padding:24px">
 <div style="max-width:560px;margin:0 auto;background:#1a1612;padding:28px 30px;border:1px solid rgba(239,231,214,.08);border-radius:4px">
 <div style="font-family:Georgia,serif;font-size:20px;letter-spacing:.12em;color:#c9a860">KEN MERRELL</div>
-<h1 style="font-size:22px;font-weight:600;color:#fff;margin:18px 0 8px">Confirm your advance reader subscription</h1>
-<p style="font-size:16px;line-height:1.6;color:#efe7d6">Click the button below to confirm your email address and join Ken's advance reader list.</p>
+<h1 style="font-size:22px;font-weight:600;color:#fff;margin:18px 0 8px">Confirm your advance reader & wishlist subscription</h1>
+<p style="font-size:16px;line-height:1.6;color:#efe7d6">Click the button below to confirm your email address and join Ken's advance reader wishlist${bookTitle ? ` for <strong>${esc(bookTitle)}</strong>` : ''}.</p>
 <p style="margin-top:22px"><a href="${esc(link)}" style="display:inline-block;background:#c9a860;color:#15120f;padding:12px 18px;text-decoration:none;font-size:13px;font-weight:600;border-radius:2px">Confirm my email</a></p>
 <p style="font-size:12px;color:#8f8573;margin-top:28px">If you didn't request this, you can safely ignore this email.</p>
 </div></div>`;
