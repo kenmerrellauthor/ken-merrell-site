@@ -4,12 +4,13 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Flipbook from '@/components/Flipbook';
-import BookVideoPlayer from '@/components/BookVideoPlayer';
+import BookVideoCoverflow from '@/components/BookVideoCoverflow';
 import { Book3D, DisplayTitle } from '@/components/Bits';
 import { Case, Cubby } from '@/components/Shelf';
 import { Arrow, Down, Headphones } from '@/components/icons';
 import { getBookBySlug, getBooks, getSite, getVideos } from '@/lib/store';
 import { parseYouTubeId } from '@/lib/youtube';
+import type { BookVideo } from '@/lib/types';
 import ReviewSection from '@/components/ReviewSection';
 
 export const revalidate = 60;
@@ -57,25 +58,42 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const [book, all, site, videos] = await Promise.all([getBookBySlug(slug), getBooks(), getSite(), getVideos()]);
   if (!book) notFound();
 
-  // Check if book has a video present (its own videoUrl or a matching title in videos)
-  let bookVideoId = book.videoUrl ? parseYouTubeId(book.videoUrl) : '';
-  const videoById = bookVideoId ? videos.find((v) => v.youtubeId === bookVideoId) : null;
-  let bookVideoTitle = videoById?.title || (book.videoUrl ? `${book.title} — Video` : '');
-  let bookVideoThumbnail = book.videoThumbnail || videoById?.thumbnail || (bookVideoId ? `https://i.ytimg.com/vi/${bookVideoId}/hqdefault.jpg` : null);
+  // Resolve all videos for this book (supporting multiple trailers, readings, interviews)
+  let bookVideos: BookVideo[] = [];
+  if (Array.isArray(book.videos) && book.videos.length > 0) {
+    bookVideos = book.videos.filter((v) => Boolean(v && v.url && v.url.trim()));
+  } else if (book.videoUrl && book.videoUrl.trim()) {
+    const yId = parseYouTubeId(book.videoUrl);
+    const videoById = yId ? videos.find((v) => v.youtubeId === yId) : null;
+    bookVideos = [{
+      id: 'bv-1',
+      url: book.videoUrl,
+      title: videoById?.title || `${book.title} — Official Trailer`,
+      type: 'Trailer',
+      thumbnail: book.videoThumbnail || videoById?.thumbnail || (yId ? `https://i.ytimg.com/vi/${yId}/hqdefault.jpg` : null),
+    }];
+  }
 
-  if (!bookVideoId) {
-    const match = videos.find((v) => {
+  // Fallback to gallery videos matching book title if none explicitly attached
+  if (bookVideos.length === 0) {
+    const matches = videos.filter((v) => {
       if (!v.youtubeId) return false;
       const vt = v.title.toLowerCase();
       const bt = book.title.toLowerCase();
       return vt.includes(bt) || bt.includes(vt);
     });
-    if (match) {
-      bookVideoId = match.youtubeId;
-      bookVideoTitle = match.title;
-      bookVideoThumbnail = book.videoThumbnail || match.thumbnail || `https://i.ytimg.com/vi/${match.youtubeId}/hqdefault.jpg`;
+    if (matches.length > 0) {
+      bookVideos = matches.map((m, i) => ({
+        id: m.id || `bv-${i + 1}`,
+        url: `https://www.youtube.com/watch?v=${m.youtubeId}`,
+        title: m.title,
+        type: m.type || (i === 0 ? 'Trailer' : 'Reading'),
+        thumbnail: m.thumbnail || `https://i.ytimg.com/vi/${m.youtubeId}/hqdefault.jpg`,
+      }));
     }
   }
+
+  const hasVideos = bookVideos.length > 0;
 
   const others = all.filter((b) => b.id !== book.id && b.status === 'available').slice(0, 4);
   const idx = all.filter((b) => b.status === 'available').findIndex((b) => b.id === book.id);
@@ -197,9 +215,9 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 6, flexWrap: 'wrap', justifyContent: 'inherit' }}>
                 {book.amazonUrl && <a href={book.amazonUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold">BUY ON AMAZON <Arrow /></a>}
                 {book.audibleUrl && <a href={book.audibleUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Headphones />LISTEN ON AUDIBLE</a>}
-                {(bookVideoId || hasSample) && (
-                  <a href={bookVideoId ? "#video" : "#sample"} className="btn btn-text">
-                    {bookVideoId ? 'WATCH & READ' : 'READ THE SAMPLE'} <Down />
+                {(hasVideos || hasSample) && (
+                  <a href={hasVideos ? "#video" : "#sample"} className="btn btn-text">
+                    {hasVideos ? (bookVideos.length > 1 ? 'WATCH VIDEOS' : 'WATCH TRAILER') : 'READ THE SAMPLE'} <Down />
                   </a>
                 )}
               </div>
@@ -225,29 +243,13 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      {/* 1. Cinematic Book Video / Trailer (if available) */}
-      {bookVideoId && (
-        <section id="video" className="book-video-section" aria-label="Book Video Trailer">
-          <div className="book-video-ambient" />
-          <div className="book-video-container">
-            <div className="book-video-head">
-              <div className="eyebrow"><span className="line" /><span className="txt">OFFICIAL TRAILER</span><span className="line" /></div>
-              <h2>{bookVideoTitle || `${book.title} — Official Trailer`}</h2>
-              <p className="book-video-sub">Watch the cinematic trailer and author reading before diving into the excerpt below.</p>
-            </div>
-            <BookVideoPlayer
-              videoId={bookVideoId}
-              title={bookVideoTitle || `${book.title} — Official Trailer`}
-              thumbnail={bookVideoThumbnail}
-            />
-            {hasSample && (
-              <a href="#sample" className="book-video-scroll-hint">
-                <span>READ THE FIRST CHAPTER</span>
-                <Down />
-              </a>
-            )}
-          </div>
-        </section>
+      {/* 1. Cinematic Book Video Section / Coverflow (single or multiple videos) */}
+      {hasVideos && (
+        <BookVideoCoverflow
+          videos={bookVideos}
+          bookTitle={book.title}
+          hasSample={hasSample}
+        />
       )}
 
       {/* 2. Interactive Sample Chapter Flipbook */}

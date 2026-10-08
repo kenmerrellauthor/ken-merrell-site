@@ -16,7 +16,7 @@ import {
   saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage,
   sanitizeBook
 } from '@/lib/store';
-import type { Book, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
+import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 import { formatStylishTitle } from '@/components/Bits';
 
@@ -180,6 +180,29 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
 
     const hasAudible = form.get('hasAudible') === 'on';
     const videoUrl = str(form, 'videoUrl', 300);
+
+    let videos: BookVideo[] = [];
+    const rawVideosJson = str(form, 'videosJson', 50000);
+    if (rawVideosJson) {
+      try {
+        const parsed = JSON.parse(rawVideosJson);
+        if (Array.isArray(parsed)) {
+          videos = parsed
+            .filter((v: any) => v && typeof v.url === 'string' && v.url.trim())
+            .map((v: any, idx: number) => ({
+              id: v.id || `bv-${idx + 1}`,
+              url: cleanUrl(String(v.url || '').trim()),
+              title: String(v.title || '').trim().slice(0, 200) || `${title} — Video ${idx + 1}`,
+              type: String(v.type || (idx === 0 ? 'Trailer' : 'Reading')).slice(0, 50),
+              thumbnail: v.thumbnail ? String(v.thumbnail).slice(0, 500) : null,
+              duration: v.duration ? String(v.duration).slice(0, 30) : ''
+            }));
+        }
+      } catch { /* ignore */ }
+    } else if (existing?.videos && Array.isArray(existing.videos)) {
+      videos = existing.videos;
+    }
+
     const book: Book = sanitizeBook({
       id,
       slug,
@@ -199,6 +222,7 @@ export async function saveBookAction(_p: AdminState, form: FormData): Promise<Ad
       amazonUrl: cleanUrl(str(form, 'amazonUrl', 500)),
       audibleUrl: hasAudible ? cleanUrl(str(form, 'audibleUrl', 500)) : '',
       videoUrl: cleanUrl(videoUrl),
+      videos,
       published: str(form, 'published', 60),
       pages: str(form, 'pages', 20),
       formats: str(form, 'formats', 80),

@@ -209,8 +209,27 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
     clothColor: b.clothColor || '#1c1712',
     amazonUrl: b.amazonUrl || '',
     audibleUrl: b.audibleUrl || '',
-    videoUrl: b.videoUrl || '',
-    videoThumbnail: b.videoThumbnail ?? null,
+    videoUrl: (Array.isArray(b.videos) && b.videos.length > 0 ? b.videos[0]?.url : b.videoUrl) || '',
+    videoThumbnail: (Array.isArray(b.videos) && b.videos.length > 0 ? b.videos[0]?.thumbnail : b.videoThumbnail) ?? null,
+    videos: Array.isArray(b.videos) && b.videos.length > 0
+      ? b.videos.filter(v => v && typeof v.url === 'string' && v.url.trim()).map((v, i) => ({
+          id: v.id || `bv-${i + 1}`,
+          url: v.url.trim(),
+          title: v.title?.trim() || `${b.title || 'Book'} — Video ${i + 1}`,
+          type: v.type || (i === 0 ? 'Trailer' : 'Reading'),
+          thumbnail: v.thumbnail ?? null,
+          duration: v.duration || '',
+        }))
+      : (b.videoUrl && b.videoUrl.trim()
+          ? [{
+              id: 'bv-1',
+              url: b.videoUrl.trim(),
+              title: `${b.title || 'Book'} — Official Trailer`,
+              type: 'Trailer',
+              thumbnail: b.videoThumbnail ?? null,
+              duration: '',
+            }]
+          : []),
     published: b.published || (status === 'available' && b.releaseLabel ? b.releaseLabel : ''),
     pages: b.pages || '',
     formats: b.formats || 'Print, Ebook',

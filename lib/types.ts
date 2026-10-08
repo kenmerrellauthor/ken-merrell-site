@@ -38,6 +38,8 @@ export interface Book {
   audibleUrl: string;
   videoUrl?: string;
   videoThumbnail?: string | null;
+  /** Multiple videos for this book (trailers, chapter readings, interviews, teasers) */
+  videos?: BookVideo[];
   published: string;
   pages: string;
   formats: string;
@@ -56,6 +58,15 @@ export interface Book {
 }
 
 export type VideoType = 'Trailer' | 'Reading' | 'Interview';
+
+export interface BookVideo {
+  id?: string;
+  url: string;
+  title?: string;
+  type?: 'Trailer' | 'Reading' | 'Interview' | 'Teaser' | string;
+  thumbnail?: string | null;
+  duration?: string;
+}
 
 export interface Video {
   id: string;

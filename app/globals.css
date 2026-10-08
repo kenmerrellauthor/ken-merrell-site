@@ -1350,6 +1350,380 @@ button { font: inherit; }
   transform: translateY(2px);
 }
 
+
+/* ============ book video coverflow carousel ============ */
+.bv-carousel-section {
+  padding-bottom: 80px;
+}
+
+.bv-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bv-stage-container {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 1100px;
+  height: 440px;
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.bv-stage-container:active {
+  cursor: grabbing;
+}
+
+.bv-stage-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.bv-floor-reflection {
+  position: absolute;
+  bottom: 0px;
+  height: 70px;
+  width: 100%;
+  max-width: 780px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201, 168, 96, 0.18) 0%, rgba(0, 0, 0, 0.9) 60%, transparent 100%);
+  pointer-events: none;
+  filter: blur(10px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bv-video-slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 580px;
+  height: 330px;
+  margin-top: -165px;
+  margin-left: -290px;
+  transform: translate3d(var(--bv-slot-x, 0px), var(--bv-slot-y, 0px), var(--bv-slot-z, 0px)) scale(var(--bv-slot-scale, 1)) rotateY(var(--bv-slot-rot, 0deg));
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease, filter 0.55s ease;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  cursor: pointer;
+  outline: none;
+}
+
+.bv-video-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.bv-card-glow {
+  position: absolute;
+  inset: -16px;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 50%, rgba(201, 168, 96, 0.35) 0%, rgba(184, 137, 48, 0.15) 50%, transparent 75%);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bv-card-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(201, 168, 96, 0.35);
+  z-index: 1;
+}
+
+.bv-card-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.bv-card-cover {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: #14110e;
+}
+
+.bv-thumb-img {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bv-card-cover:hover .bv-thumb-img {
+  transform: scale(1.03);
+}
+
+.bv-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(15, 13, 11, 0.12) 0%, rgba(15, 13, 11, 0.8) 100%);
+  pointer-events: none;
+}
+
+.bv-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.bv-play-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.bv-play-core {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #c9a860;
+  color: #120f0d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(201, 168, 96, 0.4);
+  transition: all 0.3s ease;
+}
+
+.bv-play-center .bv-play-core {
+  width: 68px;
+  height: 68px;
+}
+
+.bv-card-cover:hover .bv-play-btn {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.bv-card-cover:hover .bv-play-core {
+  background: #f5dfa8;
+  box-shadow: 0 6px 26px rgba(201, 168, 96, 0.8), 0 0 20px rgba(201, 168, 96, 0.6);
+}
+
+.bv-card-badges {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.bv-type-badge {
+  font-family: var(--serif-c);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  background: rgba(15, 13, 11, 0.88);
+  padding: 5px 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(201, 168, 96, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.bv-click-hint {
+  font-family: var(--serif-c);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  background: rgba(201, 168, 96, 0.9);
+  color: #120f0d;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.bv-bottom-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px 16px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.92) 100%);
+  color: var(--cream-2);
+  font-family: var(--serif-d);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Slot Definitions */
+.bv-slot-0 {
+  --bv-slot-x: 0px;
+  --bv-slot-y: 0px;
+  --bv-slot-z: 0px;
+  --bv-slot-scale: 1;
+  --bv-slot-rot: 0deg;
+  z-index: 10;
+  filter: brightness(1);
+  opacity: 1;
+  cursor: default;
+}
+
+.bv-slot--1 {
+  --bv-slot-x: -330px;
+  --bv-slot-y: 6px;
+  --bv-slot-z: -90px;
+  --bv-slot-scale: 0.80;
+  --bv-slot-rot: 18deg;
+  z-index: 8;
+  filter: brightness(0.68) contrast(0.96);
+  opacity: 0.88;
+}
+
+.bv-slot--1:hover {
+  --bv-slot-y: -4px;
+  --bv-slot-scale: 0.84;
+  --bv-slot-rot: 14deg;
+  filter: brightness(0.92);
+}
+
+.bv-slot-1 {
+  --bv-slot-x: 330px;
+  --bv-slot-y: 6px;
+  --bv-slot-z: -90px;
+  --bv-slot-scale: 0.80;
+  --bv-slot-rot: -18deg;
+  z-index: 8;
+  filter: brightness(0.68) contrast(0.96);
+  opacity: 0.88;
+}
+
+.bv-slot-1:hover {
+  --bv-slot-y: -4px;
+  --bv-slot-scale: 0.84;
+  --bv-slot-rot: -14deg;
+  filter: brightness(0.92);
+}
+
+.bv-slot--2 {
+  --bv-slot-x: -540px;
+  --bv-slot-y: 14px;
+  --bv-slot-z: -180px;
+  --bv-slot-scale: 0.65;
+  --bv-slot-rot: 26deg;
+  z-index: 5;
+  filter: brightness(0.45);
+  opacity: 0.55;
+}
+
+.bv-slot-2 {
+  --bv-slot-x: 540px;
+  --bv-slot-y: 14px;
+  --bv-slot-z: -180px;
+  --bv-slot-scale: 0.65;
+  --bv-slot-rot: -26deg;
+  z-index: 5;
+  filter: brightness(0.45);
+  opacity: 0.55;
+}
+
+.bv-slot-hidden-left {
+  --bv-slot-x: -700px;
+  --bv-slot-y: 20px;
+  --bv-slot-z: -240px;
+  --bv-slot-scale: 0.5;
+  --bv-slot-rot: 30deg;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bv-slot-hidden-right {
+  --bv-slot-x: 700px;
+  --bv-slot-y: 20px;
+  --bv-slot-z: -240px;
+  --bv-slot-scale: 0.5;
+  --bv-slot-rot: -30deg;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bv-pagination {
+  margin-top: 24px;
+}
+
+/* Responsive adjustments for video coverflow */
+@media (max-width: 1024px) {
+  .bv-stage-container { height: 380px; }
+  .bv-video-slot {
+    width: 480px;
+    height: 270px;
+    margin-top: -135px;
+    margin-left: -240px;
+  }
+  .bv-slot--1 { --bv-slot-x: -260px; --bv-slot-scale: 0.78; }
+  .bv-slot-1 { --bv-slot-x: 260px; --bv-slot-scale: 0.78; }
+}
+
+@media (max-width: 768px) {
+  .bv-stage-container { height: 320px; }
+  .bv-video-slot {
+    width: 380px;
+    height: 215px;
+    margin-top: -107px;
+    margin-left: -190px;
+  }
+  .bv-slot--1 { --bv-slot-x: -180px; --bv-slot-scale: 0.76; }
+  .bv-slot-1 { --bv-slot-x: 180px; --bv-slot-scale: 0.76; }
+  .bv-nav-arrow { width: 38px; height: 38px; }
+}
+
+@media (max-width: 480px) {
+  .bv-stage-container { height: 260px; }
+  .bv-video-slot {
+    width: 290px;
+    height: 165px;
+    margin-top: -82px;
+    margin-left: -145px;
+  }
+  .bv-slot--1 { --bv-slot-x: -120px; --bv-slot-scale: 0.78; }
+  .bv-slot-1 { --bv-slot-x: 120px; --bv-slot-scale: 0.78; }
+  .bv-play-core { width: 44px; height: 44px; }
+  .bv-play-center .bv-play-core { width: 50px; height: 50px; }
+}
+
+
 /* sample: open book */
 .sample {
   scroll-margin-top: 60px;

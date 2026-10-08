@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import type { Book, Quote, Review, Video } from '@/lib/types';
+import type { Book, BookVideo, Quote, Review, Video } from '@/lib/types';
 import { deleteBookAction, saveBookAction, approveReviewAction, rejectReviewAction, saveReviewCommentAction, deleteReviewAction, addReviewAction, updateReviewContentAction, type AdminState } from '@/app/admin/actions';
 import { Ic } from './AdIcons';
 import { ImagePick } from './ImagePick';
@@ -749,6 +749,24 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
   const [state, action] = useActionState<AdminState, FormData>(saveBookAction, {});
   const [status, setStatus] = useState(book.status);
   const [audible, setAudible] = useState(!!book.audibleUrl);
+
+  const parseInitialVideos = (b: Book): BookVideo[] => {
+    if (Array.isArray(b.videos) && b.videos.length > 0) {
+      return b.videos;
+    }
+    if (b.videoUrl && b.videoUrl.trim()) {
+      return [{
+        id: 'bv-1',
+        url: b.videoUrl,
+        title: `${b.title || 'Book'} — Official Trailer`,
+        type: 'Trailer',
+        thumbnail: b.videoThumbnail || null
+      }];
+    }
+    return [];
+  };
+
+  const [bookVideos, setBookVideos] = useState<BookVideo[]>(() => parseInitialVideos(book));
   const [videoUrl, setVideoUrl] = useState(book.videoUrl || '');
   const [videoThumbnail, setVideoThumbnail] = useState(book.videoThumbnail || '');
   const [quotes, setQuotes] = useState<Quote[]>(Array.isArray(book.quotes) ? book.quotes : []);
@@ -773,8 +791,10 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
     setCurrentBook(book);
     setStatus(book.status);
     setAudible(!!book.audibleUrl);
-    setVideoUrl(book.videoUrl || '');
-    setVideoThumbnail(book.videoThumbnail || '');
+    const vids = parseInitialVideos(book);
+    setBookVideos(vids);
+    setVideoUrl(vids[0]?.url || book.videoUrl || '');
+    setVideoThumbnail(vids[0]?.thumbnail || book.videoThumbnail || '');
     setQuotes(Array.isArray(book.quotes) ? book.quotes : []);
     setReviews(Array.isArray(book.reviews) ? book.reviews : []);
   }, [book]);
@@ -787,8 +807,10 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
         setCurrentBook(state.book);
         setStatus(state.book.status);
         setAudible(!!state.book.audibleUrl);
-        setVideoUrl(state.book.videoUrl || '');
-        setVideoThumbnail(state.book.videoThumbnail || '');
+        const vids = parseInitialVideos(state.book);
+        setBookVideos(vids);
+        setVideoUrl(vids[0]?.url || state.book.videoUrl || '');
+        setVideoThumbnail(vids[0]?.thumbnail || state.book.videoThumbnail || '');
         setQuotes(Array.isArray(state.book.quotes) ? state.book.quotes : []);
       }
       if (isNew && state.id) {
@@ -963,123 +985,316 @@ export default function BookForm({ book, isNew, videos = [] }: { book: Book; isN
               </section>
 
               <section className="crm-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                   <div>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
                       <Ic k="video" s={22} />
-                      Book video &amp; trailer
+                      Book videos &amp; trailers
                     </h2>
-                    <p className="sub" style={{ marginTop: 6 }}>
-                      Displays an official video or reading trailer before the sample chapter reader.
+                    <p className="sub" style={{ marginTop: 6, marginBottom: 0 }}>
+                      Add multiple videos (trailers, chapter readings, interviews). They appear in an interactive 3D coverflow carousel on this book's reading page.
                     </p>
                   </div>
-                  <span className={`pill ${videoUrl ? 'gold' : 'off'}`} style={{ fontSize: 11, letterSpacing: '.1em' }}>
-                    {videoUrl ? 'VIDEO ACTIVE' : 'OPTIONAL'}
-                  </span>
-                </div>
-
-                {videos.length > 0 && (
-                  <div className="crm-field">
-                    <label className="crm-label" htmlFor="bf-video-select">CHOOSE FROM YOUR VIDEO GALLERY</label>
-                    <select
-                      id="bf-video-select"
-                      className="crm-in"
-                      value={matchedGalleryVideo?.id || ''}
-                      onChange={(e) => {
-                        const sel = videos.find(v => v.id === e.target.value);
-                        if (sel && sel.youtubeId) {
-                          setVideoUrl(`https://www.youtube.com/watch?v=${sel.youtubeId}`);
-                          if (sel.thumbnail && !videoThumbnail) {
-                            setVideoThumbnail(sel.thumbnail);
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className={`pill ${bookVideos.length > 0 ? 'gold' : 'off'}`} style={{ fontSize: 11, letterSpacing: '.1em' }}>
+                      {bookVideos.length > 0 ? `${bookVideos.length} VIDEO${bookVideos.length > 1 ? 'S' : ''} ACTIVE` : 'NO VIDEOS'}
+                    </span>
+                    <button
+                      type="button"
+                      className="crm-btn pri"
+                      style={{ fontSize: 12, padding: '7px 14px' }}
+                      onClick={() => {
+                        const newIdx = bookVideos.length + 1;
+                        setBookVideos(prev => [
+                          ...prev,
+                          {
+                            id: `bv-${Date.now()}`,
+                            url: '',
+                            title: `${currentBook.title || 'Book'} — Video ${newIdx}`,
+                            type: newIdx === 1 ? 'Trailer' : 'Reading',
+                            thumbnail: null,
+                            duration: ''
                           }
-                          setDirty(true);
-                        }
+                        ]);
+                        setDirty(true);
                       }}
                     >
-                      <option value="">-- Choose an uploaded video or enter custom link below --</option>
-                      {videos.filter(v => v.youtubeId).map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.title} ({v.type || 'Trailer'})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="crm-field">
-                  <label className="crm-label" htmlFor="bf-video-url">OR ENTER YOUTUBE URL DIRECTLY</label>
-                  <input
-                    id="bf-video-url"
-                    name="videoUrl"
-                    type="text"
-                    className="crm-in"
-                    placeholder="https://www.youtube.com/watch?v=…"
-                    value={videoUrl}
-                    onChange={(e) => { setVideoUrl(e.target.value); setDirty(true); }}
-                  />
-                  <span className="help">
-                    Paste any YouTube video or trailer link. When saved, visitors can watch this trailer before opening the book.
-                  </span>
-                </div>
-
-                {/* Custom Trailer Thumbnail */}
-                <div style={{ marginTop: 12 }}>
-                  <label className="crm-label">CUSTOM TRAILER THUMBNAIL (OPTIONAL)</label>
-                  <p className="sub" style={{ marginTop: 2, marginBottom: 10, fontSize: 13 }}>
-                    Appears before the video plays on the book reading page. Defaults to the gallery video's custom thumbnail or YouTube cover.
-                  </p>
-                  <div style={{ maxWidth: 360 }}>
-                    <ImagePick
-                      name="videoThumbnail"
-                      current={videoThumbnail || matchedGalleryVideo?.thumbnail || null}
-                      label="Upload custom thumbnail"
-                      aspect="16 / 9"
-                      removeName="removeVideoThumbnail"
-                      sizeHint="Recommended: 1280 × 720 (16:9)"
-                    />
+                      <Ic k="plus" s={14} /> ADD VIDEO
+                    </button>
                   </div>
                 </div>
 
-                {/* Live Preview Card */}
-                {previewYoutubeId && (
+                {/* Hidden inputs to pass data to server action */}
+                <input type="hidden" name="videosJson" value={JSON.stringify(bookVideos)} />
+                <input type="hidden" name="videoUrl" value={bookVideos[0]?.url || ''} />
+                <input type="hidden" name="videoThumbnail" value={bookVideos[0]?.thumbnail || ''} />
+
+                {bookVideos.length === 0 ? (
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 16,
-                    padding: 14,
-                    background: 'rgba(201,168,96,.08)',
-                    border: '1px solid rgba(201,168,96,.3)',
+                    padding: '32px 20px',
+                    textAlign: 'center',
+                    background: 'rgba(239,231,214,.02)',
+                    border: '1px dashed rgba(201,168,96,.25)',
                     borderRadius: 6,
-                    marginTop: 14
+                    marginTop: 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 12
                   }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {activePreviewThumb && (
-                      <img
-                        src={activePreviewThumb}
-                        alt="Trailer thumbnail"
-                        style={{ width: 110, height: 62, objectFit: 'cover', borderRadius: 4, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.5)' }}
-                      />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {matchedGalleryVideo?.title || `${currentBook.title || 'Book'} Trailer`}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--gold)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} />
-                        Active on public book page
-                        {isCustomPreviewThumb && (
-                          <span style={{ color: '#6dbf78', marginLeft: 6 }}>• Custom thumbnail</span>
-                        )}
-                      </div>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: 'rgba(201,168,96,.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--gold)'
+                    }}>
+                      <Ic k="video" s={22} />
+                    </div>
+                    <div style={{ maxWidth: 440 }}>
+                      <p style={{ margin: 0, fontWeight: 600, color: 'var(--cream-2)' }}>No videos added for this book yet</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
+                        Add cinematic trailers, dramatic author readings, or interviews. When you add multiple videos, visitors can swipe through them in a coverflow carousel before reading the chapter sample.
+                      </p>
                     </div>
                     <button
                       type="button"
-                      className="crm-sm"
-                      style={{ height: 32, fontSize: 12 }}
-                      onClick={() => { setVideoUrl(''); setVideoThumbnail(''); setDirty(true); }}
+                      className="crm-btn pri"
+                      style={{ fontSize: 12, padding: '7px 16px', marginTop: 4 }}
+                      onClick={() => {
+                        setBookVideos([
+                          {
+                            id: `bv-${Date.now()}`,
+                            url: '',
+                            title: `${currentBook.title || 'Book'} — Official Trailer`,
+                            type: 'Trailer',
+                            thumbnail: null,
+                            duration: ''
+                          }
+                        ]);
+                        setDirty(true);
+                      }}
                     >
-                      Clear
+                      <Ic k="plus" s={14} /> ADD FIRST VIDEO
                     </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 18 }}>
+                    {bookVideos.map((vid, idx) => {
+                      const parsedId = parseYouTubeId(vid.url);
+                      const matchedGal = parsedId
+                        ? videos.find(v => Boolean(v.youtubeId && v.youtubeId === parsedId))
+                        : videos.find(v => Boolean(vid.url && v.youtubeId && vid.url.includes(v.youtubeId)));
+                      const autoThumb = vid.thumbnail || matchedGal?.thumbnail || (parsedId ? `https://i.ytimg.com/vi/${parsedId}/hqdefault.jpg` : null);
+
+                      return (
+                        <div
+                          key={vid.id || idx}
+                          style={{
+                            background: 'rgba(0,0,0,.25)',
+                            border: idx === 0 ? '1px solid rgba(201,168,96,.4)' : '1px solid rgba(239,231,214,.1)',
+                            borderRadius: 6,
+                            padding: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 14,
+                            position: 'relative'
+                          }}
+                        >
+                          {/* Item Header */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{
+                                fontSize: 11,
+                                fontFamily: 'var(--serif-c)',
+                                fontWeight: 700,
+                                letterSpacing: '.12em',
+                                color: idx === 0 ? 'var(--gold)' : 'var(--cream-2)',
+                                background: idx === 0 ? 'rgba(201,168,96,.15)' : 'rgba(255,255,255,.06)',
+                                border: `1px solid ${idx === 0 ? 'rgba(201,168,96,.3)' : 'rgba(255,255,255,.1)'}`,
+                                padding: '3px 8px',
+                                borderRadius: 3
+                              }}>
+                                #{idx + 1} {idx === 0 ? '• PRIMARY / FEATURED' : ''}
+                              </span>
+                              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                                {vid.type || 'Trailer'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  className="crm-sm"
+                                  title="Move video up"
+                                  style={{ height: 28, padding: '0 8px', fontSize: 11 }}
+                                  onClick={() => {
+                                    setBookVideos(prev => {
+                                      const next = [...prev];
+                                      const temp = next[idx - 1];
+                                      next[idx - 1] = next[idx];
+                                      next[idx] = temp;
+                                      return next;
+                                    });
+                                    setDirty(true);
+                                  }}
+                                >
+                                  ▲ Up
+                                </button>
+                              )}
+                              {idx < bookVideos.length - 1 && (
+                                <button
+                                  type="button"
+                                  className="crm-sm"
+                                  title="Move video down"
+                                  style={{ height: 28, padding: '0 8px', fontSize: 11 }}
+                                  onClick={() => {
+                                    setBookVideos(prev => {
+                                      const next = [...prev];
+                                      const temp = next[idx + 1];
+                                      next[idx + 1] = next[idx];
+                                      next[idx] = temp;
+                                      return next;
+                                    });
+                                    setDirty(true);
+                                  }}
+                                >
+                                  ▼ Down
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="crm-sm danger"
+                                title="Remove video"
+                                style={{ height: 28, padding: '0 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                onClick={() => {
+                                  setBookVideos(prev => prev.filter((_, i) => i !== idx));
+                                  setDirty(true);
+                                }}
+                              >
+                                <Ic k="trash" s={12} /> Remove
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Gallery selector (if gallery videos exist) */}
+                          {videos.length > 0 && (
+                            <div className="crm-field">
+                              <label className="crm-label">CHOOSE FROM VIDEO GALLERY (OR ENTER BELOW)</label>
+                              <select
+                                className="crm-in"
+                                value={matchedGal?.id || ''}
+                                onChange={(e) => {
+                                  const sel = videos.find(v => v.id === e.target.value);
+                                  if (sel && sel.youtubeId) {
+                                    setBookVideos(prev => prev.map((item, i) => i === idx ? {
+                                      ...item,
+                                      url: `https://www.youtube.com/watch?v=${sel.youtubeId}`,
+                                      title: sel.title || item.title,
+                                      type: sel.type || item.type,
+                                      thumbnail: sel.thumbnail || item.thumbnail || null
+                                    } : item));
+                                    setDirty(true);
+                                  }
+                                }}
+                              >
+                                <option value="">-- Choose from your uploaded videos --</option>
+                                {videos.filter(v => v.youtubeId).map((v) => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.title} ({v.type || 'Trailer'})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* YouTube URL input */}
+                          <div className="crm-field">
+                            <label className="crm-label">YOUTUBE VIDEO URL</label>
+                            <input
+                              type="text"
+                              className="crm-in"
+                              placeholder="https://www.youtube.com/watch?v=…"
+                              value={vid.url}
+                              onChange={(e) => {
+                                const newUrl = e.target.value;
+                                setBookVideos(prev => prev.map((item, i) => i === idx ? { ...item, url: newUrl } : item));
+                                setDirty(true);
+                              }}
+                            />
+                          </div>
+
+                          {/* Title & Type in 2 columns */}
+                          <div className="crm-grid2">
+                            <div className="crm-field">
+                              <label className="crm-label">VIDEO TITLE</label>
+                              <input
+                                type="text"
+                                className="crm-in"
+                                placeholder="e.g. Official Book Trailer"
+                                value={vid.title}
+                                onChange={(e) => {
+                                  const newTitle = e.target.value;
+                                  setBookVideos(prev => prev.map((item, i) => i === idx ? { ...item, title: newTitle } : item));
+                                  setDirty(true);
+                                }}
+                              />
+                            </div>
+                            <div className="crm-field">
+                              <label className="crm-label">VIDEO TYPE</label>
+                              <select
+                                className="crm-in"
+                                value={vid.type || 'Trailer'}
+                                onChange={(e) => {
+                                  const newType = e.target.value;
+                                  setBookVideos(prev => prev.map((item, i) => i === idx ? { ...item, type: newType } : item));
+                                  setDirty(true);
+                                }}
+                              >
+                                <option value="Trailer">Trailer (Cinematic)</option>
+                                <option value="Reading">Reading (Author Reading)</option>
+                                <option value="Interview">Interview (Discussion)</option>
+                                <option value="Teaser">Teaser (Short Promo)</option>
+                                <option value="Behind the Scenes">Behind the Scenes</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Live Video Preview Card */}
+                          {parsedId && (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 14,
+                              padding: '10px 14px',
+                              background: 'rgba(201,168,96,.06)',
+                              border: '1px solid rgba(201,168,96,.2)',
+                              borderRadius: 4
+                            }}>
+                              {autoThumb && (
+                                <img
+                                  src={autoThumb}
+                                  alt={vid.title || 'Video thumbnail'}
+                                  style={{ width: 90, height: 50, objectFit: 'cover', borderRadius: 3, flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,.5)' }}
+                                />
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--cream-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {vid.title || 'Untitled Video'}
+                                </div>
+                                <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 2 }}>
+                                  YouTube ID: <code style={{ color: 'var(--cream)' }}>{parsedId}</code> · {vid.type || 'Trailer'}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </section>
