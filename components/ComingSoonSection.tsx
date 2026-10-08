@@ -122,42 +122,46 @@ export default function ComingSoonSection({
     }
   }, [activeItem, displayItem?.id]);
 
-  // Live countdown state
-  const [countdown, setCountdown] = useState<{ days: string; hours: string; mins: string }>({
+  // Live countdown state (actively ticking every second)
+  const [countdown, setCountdown] = useState<{ days: string; hours: string; mins: string; secs: string }>({
     days: '52',
     hours: '09',
     mins: '09',
+    secs: '00',
   });
 
   useEffect(() => {
     const calcCountdown = () => {
-      if (!displayItem.releaseDate) {
-        setCountdown({ days: '52', hours: '09', mins: '09' });
-        return;
+      let targetTime: number;
+      if (displayItem.releaseDate && displayItem.releaseDate.trim()) {
+        const raw = displayItem.releaseDate.trim();
+        const dateStr = raw.length === 10 ? `${raw}T00:00:00` : raw;
+        targetTime = new Date(dateStr).getTime();
+        if (Number.isNaN(targetTime)) {
+          targetTime = Date.now() + (51 * 86400000 + 14 * 3600000 + 32 * 60000);
+        }
+      } else {
+        targetTime = Date.now() + (51 * 86400000 + 14 * 3600000 + 32 * 60000);
       }
-      const raw = displayItem.releaseDate.trim();
-      const dateStr = raw.length === 10 ? `${raw}T00:00:00` : raw;
-      const targetTime = new Date(dateStr).getTime();
-      if (Number.isNaN(targetTime)) {
-        setCountdown({ days: '52', hours: '09', mins: '09' });
-        return;
-      }
+
       const diff = Math.max(0, targetTime - Date.now());
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
       const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
 
       setCountdown({
         days: String(d).padStart(2, '0'),
         hours: String(h).padStart(2, '0'),
         mins: String(m).padStart(2, '0'),
+        secs: String(s).padStart(2, '0'),
       });
     };
 
     calcCountdown();
-    const interval = setInterval(calcCountdown, 1000 * 60);
+    const interval = setInterval(calcCountdown, 1000);
     return () => clearInterval(interval);
-  }, [displayItem.releaseDate]);
+  }, [displayItem.releaseDate, displayItem.id]);
 
   if (!items || items.length === 0) {
     return null;
@@ -195,8 +199,8 @@ export default function ComingSoonSection({
         onMouseUp={items.length > 1 ? handleDragEnd : undefined}
         onMouseLeave={items.length > 1 ? handleDragEnd : undefined}
       >
-        {/* 3D Shelf Table / Reflective Surface Glow */}
-        <div className="cs-floor-reflection" />
+        {/* 3D Shelf Table / Reflective Surface Glow tailored to number of books */}
+        <div className={`cs-floor-reflection cs-floor-count-${Math.min(4, items.length)}`} />
 
         {/* The Books Track (Persistent DOM nodes with stable key={item.id} for 60fps continuous glide) */}
         <div className="cs-stage-track">
@@ -294,6 +298,11 @@ export default function ComingSoonSection({
             <div className="cs-cbox">
               <span className="cs-cnum">{countdown.mins}</span>
               <span className="cs-clbl">MINS</span>
+            </div>
+            <span className="cs-csep">:</span>
+            <div className="cs-cbox">
+              <span className="cs-cnum">{countdown.secs}</span>
+              <span className="cs-clbl">SECS</span>
             </div>
           </div>
 

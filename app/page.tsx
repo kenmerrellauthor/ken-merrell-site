@@ -8,7 +8,7 @@ import Countdown from '@/components/Countdown';
 import { ContactForm } from '@/components/Forms';
 import { Cover, Eyebrow, Seal } from '@/components/Bits';
 import { Case, Cubby, SoonCubby, EmptyCubby } from '@/components/Shelf';
-import { Arrow, Ext, SocialIcon } from '@/components/icons';
+import { Arrow, Ext } from '@/components/icons';
 import ScrollReveal from '@/components/ScrollReveal';
 import ComingSoonSection from '@/components/ComingSoonSection';
 import { getBooks, getSite, getVideos, isBookNew } from '@/lib/store';
@@ -169,52 +169,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {site.socialLinks && site.socialLinks.length > 0 && (
-        <section className="social-band" style={{ padding: '100px 20px', borderTop: '1px solid rgba(201,168,96,.18)', textAlign: 'center', background: '#0a0806', position: 'relative', overflow: 'hidden' }}>
-          <div className="km-grain abs" style={{ opacity: 0.3 }} />
-          <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h2 style={{ fontFamily: 'var(--serif-d)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 600, color: 'var(--cream-2)', margin: '0 0 16px', lineHeight: 1 }}>
-              <em>Connect</em> with Ken
-            </h2>
-            <p style={{ margin: '0 auto 48px', fontSize: '18px', color: 'var(--muted-2)', maxWidth: '440px', lineHeight: 1.6 }}>
-              Follow across the web for the latest updates, upcoming releases, and behind-the-scenes looks.
-            </p>
-            <div className="reveal-on-scroll network-anim-wrapper">
-              <div className="anim-line-vert" />
-              <div className="anim-node" />
-              <div className="anim-line-horiz" />
-            </div>
-          </div>
-          <div className="social-scroller" style={{ position: 'relative', zIndex: 1, paddingTop: '50px' }}>
-            {site.socialLinks?.map((link, idx) => (
-              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card" title={link.platform}>
-                <div className="card-drop-wire reveal-on-scroll" style={{ transitionDelay: `${0.8 + (idx * 0.15)}s` }} />
-                <div className="social-card-bg" style={link.image ? { backgroundImage: `url("${link.image}")` } : { background: '#080605', overflow: 'hidden' }}>
-                  {!link.image && (
-                    <div style={{ position: 'absolute', top: '10%', right: '-20%', opacity: 0.03, transform: 'scale(6)' }}>
-                      <SocialIcon platform={link.platform} s={100} />
-                    </div>
-                  )}
-                </div>
-                <div className="social-card-gradient" />
-                <div className="social-card-content">
-                  <div className="social-card-icon"><SocialIcon platform={link.platform} s={24} /></div>
-                  <div className="social-card-name">
-                    {link.platform}
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', color: 'var(--muted)', fontSize: '13px', alignItems: 'center', gap: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', position: 'relative', zIndex: 1, opacity: 0.6, maxWidth: '1200px', margin: '24px auto 0', padding: '0 20px' }}>
-            <span>Swipe to explore</span>
-            <Arrow />
-          </div>
-        </section>
-      )}
-
-
-      <Footer site={site} hideSocial={true} />
+      <Footer site={site} />
     </>
   );
 }
