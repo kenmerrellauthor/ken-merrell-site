@@ -48,6 +48,18 @@ export default function BookVideoCoverflow({
     setActiveIndex((prev) => (prev < total - 1 ? prev + 1 : 0));
   }, [total]);
 
+  // Auto-swipe every 10 seconds when multiple videos exist and video is not playing
+  useEffect(() => {
+    if (total <= 1 || playingIndex !== null) return;
+    const autoTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (!isDragging.current && playingIndex === null) {
+        nextSlide();
+      }
+    }, 10000);
+    return () => clearInterval(autoTimer);
+  }, [total, activeIndex, playingIndex, nextSlide]);
+
   const handleDragStart = (clientX: number) => {
     if (total <= 1) return;
     isDragging.current = true;
@@ -211,6 +223,7 @@ export default function BookVideoCoverflow({
           onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
           onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
           onTouchEnd={handleDragEnd}
+          onTouchCancel={handleDragEnd}
           onMouseDown={(e) => handleDragStart(e.clientX)}
           onMouseMove={(e) => handleDragMove(e.clientX)}
           onMouseUp={handleDragEnd}

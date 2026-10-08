@@ -106,18 +106,17 @@ export default function ComingSoonSection({
     }, 120);
   };
 
-  // Auto-swipe & manual gesture tracking
-  const [isHovered, setIsHovered] = useState(false);
-
+  // Auto-swipe every 10 seconds (resets cleanly when user interacts or slides)
   useEffect(() => {
-    if (items.length <= 1 || isHovered) return;
+    if (items.length <= 1) return;
     const autoTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       if (!isDragging.current) {
         nextSlide();
       }
     }, 10000);
     return () => clearInterval(autoTimer);
-  }, [items.length, isHovered, nextSlide]);
+  }, [items.length, activeIndex, nextSlide]);
 
   const safeIndex = items.length > 0 ? (activeIndex % items.length + items.length) % items.length : 0;
   const activeItem = items[safeIndex] || items[0];
@@ -185,8 +184,6 @@ export default function ComingSoonSection({
       id="coming"
       className="cs-section"
       aria-label="Coming Soon"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Background Ambience & Lighting */}
       <div className="cs-bg-mesh" />
@@ -207,6 +204,7 @@ export default function ComingSoonSection({
         onTouchStart={(e) => items.length > 1 && handleDragStart(e.touches[0].clientX)}
         onTouchMove={(e) => items.length > 1 && handleDragMove(e.touches[0].clientX)}
         onTouchEnd={items.length > 1 ? handleDragEnd : undefined}
+        onTouchCancel={items.length > 1 ? handleDragEnd : undefined}
         onMouseDown={(e) => items.length > 1 && handleDragStart(e.clientX)}
         onMouseMove={(e) => items.length > 1 && handleDragMove(e.clientX)}
         onMouseUp={items.length > 1 ? handleDragEnd : undefined}
