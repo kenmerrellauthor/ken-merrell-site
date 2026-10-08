@@ -29,6 +29,13 @@
         "who": "[Name · Source]"
       }
     ],
-    "lastSeenReaders": "2026-09-30T17:01:14.781Z"
+    "lastSeenReaders": "2026-09-30T17:01:14.781Z",
+    "socialLinks": [
+      { "platform": "Instagram", "url": "https://instagram.com/kenmerrell" },
+      { "platform": "Facebook", "url": "https://facebook.com/kenmerrell" },
+      { "platform": "YouTube", "url": "https://youtube.com/@kenmerrell" },
+      { "platform": "TikTok", "url": "https://tiktok.com/@kenmerrell" },
+      { "platform": "X", "url": "https://x.com/kenmerrell" }
+    ]
   }
 ]

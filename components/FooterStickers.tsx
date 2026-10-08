@@ -9,7 +9,7 @@ interface FooterStickersProps {
 
 export default function FooterStickers({ site }: FooterStickersProps) {
   // If admin has configured custom social links, use them!
-  // Otherwise, default to the 5 standard handles from the reference design.
+  // Otherwise, default to the 5 standard handles.
   const defaultLinks: SocialLink[] = [
     { platform: 'Instagram', url: 'https://instagram.com/kenmerrell' },
     { platform: 'Facebook', url: 'https://facebook.com/kenmerrell' },
@@ -181,149 +181,95 @@ export default function FooterStickers({ site }: FooterStickersProps) {
   };
 
   return (
-    <div className="footer-stickers-wrap" aria-label="Social media channels and author desk">
-      {/* 
-        Artistic Panoramic Background containing pictures of torn manuscripts, 
-        woodblock mountain etchings, botanical laurel branches, and antique letters 
-      */}
-      <div className="footer-collage-backdrop" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/img/footer-collage-backdrop.png"
-          alt=""
-          className="footer-collage-backdrop-img"
-          width={1024}
-          height={210}
-        />
-        <div className="footer-collage-vignette" />
-      </div>
-
-      {/* Interactive Desk Shelf containing Social Stickers, Open Book, and Fountain Pen */}
+    <div className="footer-stickers-wrap" aria-label="Follow Ken Merrell on social media">
+      {/* Clean responsive sticker shelf - only individual stickers shown */}
       <div className="footer-stickers-shelf">
         {linksToRender.map((stk, idx) => {
           const tilt = tilts[idx % tilts.length];
           const isCircle = stk.platform.toLowerCase().includes('facebook') || stk.platform.toLowerCase() === 'fb';
           const isWide = stk.platform.toLowerCase().includes('youtube') || stk.platform.toLowerCase() === 'yt';
           const gradId = `stkGrad-${idx}`;
-          const isBookSpot = idx === 2 && linksToRender.length >= 4;
 
           return (
-            <React.Fragment key={`${stk.platform}-${idx}`}>
-              <a
-                href={stk.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`footer-sticker-item stk-${stk.platform.toLowerCase().replace(/[^a-z0-9]/g, '')}`}
-                style={{ '--stk-tilt': tilt } as React.CSSProperties}
-                title={`Follow Ken Merrell on ${stk.platform}`}
-                aria-label={`Follow Ken Merrell on ${stk.platform}`}
-              >
-                <div className="sticker-shadow" />
-                <div className="sticker-body">
-                  <svg viewBox={isWide ? '0 0 112 100' : '0 0 100 100'} className="sticker-svg" aria-hidden="true">
-                    <defs>
-                      <linearGradient id={`paperGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#f5ede2" />
-                        <stop offset="50%" stopColor="#eae0d0" />
-                        <stop offset="100%" stopColor="#d9cdba" />
-                      </linearGradient>
-                      <radialGradient id={`slateGrad-${idx}`} cx="45%" cy="40%" r="65%">
-                        <stop offset="0%" stopColor="#25211c" />
-                        <stop offset="70%" stopColor="#141210" />
-                        <stop offset="100%" stopColor="#0a0908" />
-                      </radialGradient>
-                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#fae7b5" />
-                        <stop offset="40%" stopColor="#d8b467" />
-                        <stop offset="80%" stopColor="#b48c3d" />
-                        <stop offset="100%" stopColor="#926f28" />
-                      </linearGradient>
-                      <filter id={`emboss-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="1.5" stdDeviation="1" floodColor="#000" floodOpacity="0.85" />
-                      </filter>
-                      <clipPath id="customClip">
-                        <rect x="18" y="18" width="64" height="64" rx="14" ry="14" />
-                      </clipPath>
-                    </defs>
+            <a
+              key={`${stk.platform}-${idx}`}
+              href={stk.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`footer-sticker-item stk-${stk.platform.toLowerCase().replace(/[^a-z0-9]/g, '')}`}
+              style={{ '--stk-tilt': tilt } as React.CSSProperties}
+              title={`Follow Ken Merrell on ${stk.platform}`}
+              aria-label={`Follow Ken Merrell on ${stk.platform}`}
+            >
+              <div className="sticker-shadow" />
+              <div className="sticker-body">
+                <svg viewBox={isWide ? '0 0 112 100' : '0 0 100 100'} className="sticker-svg" aria-hidden="true">
+                  <defs>
+                    <linearGradient id={`paperGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#f5ede2" />
+                      <stop offset="50%" stopColor="#eae0d0" />
+                      <stop offset="100%" stopColor="#d9cdba" />
+                    </linearGradient>
+                    <radialGradient id={`slateGrad-${idx}`} cx="45%" cy="40%" r="65%">
+                      <stop offset="0%" stopColor="#25211c" />
+                      <stop offset="70%" stopColor="#141210" />
+                      <stop offset="100%" stopColor="#0a0908" />
+                    </radialGradient>
+                    <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fae7b5" />
+                      <stop offset="40%" stopColor="#d8b467" />
+                      <stop offset="80%" stopColor="#b48c3d" />
+                      <stop offset="100%" stopColor="#926f28" />
+                    </linearGradient>
+                    <filter id={`emboss-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="1.5" stdDeviation="1" floodColor="#000" floodOpacity="0.85" />
+                    </filter>
+                    <clipPath id="customClip">
+                      <rect x="18" y="18" width="64" height="64" rx="14" ry="14" />
+                    </clipPath>
+                  </defs>
 
-                    {/* Outer Deckled Paper Die-Cut Rim */}
-                    {isCircle ? (
-                      <circle cx="50" cy="50" r="46" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
-                    ) : isWide ? (
-                      <rect x="5" y="8" width="102" height="84" rx="26" ry="26" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
-                    ) : (
-                      <rect x="4" y="4" width="92" height="92" rx="27" ry="27" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
-                    )}
+                  {/* Outer Deckled Paper Die-Cut Rim */}
+                  {isCircle ? (
+                    <circle cx="50" cy="50" r="46" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                  ) : isWide ? (
+                    <rect x="5" y="8" width="102" height="84" rx="26" ry="26" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                  ) : (
+                    <rect x="4" y="4" width="92" height="92" rx="27" ry="27" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                  )}
 
-                    {/* Charcoal Slate Inner Disk */}
-                    {isCircle ? (
-                      <circle cx="50" cy="50" r="40" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
-                    ) : isWide ? (
-                      <rect x="11" y="14" width="90" height="72" rx="20" ry="20" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
-                    ) : (
-                      <rect x="10" y="10" width="80" height="80" rx="22" ry="22" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
-                    )}
+                  {/* Charcoal Slate Inner Disk */}
+                  {isCircle ? (
+                    <circle cx="50" cy="50" r="40" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                  ) : isWide ? (
+                    <rect x="11" y="14" width="90" height="72" rx="20" ry="20" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                  ) : (
+                    <rect x="10" y="10" width="80" height="80" rx="22" ry="22" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                  )}
 
-                    {/* Inner Fine Gold Inset Ring */}
-                    {isCircle ? (
-                      <circle cx="50" cy="50" r="37" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
-                    ) : isWide ? (
-                      <rect x="14" y="17" width="84" height="66" rx="17" ry="17" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
-                    ) : (
-                      <rect x="13" y="13" width="74" height="74" rx="19" ry="19" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
-                    )}
+                  {/* Inner Fine Gold Inset Ring */}
+                  {isCircle ? (
+                    <circle cx="50" cy="50" r="37" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                  ) : isWide ? (
+                    <rect x="14" y="17" width="84" height="66" rx="17" ry="17" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                  ) : (
+                    <rect x="13" y="13" width="74" height="74" rx="19" ry="19" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                  )}
 
-                    {/* Embossed Gold Foil Icon */}
-                    <g filter={`url(#emboss-${idx})`}>
-                      {renderGlyph(stk.platform, stk.image, gradId)}
-                    </g>
+                  {/* Embossed Gold Foil Icon */}
+                  <g filter={`url(#emboss-${idx})`}>
+                    {renderGlyph(stk.platform, stk.image, gradId)}
+                  </g>
 
-                    {/* Top Surface Vinyl Glare */}
-                    <path d="M12 12 Q50 8 78 30 L50 65 Q20 50 12 12 Z" fill="rgba(255,255,255,0.08)" pointerEvents="none" />
-                  </svg>
-                  <div className="sticker-peel-shimmer" />
-                </div>
-                <span className="sticker-tooltip">{stk.platform}</span>
-              </a>
-
-              {/* Picture of Vintage Open Book nestled naturally after the 3rd handle */}
-              {isBookSpot && (
-                <div
-                  className="footer-decor-sticker decor-book"
-                  title="Ken Merrell Novels"
-                  aria-hidden="true"
-                >
-                  <div className="decor-shadow" />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/img/sticker-book-clean.png"
-                    alt="Open Book"
-                    className="decor-img"
-                    width={123}
-                    height={89}
-                  />
-                </div>
-              )}
-            </React.Fragment>
+                  {/* Top Surface Vinyl Glare */}
+                  <path d="M12 12 Q50 8 78 30 L50 65 Q20 50 12 12 Z" fill="rgba(255,255,255,0.08)" pointerEvents="none" />
+                </svg>
+                <div className="sticker-peel-shimmer" />
+              </div>
+              <span className="sticker-tooltip">{stk.platform}</span>
+            </a>
           );
         })}
-
-        {/* Picture of Vintage Fountain Pen angled on the right of the handles */}
-        <div
-          className="footer-decor-sticker decor-pen"
-          title="Author's Pen"
-          aria-hidden="true"
-        >
-          <div className="decor-shadow pen-shadow" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/sticker-pen-clean.png"
-            alt="Fountain Pen"
-            className="decor-img"
-            width={116}
-            height={196}
-          />
-        </div>
       </div>
     </div>
   );

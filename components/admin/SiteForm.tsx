@@ -368,6 +368,12 @@ function EditableSocialLink({
     }
   };
 
+  const updateField = (field: 'platform' | 'url', val: string) => {
+    const updated = { ...draft, [field]: val };
+    setDraft(updated);
+    onUpdate(updated);
+  };
+
   return (
     <div className="crm-field" style={{ paddingBottom: 18, borderBottom: '1px solid rgba(239,231,214,.06)' }}>
       <input ref={hiddenRef} type="hidden" />
@@ -440,8 +446,8 @@ function EditableSocialLink({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="crm-grid2">
-            <input className="crm-in" aria-label="Platform name" value={draft.platform} onChange={(e) => setDraft({ ...draft, platform: e.target.value })} placeholder="Platform (e.g. Instagram)" />
-            <input className="crm-in" aria-label="URL" type="url" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} placeholder="https://..." />
+            <input className="crm-in" aria-label="Platform name" value={draft.platform} onChange={(e) => updateField('platform', e.target.value)} placeholder="Platform (e.g. Instagram)" />
+            <input className="crm-in" aria-label="URL" type="url" value={draft.url} onChange={(e) => updateField('url', e.target.value)} placeholder="https://..." />
           </div>
           <ImagePick
             name={`socialImage_${idx}`}
@@ -469,7 +475,16 @@ function EditableSocialLink({
 export default function SiteForm({ site }: { site: SiteSettings }) {
   const [state, action] = useActionState<AdminState, FormData>(saveSiteAction, {});
   const [quotes, setQuotes] = useState<HomeQuote[]>(site.homeQuotes);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(site.socialLinks || []);
+  const defaultSocial = [
+    { platform: 'Instagram', url: 'https://instagram.com/kenmerrell' },
+    { platform: 'Facebook', url: 'https://facebook.com/kenmerrell' },
+    { platform: 'YouTube', url: site.youtubeUrl || 'https://youtube.com/@kenmerrell' },
+    { platform: 'TikTok', url: 'https://tiktok.com/@kenmerrell' },
+    { platform: 'X', url: 'https://x.com/kenmerrell' },
+  ];
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(
+    site.socialLinks && site.socialLinks.length > 0 ? site.socialLinks : defaultSocial
+  );
 
   useEffect(() => {
     if (state.site) {

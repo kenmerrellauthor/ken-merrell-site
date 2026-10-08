@@ -100,5 +100,12 @@ That is the moment I write toward. My stories may begin with a watchful landlord
     { text: '“What will I do when the pressure falls on me?”', sub: 'The question beneath every one of my stories.', who: 'Ken Merrell' },
     { text: '“[Reader or reviewer quote about Ken’s books.]”', sub: '[Book title]', who: '[Name · Source]' },
     { text: '“[Second reader or reviewer quote.]”', sub: '[Book title]', who: '[Name · Source]' }
+  ],
+  socialLinks: [
+    { platform: 'Instagram', url: 'https://instagram.com/kenmerrell' },
+    { platform: 'Facebook', url: 'https://facebook.com/kenmerrell' },
+    { platform: 'YouTube', url: 'https://youtube.com/@kenmerrell' },
+    { platform: 'TikTok', url: 'https://tiktok.com/@kenmerrell' },
+    { platform: 'X', url: 'https://x.com/kenmerrell' }
   ]
 };

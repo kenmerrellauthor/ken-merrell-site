@@ -980,59 +980,25 @@ button { font: inherit; }
 .site-footer .bottom i { font-family: var(--serif-d); font-size: 17px; }
 
 /* ============ footer responsive sticker components ============ */
-/* ============ footer responsive sticker components ============ */
 .footer-stickers-wrap {
   position: relative;
   width: 100%;
-  max-width: 1080px;
-  margin: 24px auto -10px;
+  max-width: 860px;
+  margin: 20px auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: visible;
-}
-
-/* Atmospheric Background with Torn Manuscript & Mountains */
-.footer-collage-backdrop {
-  position: absolute;
-  inset: -15px 0 -10px;
-  pointer-events: none;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0.88;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.footer-collage-backdrop-img {
-  width: 100%;
-  max-width: 1080px;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.9));
-  mask-image: radial-gradient(ellipse 92% 85% at 50% 50%, #000 65%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 92% 85% at 50% 50%, #000 65%, transparent 100%);
-}
-
-.footer-collage-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(10, 9, 8, 0.75) 100%);
 }
 
 .footer-stickers-shelf {
   position: relative;
-  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: clamp(14px, 3.2vw, 32px);
-  padding: 16px 20px;
+  gap: clamp(16px, 3.8vw, 36px);
+  padding: 12px 16px;
   width: 100%;
 }
 
@@ -1041,8 +1007,8 @@ button { font: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: clamp(70px, 13vw, 94px);
-  height: clamp(70px, 13vw, 94px);
+  width: clamp(72px, 14vw, 98px);
+  height: clamp(72px, 14vw, 98px);
   cursor: pointer;
   text-decoration: none;
   transform: rotate(var(--stk-tilt, 0deg));
@@ -1116,52 +1082,6 @@ button { font: inherit; }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
 }
 
-/* Open Book & Fountain Pen Decorative Stickers */
-.footer-decor-sticker {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 4;
-  user-select: none;
-  pointer-events: auto;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.decor-book {
-  width: clamp(64px, 10vw, 88px);
-  height: auto;
-  transform: rotate(-2deg);
-  margin: 0 2px;
-}
-
-.decor-book:hover {
-  transform: translateY(-8px) scale(1.12) rotate(0deg);
-}
-
-.decor-pen {
-  width: clamp(52px, 8vw, 76px);
-  height: auto;
-  transform: rotate(8deg);
-  margin-left: 4px;
-}
-
-.decor-pen:hover {
-  transform: translateY(-10px) scale(1.15) rotate(4deg);
-}
-
-.decor-img {
-  width: 100%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.75));
-  transition: filter 0.35s ease;
-}
-
-.footer-decor-sticker:hover .decor-img {
-  filter: drop-shadow(0 0 16px rgba(201, 168, 96, 0.5)) drop-shadow(0 12px 22px rgba(0, 0, 0, 0.85));
-}
-
 /* Hover Interaction: Physical Lift, Straighten, Aura Glow */
 .footer-sticker-item:hover {
   transform: translateY(-16px) rotate(0deg) scale(1.18) !important;
@@ -1202,18 +1122,12 @@ button { font: inherit; }
 /* Mobile Responsiveness */
 @media (max-width: 640px) {
   .footer-stickers-shelf {
-    gap: 12px 14px;
-    padding: 8px 4px;
+    gap: 14px 18px;
+    padding: 8px;
   }
   .footer-sticker-item {
-    width: 62px;
-    height: 62px;
-  }
-  .decor-book {
-    width: 54px;
-  }
-  .decor-pen {
-    width: 44px;
+    width: 68px;
+    height: 68px;
   }
 }
 
