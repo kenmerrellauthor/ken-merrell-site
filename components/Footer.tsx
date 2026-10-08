@@ -20,13 +20,13 @@ export default function Footer({ site }: { site: SiteSettings; hideSocial?: bool
         </nav>
       </div>
 
+      {/* Responsive Individual Social Sticker Components */}
+      <FooterStickers site={site} />
+
       <div className="bottom">
         <span>© {new Date().getFullYear()} Ken Merrell. All rights reserved.</span>
         <i>{site.pullQuote || 'What will I do when the pressure falls on me?'}</i>
       </div>
-
-      {/* Responsive Individual Social Sticker Components */}
-      <FooterStickers site={site} />
     </footer>
   );
 }
