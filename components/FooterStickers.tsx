@@ -182,13 +182,13 @@ export default function FooterStickers({ site }: FooterStickersProps) {
 
   return (
     <div className="footer-stickers-wrap" aria-label="Follow Ken Merrell on social media">
-      {/* Clean responsive sticker shelf - only individual stickers shown */}
+      {/* Clean responsive sticker shelf - styled in exact site color palette */}
       <div className="footer-stickers-shelf">
         {linksToRender.map((stk, idx) => {
           const tilt = tilts[idx % tilts.length];
           const isCircle = stk.platform.toLowerCase().includes('facebook') || stk.platform.toLowerCase() === 'fb';
           const isWide = stk.platform.toLowerCase().includes('youtube') || stk.platform.toLowerCase() === 'yt';
-          const gradId = `stkGrad-${idx}`;
+          const gradId = `siteGoldGrad-${idx}`;
 
           return (
             <a
@@ -205,22 +205,35 @@ export default function FooterStickers({ site }: FooterStickersProps) {
               <div className="sticker-body">
                 <svg viewBox={isWide ? '0 0 112 100' : '0 0 100 100'} className="sticker-svg" aria-hidden="true">
                   <defs>
+                    {/* Website Cream Parchment Gradient */}
                     <linearGradient id={`paperGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#f5ede2" />
-                      <stop offset="50%" stopColor="#eae0d0" />
-                      <stop offset="100%" stopColor="#d9cdba" />
+                      <stop offset="0%" stopColor="#f4ecdc" />
+                      <stop offset="60%" stopColor="#efe7d6" />
+                      <stop offset="100%" stopColor="#cfc4ae" />
                     </linearGradient>
+
+                    {/* Website Deep Ink Gradient (matches footer & dark panels) */}
                     <radialGradient id={`slateGrad-${idx}`} cx="45%" cy="40%" r="65%">
-                      <stop offset="0%" stopColor="#25211c" />
-                      <stop offset="70%" stopColor="#141210" />
+                      <stop offset="0%" stopColor="#1a1613" />
+                      <stop offset="70%" stopColor="#120f0d" />
                       <stop offset="100%" stopColor="#0a0908" />
                     </radialGradient>
+
+                    {/* Website Signature Gold Gradient (--gold-hi -> --gold -> --brown) */}
                     <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fae7b5" />
-                      <stop offset="40%" stopColor="#d8b467" />
-                      <stop offset="80%" stopColor="#b48c3d" />
-                      <stop offset="100%" stopColor="#926f28" />
+                      <stop offset="0%" stopColor="#e2c683" />
+                      <stop offset="45%" stopColor="#c9a860" />
+                      <stop offset="85%" stopColor="#96742e" />
+                      <stop offset="100%" stopColor="#7a5c1e" />
                     </linearGradient>
+
+                    {/* Gilded Border Rim Gradient */}
+                    <linearGradient id={`goldRim-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#e2c683" />
+                      <stop offset="50%" stopColor="#c9a860" />
+                      <stop offset="100%" stopColor="#7a5c1e" />
+                    </linearGradient>
+
                     <filter id={`emboss-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
                       <feDropShadow dx="0" dy="1.5" stdDeviation="1" floodColor="#000" floodOpacity="0.85" />
                     </filter>
@@ -229,40 +242,40 @@ export default function FooterStickers({ site }: FooterStickersProps) {
                     </clipPath>
                   </defs>
 
-                  {/* Outer Deckled Paper Die-Cut Rim */}
+                  {/* Outer Parchment Paper Die-Cut Rim with Gilded Gold Stroke */}
                   {isCircle ? (
-                    <circle cx="50" cy="50" r="46" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                    <circle cx="50" cy="50" r="46" fill={`url(#paperGrad-${idx})`} stroke={`url(#goldRim-${idx})`} strokeWidth="1.8" />
                   ) : isWide ? (
-                    <rect x="5" y="8" width="102" height="84" rx="26" ry="26" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                    <rect x="5" y="8" width="102" height="84" rx="26" ry="26" fill={`url(#paperGrad-${idx})`} stroke={`url(#goldRim-${idx})`} strokeWidth="1.8" />
                   ) : (
-                    <rect x="4" y="4" width="92" height="92" rx="27" ry="27" fill={`url(#paperGrad-${idx})`} stroke="#cfc0a7" strokeWidth="1.5" />
+                    <rect x="4" y="4" width="92" height="92" rx="27" ry="27" fill={`url(#paperGrad-${idx})`} stroke={`url(#goldRim-${idx})`} strokeWidth="1.8" />
                   )}
 
-                  {/* Charcoal Slate Inner Disk */}
+                  {/* Charcoal Deep Ink Inner Disk */}
                   {isCircle ? (
-                    <circle cx="50" cy="50" r="40" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                    <circle cx="50" cy="50" r="39.5" fill={`url(#slateGrad-${idx})`} stroke="rgba(201, 168, 96, 0.4)" strokeWidth="1" />
                   ) : isWide ? (
-                    <rect x="11" y="14" width="90" height="72" rx="20" ry="20" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                    <rect x="11" y="14" width="90" height="72" rx="20" ry="20" fill={`url(#slateGrad-${idx})`} stroke="rgba(201, 168, 96, 0.4)" strokeWidth="1" />
                   ) : (
-                    <rect x="10" y="10" width="80" height="80" rx="22" ry="22" fill={`url(#slateGrad-${idx})`} stroke="#3a3227" strokeWidth="1" />
+                    <rect x="10" y="10" width="80" height="80" rx="22" ry="22" fill={`url(#slateGrad-${idx})`} stroke="rgba(201, 168, 96, 0.4)" strokeWidth="1" />
                   )}
 
                   {/* Inner Fine Gold Inset Ring */}
                   {isCircle ? (
-                    <circle cx="50" cy="50" r="37" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                    <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(226, 198, 131, 0.3)" strokeWidth="0.8" />
                   ) : isWide ? (
-                    <rect x="14" y="17" width="84" height="66" rx="17" ry="17" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                    <rect x="14" y="17" width="84" height="66" rx="17" ry="17" fill="none" stroke="rgba(226, 198, 131, 0.3)" strokeWidth="0.8" />
                   ) : (
-                    <rect x="13" y="13" width="74" height="74" rx="19" ry="19" fill="none" stroke="rgba(201,168,96,0.22)" strokeWidth="0.8" />
+                    <rect x="13" y="13" width="74" height="74" rx="19" ry="19" fill="none" stroke="rgba(226, 198, 131, 0.3)" strokeWidth="0.8" />
                   )}
 
-                  {/* Embossed Gold Foil Icon */}
+                  {/* Embossed Website Gold Foil Icon */}
                   <g filter={`url(#emboss-${idx})`}>
                     {renderGlyph(stk.platform, stk.image, gradId)}
                   </g>
 
                   {/* Top Surface Vinyl Glare */}
-                  <path d="M12 12 Q50 8 78 30 L50 65 Q20 50 12 12 Z" fill="rgba(255,255,255,0.08)" pointerEvents="none" />
+                  <path d="M12 12 Q50 8 78 30 L50 65 Q20 50 12 12 Z" fill="rgba(255,255,255,0.09)" pointerEvents="none" />
                 </svg>
                 <div className="sticker-peel-shimmer" />
               </div>
