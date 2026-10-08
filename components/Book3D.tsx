@@ -81,9 +81,12 @@ export default function Book3D({
               fill
               sizes="(max-width: 768px) 240px, 320px"
               priority={priority}
+              draggable={false}
               style={{
                 objectFit: 'cover',
                 display: 'block',
+                pointerEvents: 'none',
+                userSelect: 'none',
               }}
             />
           ) : (

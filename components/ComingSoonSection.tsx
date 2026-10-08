@@ -54,6 +54,7 @@ export default function ComingSoonSection({
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const currentDrag = useRef(0);
+  const hasSwiped = useRef(false);
 
   const prevSlide = useCallback(() => {
     if (items.length <= 1) return;
@@ -70,14 +71,18 @@ export default function ComingSoonSection({
     isDragging.current = true;
     dragStartX.current = clientX;
     currentDrag.current = 0;
+    hasSwiped.current = false;
   };
 
   const handleDragMove = (clientX: number) => {
     if (!isDragging.current) return;
     const diff = clientX - dragStartX.current;
     currentDrag.current = diff;
-    // Damped elastic feedback during drag
-    setDragOffset(diff * 0.35);
+    // Only apply visual drag offset if movement exceeds small jitter threshold (> 6px)
+    // This keeps clean clicks/taps from triggering style mutations that cancel browser click events
+    if (Math.abs(diff) > 6) {
+      setDragOffset(diff * 0.35);
+    }
   };
 
   const handleDragEnd = () => {
@@ -85,12 +90,20 @@ export default function ComingSoonSection({
     isDragging.current = false;
     const diff = currentDrag.current;
     setDragOffset(0);
-    if (diff < -45) {
-      nextSlide();
-    } else if (diff > 45) {
-      prevSlide();
+
+    if (Math.abs(diff) > 35) {
+      hasSwiped.current = true;
+      if (diff < -35) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
     }
-    currentDrag.current = 0;
+
+    setTimeout(() => {
+      hasSwiped.current = false;
+      currentDrag.current = 0;
+    }, 120);
   };
 
   // Auto-swipe & manual gesture tracking
@@ -235,8 +248,14 @@ export default function ComingSoonSection({
                       }
                     : undefined
                 }
-                onClick={() => {
-                  if (!isCenter && Math.abs(currentDrag.current) < 10) {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isCenter && !hasSwiped.current && Math.abs(currentDrag.current) < 25) {
+                    setActiveIndex(index);
+                  }
+                }}
+                onPointerUp={(e) => {
+                  if (!isCenter && !hasSwiped.current && Math.abs(currentDrag.current) < 15) {
                     setActiveIndex(index);
                   }
                 }}
@@ -263,6 +282,38 @@ export default function ComingSoonSection({
             );
           })}
         </div>
+
+        {/* Stage Navigation Arrows */}
+        {items.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="cs-stage-arrow cs-arrow-prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                prevSlide();
+              }}
+              aria-label="Previous book"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="cs-stage-arrow cs-arrow-next"
+              onClick={(e) => {
+                e.stopPropagation();
+                nextSlide();
+              }}
+              aria-label="Next book"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </>
+        )}
       </div>
 
       {/* Active Book Details & Call to Action (Smoothly crossfades on book change) */}

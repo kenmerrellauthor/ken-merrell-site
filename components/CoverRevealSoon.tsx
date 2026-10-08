@@ -34,6 +34,7 @@ export default function CoverRevealSoon({
         overflow: 'hidden',
         color: '#c9a860',
         userSelect: 'none',
+        pointerEvents: 'none',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
