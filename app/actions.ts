@@ -81,6 +81,17 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
     html: (await import('@/lib/email')).verifyReaderEmail(link, bookTitle),
   });
 
+  // Identity Bridging: Link anonymous ad click session to real reader contact
+  const sessionId = sanitizeSingleLine(String(form.get('sessionId') || '')).slice(0, 50);
+  if (sessionId) {
+    try {
+      const { bridgeReaderIdentity } = await import('@/lib/analytics');
+      await bridgeReaderIdentity(sessionId, { name, email, format, bookTitle });
+    } catch {
+      /* ignore */
+    }
+  }
+
   return { ok: true, errors: {}, name: name.split(' ')[0], format, bookTitle, message: 'verify' };
 }
 

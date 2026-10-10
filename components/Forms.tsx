@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitContact, submitReader, type FormState } from '@/app/actions';
 import Turnstile, { Traps } from './Turnstile';
@@ -26,6 +26,15 @@ function Err({ id, text, dark }: { id: string; text?: string; dark?: boolean }) 
 
 export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
   const [state, action] = useActionState(submitReader, initial);
+  const [sessionId, setSessionId] = useState('');
+
+  useEffect(() => {
+    try {
+      const sid = sessionStorage.getItem('km_session_id');
+      if (sid) setSessionId(sid);
+    } catch {}
+  }, []);
+
   const v = state.values || {};
   if (state.ok) {
     return (
@@ -50,6 +59,7 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
   return (
     <form action={action} className="ar-card" noValidate>
       <div className="frame" />
+      <input type="hidden" name="sessionId" value={sessionId} />
       <input type="hidden" name="bookTitle" value={bookTitle || ''} />
       <div className="ttl">{bookTitle ? `Wishlist: ${bookTitle}` : 'Join the list'}</div>
       {bookTitle && (

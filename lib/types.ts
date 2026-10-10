@@ -130,3 +130,78 @@ export interface CrmNotification {
     readerName?: string;
   };
 }
+
+export type TrafficMedium = 'paid_ad' | 'organic_bio' | 'organic_post' | 'story' | 'newsletter' | 'cpc' | 'search' | 'direct' | 'referral';
+
+export interface AnalyticsLocation {
+  city: string;
+  region: string;
+  country: string;
+}
+
+export interface AnalyticsSession {
+  id: string; // e.g. "USR-8422"
+  createdAt: string;
+  updatedAt: string;
+  durationSeconds: number;
+  source: string; // "Instagram", "Facebook", "BookBub", "Google", "Email", "TikTok", "Direct"
+  medium: TrafficMedium | string;
+  campaign: string;
+  content?: string;
+  term?: string;
+  location: AnalyticsLocation;
+  device: string; // "iPhone", "Android", "iPad", "Mac", "Windows", "Desktop", "Mobile"
+  browser: string; // "Safari", "Chrome", "Firefox", "Edge"
+  landingPage: string;
+  referrer?: string;
+  exitOutcome: 'amazon_click' | 'arc_signup' | 'video_play' | 'browse' | 'exit';
+  outcomeDetail?: string;
+  readerId?: string;
+  readerName?: string;
+  readerEmail?: string;
+  pageCount: number;
+  ipHash?: string;
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  sessionId: string;
+  timestamp: string;
+  eventType: 'pageview' | 'amazon_click' | 'video_play' | 'arc_signup' | 'scroll_quote';
+  pagePath: string;
+  pageTitle?: string;
+  bookTitle?: string;
+  details?: string;
+  targetUrl?: string;
+}
+
+export interface CampaignSummary {
+  campaign: string;
+  source: string;
+  medium: string;
+  isPaid: boolean;
+  visitors: number;
+  amazonClicks: number;
+  arcSignups: number;
+  videoPlays: number;
+  conversionRate: number; // percentage (amazonClicks + arcSignups) / visitors * 100
+  estimatedCost?: number;
+  costPerClick?: number;
+  notes?: string;
+}
+
+export interface AnalyticsKPIs {
+  todayVisitors: number;
+  yesterdayVisitors: number;
+  visitorsDeltaPct: number;
+  thisWeekVisitors: number;
+  totalViews: number;
+  amazonClicks: number;
+  amazonIntentRate: number;
+  arcSignups: number;
+  paidVisitors: number;
+  paidPercentage: number;
+  organicVisitors: number;
+  organicPercentage: number;
+}
+

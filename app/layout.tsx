@@ -67,6 +67,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#0f0d0b', width: 'device-width', initialScale: 1 };
 
+import { Suspense } from 'react';
+import Tracker from '@/components/Tracker';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -100,7 +103,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Suspense fallback={null}>
+          <Tracker />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ken Merrell Author Platform - Ad Tracking & Analytics Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 14mm 12mm 14mm 12mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cover-banner {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 24px 28px;
+    border-radius: 6px;
+    border-left: 6px solid #c9a860;
+    margin-bottom: 22px;
+  }
+
+  .cover-tag {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #c9a860;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .cover-title {
+    font-size: 19pt;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+
+  .cover-sub {
+    font-size: 9.5pt;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  h2 {
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 22px 0 6px 0;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #c9a860;
+    display: inline-block;
+  }
+
+  .section-tag {
+    display: block;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #b45309;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 14px;
+    margin-bottom: 2px;
+  }
+
+  h3 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 14px 0 6px 0;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    color: #334155;
+  }
+
+  .callout {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #c9a860;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 10px 0 14px 0;
+  }
+
+  .callout.danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    border-left-color: #ef4444;
+  }
+
+  .callout.blue {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    border-left-color: #2563eb;
+  }
+
+  .callout.green {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    border-left-color: #16a34a;
+  }
+
+  .callout-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+
+  .callout ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .callout li {
+    margin-bottom: 4px;
+    color: #334155;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px 0;
+    font-size: 8.5pt;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  th {
+    background: #1e293b;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: left;
+    padding: 7px 10px;
+    letter-spacing: 0.02em;
+  }
+
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    vertical-align: middle;
+  }
+
+  tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-green {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .badge-gold {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-blue {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .badge-gray {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0 14px 0;
+  }
+
+  .card {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-top: 3px solid #c9a860;
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+
+  .card.blue { border-top-color: #2563eb; }
+  .card.green { border-top-color: #16a34a; }
+
+  .card-label {
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.05em;
+  }
+
+  .card-value {
+    font-size: 17pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 3px 0;
+  }
+
+  .card-sub {
+    font-size: 7.5pt;
+    color: #64748b;
+  }
+
+  /* Code block */
+  .code-box {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 8pt;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 8px 0 12px 0;
+    line-height: 1.45;
+    word-break: break-all;
+  }
+
+  .code-highlight {
+    color: #38bdf8;
+    font-weight: bold;
+  }
+
+  /* Timeline */
+  .timeline {
+    border-left: 2px solid #cbd5e1;
+    margin-left: 10px;
+    padding-left: 14px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -19px;
+    top: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2563eb;
+    border: 2px solid #ffffff;
+  }
+
+  .timeline-item.success::before {
+    background: #16a34a;
+  }
+
+  .timeline-time {
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  .timeline-text {
+    font-size: 8.5pt;
+    color: #1e293b;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .footer-note {
+    margin-top: 24px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 7.5pt;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER BANNER -->
+<div class="cover-banner">
+  <div class="cover-tag">Ken Merrell Author Platform</div>
+  <div class="cover-title">Ad Tracking, Analytics & Attribution Guide</div>
+  <div class="cover-sub">Comprehensive Reference for In-Platform First-Party Analytics, UTMs, Meta Ads, and Live Visitor Tracking</div>
+</div>
+
+<!-- SECTION 1 -->
+<span class="section-tag">Strategy & Architecture</span>
+<h2>1. Executive Overview & The Single-Dashboard Solution</h2>
+
+<p>When authors run advertising across Facebook, Instagram, or BookBub, digital agencies typically advise installing Google Analytics 4 (GA4) and Facebook Pixel. For an independent author, this creates serious roadblocks:</p>
+
+<div class="callout danger">
+  <div class="callout-title">Why Traditional Analytics Tools Fail Authors:</div>
+  <ul>
+    <li><strong>Tool Overload:</strong> Ken would have to log into 4 different platforms (Meta Ads Manager, GA4, Amazon KDP, BookBub) and manually stitch spreadsheets together.</li>
+    <li><strong>Extreme Complexity:</strong> GA4 is built for enterprise data scientists; simple author metrics like daily visitors are buried beneath endless menus.</li>
+    <li><strong>Ad Blocker Loss:</strong> 30% to 40% of readers use ad blockers or Safari/Firefox privacy protection, blocking Google Analytics and Meta Pixel completely.</li>
+    <li><strong>Disconnected from Books:</strong> External tools cannot tie an ad click directly to Ken's Advance Reader team signups or "Buy on Amazon" buttons.</li>
+  </ul>
+</div>
+
+<p><strong>The Solution:</strong> Build a lightweight, first-party analytics system directly into Ken's existing website admin portal (<strong>/admin/analytics</strong>). Ken opens his existing website dashboard and instantly sees daily visitors, ad ROI, and individual visitor clickstreams with <strong>zero extra logins and zero monthly subscription fees</strong>.</p>
+
+<!-- SECTION 2 -->
+<span class="section-tag">Tracking Technology</span>
+<h2>2. What are UTM Parameters & How Do They Work?</h2>
+
+<p>A UTM parameter is simply an extra label appended to the end of a web link. It does not alter the destination page; it quietly informs Ken's website where the visitor originated.</p>
+
+<div class="callout">
+  <div class="callout-title">Anatomy of a Tracking Link:</div>
+  <div class="code-box">
+    https://www.kenmerrell.com/books/the-iron-gate<span class="code-highlight">?utm_source=facebook&utm_medium=paid_ad&utm_campaign=spring_promo</span>
+  </div>
+  <ul>
+    <li><strong>utm_source:</strong> WHERE the reader came from (e.g. <code>facebook</code>, <code>instagram</code>, <code>bookbub</code>, <code>newsletter</code>).</li>
+    <li><strong>utm_medium:</strong> THE TYPE of marketing (e.g. <code>paid_ad</code>, <code>organic_bio</code>, <code>organic_story</code>, <code>email</code>).</li>
+    <li><strong>utm_campaign:</strong> THE PROMOTION NAME (e.g. <code>spring_promo</code>, <code>trailer_launch</code>, <code>arc_recruitment</code>).</li>
+  </ul>
+</div>
+
+<!-- SECTION 3 -->
+<span class="section-tag">Visitor Attribution</span>
+<h2>3. Tracking Engine & Paid vs. Organic Traffic Split</h2>
+
+<p>Ken needs to distinguish whether a visitor arrived from a <strong>PAID AD</strong> (where he spent budget) or <strong>ORGANICALLY</strong> (free visitors discovering his Instagram bio, TikTok reel, or Google search). The system handles this automatically:</p>
+
+<div class="callout blue">
+  <div class="callout-title">Two-Tier Detection Approach:</div>
+  <ul>
+    <li><strong>Tier 1 — Automatic HTTP Referrer (No tags needed):</strong> If a visitor arrives from an Instagram bio or Google search without UTM tags, their browser still passes a referrer header. The engine automatically classifies them as <em>Organic Social (Instagram)</em> or <em>Organic Search (Google)</em>.</li>
+    <li><strong>Tier 2 — Explicit UTM Tagging (100% precision):</strong> Ken uses <code>utm_medium=paid_ad</code> for paid campaigns and <code>utm_medium=organic_bio</code> for his profile links. The admin dashboard displays a clean side-by-side comparison.</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- SECTION 4 -->
+<span class="section-tag">Step-by-Step Options</span>
+<h2>4. Where & How Do You Get / Create the Tracking Link?</h2>
+
+<p>A tracking link is not something you buy or purchase. It is simply Ken's page URL with tags. You can get or generate tracking links in 4 easy ways:</p>
+
+<div class="callout">
+  <div class="callout-title">Option 1: Inside Ken's Website Admin (/admin/analytics) — When Built</div>
+  <p>Ken uses the built-in 10-second generator: select the book, choose the platform (Instagram/Facebook/BookBub), type the campaign name, and click <strong>Copy Link</strong>.</p>
+</div>
+
+<div class="callout blue">
+  <div class="callout-title">Option 2: Right Inside Meta Ads Manager (Free Native Generator)</div>
+  <p>When creating or editing an ad at <strong>adsmanager.facebook.com</strong>, paste Ken's clean book URL in <em>Website URL</em>, then click the blue <strong>"Build a URL parameter"</strong> link. Meta generates and attaches the tags automatically.</p>
+</div>
+
+<div class="callout">
+  <div class="callout-title">Option 3: Google's Free Official Campaign URL Builder (Available Today)</div>
+  <p>Visit <strong>ga-dev-tools.google/campaign-url-builder/</strong> (100% free, no login required), fill in the website URL, source, medium, and campaign name, then copy the generated link.</p>
+</div>
+
+<div class="callout green">
+  <div class="callout-title">Option 4: Amazon Attribution (For Actual Sales & Royalties)</div>
+  <p>Inside <strong>advertising.amazon.com</strong>, navigate to <em>Amazon Attribution &rarr; Create Campaign</em> and select Ken's book. Amazon generates a tracked Amazon URL that Ken pastes into his website admin under <em>Books &rarr; Amazon URL</em>.</p>
+</div>
+
+<!-- SECTION 5 -->
+<span class="section-tag">Platform Guides</span>
+<h2>5. How to Add & Change Links in Meta Ads & Instagram</h2>
+
+<h3>5.1 Meta Ads Manager (Paid Facebook & Instagram Ads)</h3>
+<p>1. Go to <strong>adsmanager.facebook.com</strong> &rarr; Campaigns &rarr; select Ad Set &rarr; click the <strong>Ads</strong> tab.<br>
+2. Hover over the ad and click <strong>Edit</strong>. Scroll down to <strong>Destination</strong>.<br>
+3. In <strong>Website URL</strong>, enter Ken's book link (or the full tracking link).<br>
+4. In <strong>URL Parameters</strong>, enter: <code>utm_source=instagram&utm_medium=paid_ad&utm_campaign=spring_promo</code><br>
+5. Click the green <strong>Publish</strong> button. (Active ads undergo a 15–30 min review before updating).</p>
+
+<h3>5.2 Instagram Profile Bio Link (Free Organic Traffic)</h3>
+<p>1. Open the Instagram app &rarr; tap Ken's profile &rarr; tap <strong>Edit Profile</strong>.<br>
+2. Tap <strong>Links</strong> &rarr; <strong>Add external link</strong>.<br>
+3. URL: <code>https://www.kenmerrell.com?utm_source=instagram&utm_medium=organic_bio&utm_campaign=profile_bio</code><br>
+4. Title: <em>Official Website & Books</em> &rarr; Tap <strong>Done</strong>.</p>
+
+<h3>5.3 Instagram Stories (Link Sticker)</h3>
+<p>1. Create a Story &rarr; tap Sticker icon &rarr; select the <strong>LINK</strong> sticker.<br>
+2. Paste: <code>https://www.kenmerrell.com/books/the-iron-gate?utm_source=instagram&utm_medium=organic_story&utm_campaign=trailer</code><br>
+3. Tap <em>Customize sticker text</em> &rarr; enter <em>"Read Chapter 1"</em> or <em>"Buy on Amazon"</em> &rarr; Post.</p>
+
+<div class="page-break"></div>
+
+<!-- SECTION 6 -->
+<span class="section-tag">Client Dashboard Outputs</span>
+<h2>6. What Ken Sees in His Admin Portal (/admin/analytics)</h2>
+
+<h3>Output A: Executive KPI Cards & Paid vs. Organic Split</h3>
+<div class="cards-grid">
+  <div class="card">
+    <div class="card-label">Today's Viewers</div>
+    <div class="card-value">142</div>
+    <div class="card-sub">+28% vs yesterday</div>
+  </div>
+  <div class="card blue">
+    <div class="card-label">This Week</div>
+    <div class="card-value">1,120</div>
+    <div class="card-sub">Active ad running</div>
+  </div>
+  <div class="card green">
+    <div class="card-label">Amazon Clicks</div>
+    <div class="card-value">82</div>
+    <div class="card-sub">21.7% intent rate</div>
+  </div>
+  <div class="card">
+    <div class="card-label">New ARC Signups</div>
+    <div class="card-value">16</div>
+    <div class="card-sub">Direct readers joined</div>
+  </div>
+</div>
+
+<div class="callout blue" style="margin-top: 4px;">
+  <strong>TRAFFIC SPLIT TODAY:</strong> Paid Ads = <strong>65% (92 visitors)</strong> &nbsp;|&nbsp; Organic (Bio, Posts, Search) = <strong>35% (50 visitors)</strong>
+</div>
+
+<h3>Output B: Advertising & Organic Campaign Leaderboard</h3>
+<p>Ken compares promotions side-by-side to immediately evaluate performance:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Campaign Name</th>
+      <th>Source & Medium</th>
+      <th class="text-right">Visitors</th>
+      <th class="text-right">Amazon Clicks</th>
+      <th class="text-right">ARC Signups</th>
+      <th class="text-right">Conv. Rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Spring Fantasy Launch</strong></td>
+      <td><span class="badge badge-blue">Instagram Paid Ad</span></td>
+      <td class="text-right">450</td>
+      <td class="text-right"><span class="badge badge-green">82 Clicks</span></td>
+      <td class="text-right">16</td>
+      <td class="text-right"><strong>21.7%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>BookBub Featured Deal</strong></td>
+      <td><span class="badge badge-blue">BookBub Promo</span></td>
+      <td class="text-right">720</td>
+      <td class="text-right"><span class="badge badge-green">215 Clicks</span></td>
+      <td class="text-right">28</td>
+      <td class="text-right"><strong>33.7%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Instagram Profile Bio</strong></td>
+      <td><span class="badge badge-gold">Instagram Organic (Free)</span></td>
+      <td class="text-right">140</td>
+      <td class="text-right"><span class="badge badge-green">45 Clicks</span></td>
+      <td class="text-right">21</td>
+      <td class="text-right"><strong>47.1%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Author Newsletter May</strong></td>
+      <td><span class="badge badge-gold">Email Broadcast</span></td>
+      <td class="text-right">130</td>
+      <td class="text-right"><span class="badge badge-green">35 Clicks</span></td>
+      <td class="text-right">48</td>
+      <td class="text-right"><strong>63.8%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Facebook Boosted Post</strong></td>
+      <td><span class="badge badge-blue">Facebook Paid Ad</span></td>
+      <td class="text-right">210</td>
+      <td class="text-right"><span class="badge badge-green">38 Clicks</span></td>
+      <td class="text-right">9</td>
+      <td class="text-right"><strong>22.3%</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Output C: Live Visitor Journey Feed (Every Single User)</h3>
+<p>A real-time log showing every individual person who visits the website:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>User ID</th>
+      <th>Source / Campaign</th>
+      <th>Location</th>
+      <th>Device</th>
+      <th>Journey Outcome</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>03:42 PM</td>
+      <td><span class="badge badge-blue">#USR-8422</span></td>
+      <td>Instagram Story Ad</td>
+      <td>Austin, TX</td>
+      <td>iPhone</td>
+      <td><span class="badge badge-green">[CLICKED AMAZON]</span></td>
+    </tr>
+    <tr>
+      <td>03:38 PM</td>
+      <td><span class="badge badge-blue">#USR-8421</span></td>
+      <td>Facebook: Spring Promo</td>
+      <td>London, UK</td>
+      <td>Desktop</td>
+      <td><span class="badge badge-gold">[ARC SIGNUP: John]</span></td>
+    </tr>
+    <tr>
+      <td>03:25 PM</td>
+      <td><span class="badge badge-gray">#USR-8420</span></td>
+      <td>Google Search (Organic)</td>
+      <td>Chicago, IL</td>
+      <td>Android</td>
+      <td><span class="badge badge-gray">Exited (30s)</span></td>
+    </tr>
+    <tr>
+      <td>03:10 PM</td>
+      <td><span class="badge badge-blue">#USR-8419</span></td>
+      <td>BookBub Deal</td>
+      <td>Toronto, CA</td>
+      <td>iPad</td>
+      <td><span class="badge badge-green">[CLICKED AMAZON]</span></td>
+    </tr>
+    <tr>
+      <td>02:54 PM</td>
+      <td><span class="badge badge-gold">#USR-8418</span></td>
+      <td>Instagram Bio (Organic)</td>
+      <td>Seattle, WA</td>
+      <td>iPhone</td>
+      <td><span class="badge badge-gold">[ARC SIGNUP: Sarah]</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h3>Output D: Individual Visitor Clickstream Drawer (When Ken Clicks #USR-8422)</h3>
+<div class="callout green">
+  <div class="callout-title">VISITOR #USR-8422 PROFILE & TIMELINE</div>
+  <p style="font-size: 8pt; color: #64748b; margin-bottom: 8px;">
+    <strong>Acquired via:</strong> Instagram Story Ad (Campaign: book_trailer_v2) &nbsp;|&nbsp; 
+    <strong>Location:</strong> Austin, Texas &nbsp;|&nbsp; 
+    <strong>Device:</strong> Apple iPhone (Safari) &nbsp;|&nbsp; 
+    <strong>Total Time:</strong> 4m 12s
+  </p>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-time">03:42:10 PM</div>
+      <div class="timeline-text">Landed on <strong>/books/the-iron-gate</strong> from Instagram ad swipe</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">03:42:45 PM</div>
+      <div class="timeline-text">Clicked <strong>"Watch Book Trailer"</strong> (watched for 1 minute 15 seconds)</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">03:44:00 PM</div>
+      <div class="timeline-text">Scrolled down to read <strong>Editorial Reviews & Praise Quotes</strong></div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">03:44:50 PM</div>
+      <div class="timeline-text">Navigated to <strong>/author</strong> ("About Ken Merrell") — Read author bio for 1m 20s</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">03:46:10 PM</div>
+      <div class="timeline-text">Returned to <strong>/books/the-iron-gate</strong></div>
+    </div>
+    <div class="timeline-item success">
+      <div class="timeline-time" style="color: #16a34a;">03:46:22 PM</div>
+      <div class="timeline-text" style="color: #16a34a; font-weight: bold;">*** CLICKED "BUY ON AMAZON" BUTTON *** &rarr; Forwarded to Amazon Product Page</div>
+    </div>
+  </div>
+</div>
+
+<h3>Output E: Reader CRM Profile (Identity Bridging)</h3>
+<div class="callout" style="background: #fffbeb; border-left-color: #d97706;">
+  <div class="callout-title" style="color: #92400e;">READER CRM RECORD: JANE DOE (Verified ARC Reader)</div>
+  <p style="margin-bottom: 4px;"><strong>Email:</strong> jane.doe@example.com &nbsp;|&nbsp; <strong>Format Requested:</strong> Paperback & Ebook &nbsp;|&nbsp; <strong>Book:</strong> The Iron Gate</p>
+  <p style="margin-bottom: 4px; color: #b45309; font-weight: 600;">
+    Acquisition Trail: Facebook Ad (Campaign: Spring_Launch_Promo) &nbsp;|&nbsp; Session: #USR-8421 &nbsp;|&nbsp; Visited 2 pages prior to joining.
+  </p>
+  <p style="color: #78350f; font-size: 8pt; margin: 0;">Ken can see Jane's complete pre-signup browsing history, track her paperback shipping status, and send review reminders.</p>
+</div>
+
+<!-- SECTION 7 -->
+<span class="section-tag">Execution Plan</span>
+<h2>7. Implementation Roadmap (4 Phases)</h2>
+
+<div class="callout blue">
+  <div class="callout-title">4-Phase Technical Roadmap:</div>
+  <ul>
+    <li><strong>Phase 1: Database & Storage —</strong> Add <code>analytics_sessions</code> and <code>analytics_events</code> tables in Supabase/local store with salted daily visitor hashing (GDPR compliant, zero cookies, zero consent banners).</li>
+    <li><strong>Phase 2: Lightweight Tracking Beacon —</strong> Deploy fast <code>/api/track</code> route, attach listeners to Amazon buttons and trailer videos, and tie reader form submissions to session IDs.</li>
+    <li><strong>Phase 3: Admin Analytics Dashboard & Live Feed —</strong> Build <strong>/admin/analytics</strong> with KPI cards, campaign leaderboard table, and the slide-out visitor clickstream drawer.</li>
+    <li><strong>Phase 4: 1-Click Campaign Link Generator —</strong> Embed the link builder tool inside the admin so Ken can copy tracked URLs for Facebook, Instagram, BookBub, and Newsletters in 10 seconds.</li>
+  </ul>
+</div>
+
+<div class="footer-note">
+  <span>Ken Merrell Author Platform &bull; Private &amp; Confidential</span>
+  <span>All-In-One First-Party Analytics Guide</span>
+</div>
+
+</body>
+</html>

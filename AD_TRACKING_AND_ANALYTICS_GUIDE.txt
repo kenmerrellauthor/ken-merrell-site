@@ -1,0 +1,531 @@
+================================================================================
+KEN MERRELL AUTHOR PLATFORM: AD TRACKING & ANALYTICS GUIDE
+All-In-One First-Party Analytics, UTM Tracking & Meta/Instagram Setup
+================================================================================
+
+TABLE OF CONTENTS:
+1. Executive Overview & The Single-Dashboard Solution
+2. What are UTM Parameters and How Do They Work?
+3. How the In-Platform Tracking Engine Works
+   3.5 Where and How Do You Get / Create the Tracking Link? (4 Options)
+   3.6 Tracking Paid Ads vs. Organic Free Traffic (The Paid Trail vs. Organic Split)
+4. Step-by-Step: How to Add & Change Links in Meta Ads Manager & Instagram
+   4.1 Meta Ads Manager (Facebook & Instagram Paid Ads)
+   4.2 Editing an Existing / Active Ad in Meta Ads Manager
+   4.3 Instagram Profile Bio Link (Free / Organic)
+   4.4 Instagram Stories (Link Sticker)
+   4.5 BookBub & Email Newsletters
+5. What Ken Sees Inside His Admin Portal (/admin/analytics)
+   5.1 Module 1: Daily Traffic Overview & Chart
+   5.2 Module 2: Ad Campaign Leaderboard
+   5.3 Module 3: 1-Click Campaign Link Generator
+   5.4 Module 4: Individual Visitor Journey Feed (Every Single User Timeline)
+6. Tracking Amazon Purchases (The Amazon Attribution Bridge)
+7. Complete Step-by-Step Implementation Roadmap
+
+
+================================================================================
+1. EXECUTIVE OVERVIEW & THE SINGLE-DASHBOARD SOLUTION
+================================================================================
+
+THE CORE PROBLEM:
+When authors run advertising (Facebook ads, Instagram ads, BookBub deals, 
+email blasts), agencies usually tell them to install Google Analytics 4 (GA4) 
+and Facebook Meta Pixel. 
+
+For an author like Ken, this creates serious friction:
+- Ken would need to log into 4 different platforms: Meta Ads Manager, 
+  Google Analytics, Amazon KDP, and BookBub.
+- GA4 is complex, bloated, and requires endless menus just to find simple numbers.
+- Up to 30-40% of readers use ad blockers or Safari/Firefox privacy protection, 
+  which blocks Google Analytics and Meta Pixel completely.
+- GA4 does not connect directly to Ken's reader list or book pages.
+
+THE BEST APPROACH:
+Build a lightweight, first-party analytics system directly into Ken's existing
+website admin portal (at /admin/analytics).
+
+WHY THIS IS 10x BETTER FOR KEN:
+1. Zero Extra Logins: Ken checks his books, his advance readers, and his ad 
+   performance all in one place: his existing admin panel.
+2. 100% Ad-Blocker Immune & Cookieless: First-party tracking runs through Ken's 
+   own website domain. It does not get blocked by browser ad blockers and 
+   requires NO annoying "Accept Cookies" consent popups.
+3. Purpose-Built Author Metrics: Directly answers Ken's two core questions:
+   - "How many new people visited my site today?"
+   - "Which ad campaign made them click 'Buy on Amazon' or join my ARC team?"
+
+
+================================================================================
+2. WHAT ARE UTM PARAMETERS AND HOW DO THEY WORK?
+================================================================================
+
+A UTM parameter is simply an extra set of labels attached to the end of a web 
+link. It does not change the web page that opens; it just tells the website 
+who sent the visitor.
+
+Example standard link:
+  https://www.kenmerrell.com/books/the-iron-gate
+
+Example tracking link with UTM tags:
+  https://www.kenmerrell.com/books/the-iron-gate?utm_source=facebook&utm_medium=ad&utm_campaign=spring_launch
+
+WHAT EACH PIECE MEANS:
+- utm_source: WHERE the click came from (e.g. facebook, instagram, bookbub, newsletter)
+- utm_medium: THE TYPE of marketing (e.g. ad, bio, story, email)
+- utm_campaign: THE SPECIFIC CAMPAIGN NAME (e.g. spring_launch, book1_discount)
+- utm_content: (Optional) Which specific image or video ad they clicked (e.g. video1, cover_photo)
+
+
+================================================================================
+3. HOW THE IN-PLATFORM TRACKING ENGINE WORKS
+================================================================================
+
+The user journey happens automatically in the background:
+
+STEP 1: The Reader Clicks an Ad on Instagram or Facebook.
+STEP 2: They land on Ken's website with the UTM tags in the address bar.
+STEP 3: Ken's website immediately records a "+1 Daily Visitor" and quietly saves 
+        the campaign details into their current browser session.
+STEP 4: Even if the reader navigates around the website (reading the About page, 
+        watching book trailers, or checking other books), the website remembers 
+        their originating campaign.
+STEP 5: When the reader takes an action:
+        - If they click "BUY ON AMAZON": An event is logged: 
+          [Amazon Outbound Click | Source: Facebook | Campaign: Spring_Launch]
+        - If they sign up for the Advance Reader Team: The signup is recorded 
+          in Ken's reader database with a tag: 
+          [Reader: Jane Doe | Acquired via: Instagram Ad / Spring_Launch]
+STEP 6: The data rolls up instantly into Ken's admin dashboard.
+
+
+================================================================================
+3.5 WHERE AND HOW DO YOU GET / CREATE THE TRACKING LINK?
+================================================================================
+
+A tracking link is NOT something you have to buy, sign up for, or wait for an 
+external company to provide. It is simply Ken's normal website address with 
+tracking labels added to the end.
+
+You can get/create your tracking link using any of these 4 methods:
+
+--------------------------------------------------------------------------------
+OPTION 1: Directly Inside Ken's Website Admin Portal (When Built)
+--------------------------------------------------------------------------------
+This is the easiest method for Ken because it is completely automated:
+1. Ken logs into his website admin at: /admin/analytics
+2. In the "Campaign Link Generator" box:
+   - Select Book: (e.g. "The Iron Gate")
+   - Select Platform: (e.g. "Facebook Ads", "Instagram Bio", or "BookBub")
+   - Type Campaign Name: (e.g. "May2026_Promo")
+3. Click "Generate Link".
+4. The site outputs the ready-to-use tracking link and Ken clicks "Copy Link".
+
+--------------------------------------------------------------------------------
+OPTION 2: Right Inside Meta Ads Manager (Facebook/Instagram Generates It For You!)
+--------------------------------------------------------------------------------
+Meta has a built-in link generator directly inside the ad setup screen:
+1. When editing an ad in Meta Ads Manager (adsmanager.facebook.com):
+2. In the "Website URL" box, enter Ken's normal page link:
+   https://www.kenmerrell.com/books/my-book
+3. Look directly below that box and click the blue link: "Build a URL parameter".
+4. A popup window appears with 4 simple boxes:
+   - Campaign Source: type "facebook" (or select dynamic {{site_source_name}})
+   - Campaign Medium: type "ad"
+   - Campaign Name: type your campaign name or select {{campaign.name}}
+   - Campaign Content: type ad name or select {{ad.name}}
+5. Click "Apply". Meta automatically generates and attaches the tracking tags!
+
+--------------------------------------------------------------------------------
+OPTION 3: Using Google's Free Official Campaign URL Builder (Available Today)
+--------------------------------------------------------------------------------
+If you want to generate tracking links right now without writing code:
+1. Go to Google's official free tool:
+   https://ga-dev-tools.google/campaign-url-builder/
+2. Fill in 3 fields:
+   - Website URL: https://www.kenmerrell.com/books/the-iron-gate
+   - Campaign Source: facebook  (or instagram, bookbub, email)
+   - Campaign Medium: ad        (or bio, story, newsletter)
+   - Campaign Name: spring_launch
+3. Scroll down to "Share the generated campaign URL" and click "Copy URL".
+4. That's your link!
+
+--------------------------------------------------------------------------------
+OPTION 4: Just Type It Yourself (It Takes 10 Seconds)
+--------------------------------------------------------------------------------
+Because UTM links follow a simple rule, you can create one in any text editor:
+1. Start with the page address:
+   https://www.kenmerrell.com/books/the-iron-gate
+2. Add a question mark `?`:
+   https://www.kenmerrell.com/books/the-iron-gate?
+3. Add your tags separated by `&`:
+   utm_source=facebook&utm_medium=ad&utm_campaign=spring_promo
+4. Full link:
+   https://www.kenmerrell.com/books/the-iron-gate?utm_source=facebook&utm_medium=ad&utm_campaign=spring_promo
+
+--------------------------------------------------------------------------------
+BONUS: WHERE DO YOU GET AN "AMAZON ATTRIBUTION" LINK?
+--------------------------------------------------------------------------------
+If you want Amazon to track actual paperback and Kindle book sales from ads:
+1. Ken logs into his Amazon Advertising account: https://advertising.amazon.com
+2. In the left navigation menu, click "Amazon Attribution" (under Measurement & Reporting).
+3. Click "Create Campaign".
+4. Choose the creation method: "Manually create order and tags".
+5. Enter campaign name (e.g. "Facebook Ads").
+6. Select Ken's book from the Amazon catalog.
+7. Under "Publisher", choose "Facebook" or "Instagram".
+8. Amazon generates a special Amazon link containing Amazon's tracking tag 
+   (e.g., https://www.amazon.com/dp/B0XXXXXX?tag=...&maas=maas_adg_...).
+9. Ken copies this link and pastes it into his website admin under 
+   Books -> "Amazon URL". Now anyone clicking "BUY ON AMAZON" gets tracked 
+   by Amazon directly!
+
+
+================================================================================
+3.6 TRACKING PAID ADS VS. ORGANIC FREE TRAFFIC (THE "PAID VS. ORGANIC" SPLIT)
+================================================================================
+
+A critical question authors have:
+"How do I know if a visitor came from a PAID AD (where I spent money) versus 
+ORGANICALLY (someone who found my profile for free on Instagram, TikTok, 
+Facebook, or Google)?"
+
+Ken's in-platform analytics system handles this automatically using a two-tier 
+detection approach:
+
+--------------------------------------------------------------------------------
+TIER 1: AUTOMATIC REFERRER DETECTION (No UTM Tags Needed)
+--------------------------------------------------------------------------------
+When someone clicks an organic link (for example, finding Ken's Instagram profile 
+or TikTok bio, or clicking a link someone shared on Facebook):
+- Their mobile app/browser sends an automatic header called the "HTTP Referer".
+- If the visitor arrives with NO UTM tags, but the referrer is `instagram.com` 
+  or `android-app://com.instagram.android`:
+  * The system automatically labels them: [ CHANNEL: Organic Social | PLATFORM: Instagram ]
+- If they come from Google Search without ads:
+  * The system automatically labels them: [ CHANNEL: Organic Search | PLATFORM: Google ]
+
+This means Ken gets accurate organic tracking even if he forgot to put tracking 
+tags on an organic post!
+
+--------------------------------------------------------------------------------
+TIER 2: EXPLICIT UTM TAGGING FOR 100% PRECISION (Paid Ad vs. Organic Bio)
+--------------------------------------------------------------------------------
+To give Ken pinpoint accuracy, the system uses simple label conventions:
+
+A) FOR PAID ADS (The "Paid Trail"):
+   Set `utm_medium=paid_ad` (or `cpc` / `sponsored`):
+   https://www.kenmerrell.com/books/my-book?utm_source=instagram&utm_medium=paid_ad&utm_campaign=spring_promo_trail
+
+B) FOR ORGANIC SOCIAL (Free Traffic):
+   - In Ken's Instagram / TikTok / Facebook Bio link:
+     Set `utm_medium=organic_bio`:
+     https://www.kenmerrell.com?utm_source=instagram&utm_medium=organic_bio&utm_campaign=profile_bio
+   - In regular organic posts / reels / stories:
+     Set `utm_medium=organic_post`:
+     https://www.kenmerrell.com/books/my-book?utm_source=instagram&utm_medium=organic_post&utm_campaign=book_reveal
+
+--------------------------------------------------------------------------------
+WHAT KEN SEES IN HIS DASHBOARD:
+--------------------------------------------------------------------------------
+In the Admin Dashboard, Ken gets an instant comparison widget:
+
+[ PAID AD TRAFFIC: 65% (450 visitors) ]    [ ORGANIC TRAFFIC: 35% (240 visitors) ]
+
+And in the Leaderboard & Visitor Feed, they are clearly separated:
+
+Source & Medium              | Visitors | Amazon Clicks | ARC Signups | ROI / Note
+-----------------------------+----------+---------------+-------------+------------------
+Instagram (Paid Ad Trail)    | 450      | 82            | 16          | Cost: $40 ($0.48/click)
+Instagram (Organic Bio Link) | 140      | 45            | 21          | $0 Spent (Free organic)
+TikTok (Organic Bio Link)    | 95       | 32            | 18          | $0 Spent (Viral Reel)
+Facebook (Boosted Paid Post) | 210      | 38            | 9           | Cost: $25 ($0.65/click)
+
+KEY BENEFIT FOR KEN:
+Ken can see: "My Instagram Paid Ad brought 82 Amazon clicks, but my free Organic 
+Instagram Bio link brought 45 Amazon clicks for $0! This tells me my organic 
+content is performing great and helping offset ad spend."
+
+* Note: This applies to ALL platforms (Instagram, Facebook, TikTok, YouTube, 
+  Reddit, BookBub, Google Ads vs. Google Organic, etc.).
+
+
+================================================================================
+4. HOW TO ADD & CHANGE LINKS IN META ADS MANAGER & INSTAGRAM
+================================================================================
+
+Here is the exact step-by-step process for where and how links are entered and 
+updated across Meta (Facebook & Instagram).
+
+--------------------------------------------------------------------------------
+4.1 META ADS MANAGER (FACEBOOK & INSTAGRAM PAID ADS)
+--------------------------------------------------------------------------------
+When you create or run paid ads on Facebook or Instagram, you manage them 
+inside Meta Ads Manager (adsmanager.facebook.com).
+
+Step 1: Go to https://adsmanager.facebook.com
+Step 2: Click on the "Campaigns" tab, select your campaign, and go down to the 
+        "Ads" tab (where your individual creative/images live).
+Step 3: Hover over the ad you want to set or change, and click "Edit".
+Step 4: Scroll down the editing pane to the section called "Destination".
+Step 5: You will see two ways to handle the tracking link:
+
+  METHOD A (Simplest - Full Tracking URL):
+  - In the "Website URL" box, paste your full generated tracking link:
+    https://www.kenmerrell.com/books/my-book?utm_source=facebook&utm_medium=ad&utm_campaign=spring_promo
+
+  METHOD B (Best Practice in Meta Ads Manager - Clean URL + URL Parameters):
+  - In the "Website URL" box, put Ken's clean website URL:
+    https://www.kenmerrell.com/books/my-book
+  - Scroll down just below that box to the field called "URL Parameters".
+  - Paste your parameter string:
+    utm_source=facebook&utm_medium=ad&utm_campaign=spring_promo
+  - OR click the blue "Build a URL parameter" button:
+    * Campaign Source: facebook
+    * Campaign Medium: ad
+    * Campaign Name: spring_promo
+    * Click "Apply".
+
+Step 6: Click the green "Publish" button at the bottom right.
+
+--------------------------------------------------------------------------------
+4.2 EDITING AN EXISTING / ACTIVE AD IN META ADS MANAGER
+--------------------------------------------------------------------------------
+If an ad is ALREADY RUNNING and you want to update the link:
+
+1. Open https://adsmanager.facebook.com
+2. Go to the "Ads" level tab.
+3. Check the checkbox next to the active ad and click "Edit".
+4. Scroll to "Destination" -> update the "Website URL" or "URL Parameters".
+5. Click "Publish".
+* Note: Meta will briefly set the ad status to "In Review" (usually takes 15-60 
+  minutes) before re-enabling delivery with the new link.
+
+--------------------------------------------------------------------------------
+4.3 INSTAGRAM PROFILE BIO LINK (FREE / ORGANIC)
+--------------------------------------------------------------------------------
+For links placed in the author's public Instagram profile bio:
+
+1. Open the Instagram app on your phone (or go to instagram.com on desktop).
+2. Go to Ken's profile by tapping the profile picture in the bottom right.
+3. Tap "Edit profile".
+4. Tap "Links" (or "Add link" -> "Add external link").
+5. In the "URL" field, enter the tracking link:
+   https://www.kenmerrell.com?utm_source=instagram&utm_medium=bio&utm_campaign=profile_bio
+6. In the "Title" field, write: "Official Website & Books".
+7. Tap the checkmark / "Done" to save.
+
+--------------------------------------------------------------------------------
+4.4 INSTAGRAM STORIES (LINK STICKER)
+--------------------------------------------------------------------------------
+When Ken posts an Instagram Story and wants readers to swipe/tap to visit:
+
+1. Create an Instagram Story (take a photo or upload book cover graphic).
+2. Tap the Sticker icon at the top (the square smiling face).
+3. Select the "LINK" sticker.
+4. In the URL field, paste the tracking link:
+   https://www.kenmerrell.com/books/my-book?utm_source=instagram&utm_medium=story&utm_campaign=book_trailer
+5. Tap "Customize sticker text" and write something enticing like:
+   "Read Chapter 1" or "Buy on Amazon".
+6. Tap "Done", place the sticker on the Story, and post.
+
+--------------------------------------------------------------------------------
+4.5 BOOKBUB & EMAIL NEWSLETTERS
+--------------------------------------------------------------------------------
+- BookBub Ads: When setting up a BookBub CPM/CPC ad, paste:
+  https://www.kenmerrell.com/books/my-book?utm_source=bookbub&utm_medium=cpc&utm_campaign=may_deal
+- Author Newsletter (Mailchimp/MailerLite/Substack): In buttons/hyperlinks, use:
+  https://www.kenmerrell.com/advance-readers?utm_source=newsletter&utm_medium=email&utm_campaign=reader_recruitment
+
+
+================================================================================
+5. WHAT KEN SEES INSIDE HIS ADMIN PORTAL (/admin/analytics)
+================================================================================
+
+When Ken logs into his website admin portal, he will see a clean, executive 
+dashboard with three key modules:
+
+--------------------------------------------------------------------------------
+MODULE 1: TRAFFIC OVERVIEW (DAILY VIEWERS)
+--------------------------------------------------------------------------------
+[ TODAY'S VISITORS: 142 ]   [ THIS WEEK: 1,120 ]   [ TOTAL VIEWS: 3,450 ]
+
+A clean bar chart shows daily traffic spikes whenever an ad or promo launches.
+Below the chart, Ken sees:
+- Top Visited Pages: (e.g. Home: 45%, The Iron Gate: 35%, Advance Readers: 20%)
+- Top Device Types: (Mobile: 72%, Desktop: 28%)
+
+--------------------------------------------------------------------------------
+MODULE 2: AD CAMPAIGN LEADERBOARD
+--------------------------------------------------------------------------------
+A side-by-side comparison table of all campaigns:
+
+Campaign Name       | Source    | Visitors | Amazon Clicks | ARC Signups | Conv. Rate
+--------------------+-----------+----------+---------------+-------------+-----------
+Spring Fantasy Ad   | Facebook  | 450      | 82            | 16          | 21.7%
+BookBub Feature     | BookBub   | 720      | 215           | 28          | 33.7%
+Instagram Story     | Instagram | 180      | 41            | 22          | 35.0%
+May Reader Blast    | Email     | 130      | 35            | 48          | 63.8%
+
+Key Insight for Ken:
+Ken can see at a glance: "Even though Facebook brought 450 people, BookBub 
+produced more than double the Amazon clicks. BookBub is my best performer!"
+
+--------------------------------------------------------------------------------
+MODULE 3: 1-CLICK CAMPAIGN LINK GENERATOR
+--------------------------------------------------------------------------------
+Ken does not need to learn how to write UTM codes manually. Inside his admin, 
+he gets a simple 10-second generator tool:
+
+  Select Book:        [ The Iron Gate                v ]
+  Select Platform:    [ Facebook Ads                 v ]
+  Campaign Name:      [ May2026_Promo                  ]
+  
+  [ GENERATE TRACKING LINK ]
+
+  Your Ready-to-Use Link:
+  https://www.kenmerrell.com/books/the-iron-gate?utm_source=facebook&utm_medium=ad&utm_campaign=May2026_Promo
+
+  [ COPY LINK TO CLIPBOARD ]
+
+Ken just clicks "Copy" and pastes it straight into Meta Ads Manager or his bio.
+
+--------------------------------------------------------------------------------
+MODULE 4: INDIVIDUAL VISITOR JOURNEY FEED (EVERY SINGLE USER TIMELINE)
+--------------------------------------------------------------------------------
+Ken wants to see more than just overall numbers—he wants to inspect EVERY SINGLE 
+INDIVIDUAL USER who visits the website.
+
+This module provides a live, searchable feed of every visitor session and lets 
+Ken click any user to view their complete step-by-step journey timeline.
+
+WHAT GETS TRACKED FOR EVERY SINGLE VISITOR:
+1. Visitor / Session ID: An individual session identifier (e.g., #USR-8419).
+2. Exact Date & Timestamp: Arrival time and duration on site.
+3. Traffic Source & Campaign: Exact ad, Instagram story, Google search, or direct visit.
+4. Location: Country, State/Region, and City (derived from server headers).
+5. Device & Platform: Mobile (iPhone / Android) or Desktop (Mac / Windows), plus browser.
+6. Chronological Clickstream: Every single page they opened, how many seconds 
+   they spent reading, and every interactive button they tapped.
+7. Key Outcomes & Conversions:
+   - Did they click "BUY ON AMAZON"? (records exact book title & timestamp)
+   - Did they watch a book trailer video?
+   - Did they submit the Advance Reader form?
+8. Identity Bridging (Anonymous -> Named Reader):
+   If a visitor starts as an anonymous visitor from a Facebook ad, but then 
+   submits the Advance Reader form, their entire browsing history is 
+   instantly tied to their Name & Email in Ken's Reader CRM! Ken can click on 
+   reader "Jane Doe" in /admin/readers and see:
+   "Jane first discovered the site on Oct 9 via Facebook Ad: Spring_Promo, 
+   browsed The Iron Gate page for 2 minutes, and then joined the ARC team."
+
+MOCKUP: THE LIVE VISITOR FEED TABLE:
+--------------------------------------------------------------------------------
+Time       | Visitor ID | Source / Ad Campaign | Location       | Device  | Journey & Outcome
+-----------+------------+----------------------+----------------+---------+--------------------------
+03:42 PM   | #USR-8422  | Instagram Story Ad   | Austin, TX     | iPhone  | 3 pages -> [CLICKED AMAZON]
+03:38 PM   | #USR-8421  | Facebook: Spring Ad  | London, UK     | Desktop | 2 pages -> [ARC SIGNUP: John]
+03:25 PM   | #USR-8420  | Google Search        | Chicago, IL    | Android | 1 page  -> Exited (30s)
+03:10 PM   | #USR-8419  | BookBub Deal         | Toronto, CA    | iPad    | 4 pages -> [CLICKED AMAZON]
+
+MOCKUP: WHAT HAPPENS WHEN KEN CLICKS ON A VISITOR (#USR-8422):
+When Ken clicks any row, a detailed slide-out drawer appears with their timeline:
+
++------------------------------------------------------------------------------+
+| VISITOR #USR-8422 DETAIL                                                    |
+| Acquired via: Instagram Story Ad (Campaign: book_trailer_v2)                 |
+| Location: Austin, Texas, USA | Device: Apple iPhone (Safari)                |
+| Total Time on Site: 4 minutes 12 seconds                                     |
++------------------------------------------------------------------------------+
+| STEP-BY-STEP CLICKSTREAM TIMELINE:                                           |
+|                                                                              |
+|  03:42:10 PM  Landed on /books/the-iron-gate                                 |
+|               (Referrer: instagram.com)                                      |
+|                                                                              |
+|  03:42:45 PM  Clicked "Watch Book Trailer" (played for 1m 15s)               |
+|                                                                              |
+|  03:44:00 PM  Scrolled to "Editorial Reviews & Quotes" section               |
+|                                                                              |
+|  03:44:50 PM  Navigated to /author ("About Ken Merrell")                     |
+|               Spent 1m 20s reading bio                                       |
+|                                                                              |
+|  03:46:10 PM  Returned to /books/the-iron-gate                               |
+|                                                                              |
+|  03:46:22 PM  *** CLICKED "BUY ON AMAZON" BUTTON ***                         |
+|               Outbound redirect to Amazon Product Page                       |
++------------------------------------------------------------------------------+
+
+SEARCH & FILTER CONTROLS FOR KEN:
+Ken can easily filter the visitor list with one click:
+- Filter by Action: "Show only visitors who clicked Amazon" or "Show ARC signups"
+- Filter by Campaign: "Show only visitors from Facebook Ad"
+- Filter by Date: "Today", "Yesterday", "Last 7 Days", or custom date range.
+
+
+================================================================================
+6. TRACKING AMAZON PURCHASES (THE AMAZON ATTRIBUTION BRIDGE)
+================================================================================
+
+A common question: "Can Ken's website see when someone actually buys the book 
+inside Amazon?"
+
+Because Amazon is a separate private website, Ken's site cannot see their credit 
+card transaction. However, we solve this with two levels of tracking:
+
+LEVEL 1 (Built-In Site Tracking):
+Ken's website tracks every click on the "BUY ON AMAZON" button and attributes it 
+to the originating ad campaign. This gives Ken 90% of the intent data.
+
+LEVEL 2 (Amazon Attribution for KDP Authors):
+Amazon provides a free feature called "Amazon Attribution" to KDP authors and 
+brand publishers. 
+1. Inside Amazon Advertising (advertising.amazon.com), Ken can generate an 
+   Amazon Attribution link for his book paperback or Kindle.
+2. In Ken's website admin under "Books", Ken pastes his Amazon Attribution link.
+3. When readers click "BUY ON AMAZON" on Ken's site, they are passed to Amazon 
+   with Amazon's own tag intact. 
+4. Amazon then credits actual book sales, royalties, and Kindle Unlimited page 
+   reads back to that ad campaign in Ken's Amazon reports.
+
+
+================================================================================
+7. COMPLETE STEP-BY-STEP IMPLEMENTATION ROADMAP
+================================================================================
+
+When you are ready to implement this in the codebase, here is the execution plan:
+
+PHASE 1: DATABASE & EVENT STORAGE (Supabase / Local Store)
+- Add two lightweight tables in Supabase (and lib/store.ts fallback):
+  * `analytics_sessions`: stores session_id (e.g. USR-8422), timestamp, utm_source, 
+    utm_medium, utm_campaign, city, region, country, device, browser, exit_outcome.
+  * `analytics_events`: stores event_id, session_id, timestamp, page_path, 
+    event_type ('pageview', 'watch_trailer', 'amazon_click', 'arc_signup'), 
+    book_id/title, details.
+- Privacy compliance: IP addresses are salted and hashed daily (never stored in 
+  plain text, zero GDPR / privacy issues, zero cookie consent requirements).
+
+PHASE 2: LIGHTWEIGHT FIRST-PARTY TRACKING BEACON & SESSION LOGGING
+- Create `/api/track` API route in Next.js to log events quickly and asynchronously.
+- Generate a lightweight session ID in the visitor's browser tab.
+- Add client-side listener for:
+  * Page views and time spent on page.
+  * Video trailer clicks ("watch trailer").
+  * All "BUY ON AMAZON" button clicks.
+- Update `submitReader` in `app/actions.ts`: link the reader's real name/email 
+  to their anonymous session ID so Ken can see their full journey in /admin/readers.
+
+PHASE 3: ADMIN ANALYTICS DASHBOARD & LIVE VISITOR FEED
+- Add an "Analytics" tab to the admin navigation header alongside Books, Videos, 
+  and Readers.
+- Build the visual Daily Visitors chart and trends.
+- Build the Campaign Comparison Leaderboard table.
+- Build the **Live Visitor Feed** with search, filters (Amazon clicks, ARC signups), 
+  and a clickable slide-out drawer showing the exact clickstream timeline for every user.
+
+PHASE 4: 1-CLICK CAMPAIGN LINK GENERATOR
+- Embed the URL builder tool directly inside `/admin/analytics` so Ken can generate 
+  and copy tracked links for Facebook, Instagram, BookBub, and Email in 10 seconds.
+
+================================================================================
+END OF GUIDE
+================================================================================
