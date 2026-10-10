@@ -338,17 +338,17 @@ export default function ComingSoonSection({
               <span className="cs-cnum">{countdown.days}</span>
               <span className="cs-clbl">DAYS</span>
             </div>
-            <span className="cs-csep">:</span>
+            <span className="cs-csep" aria-hidden="true">:</span>
             <div className="cs-cbox">
               <span className="cs-cnum">{countdown.hours}</span>
               <span className="cs-clbl">HOURS</span>
             </div>
-            <span className="cs-csep">:</span>
+            <span className="cs-csep" aria-hidden="true">:</span>
             <div className="cs-cbox">
               <span className="cs-cnum">{countdown.mins}</span>
               <span className="cs-clbl">MINS</span>
             </div>
-            <span className="cs-csep">:</span>
+            <span className="cs-csep" aria-hidden="true">:</span>
             <div className="cs-cbox">
               <span className="cs-cnum">{countdown.secs}</span>
               <span className="cs-clbl">SECS</span>

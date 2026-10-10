@@ -683,16 +683,19 @@ button { font: inherit; }
 
 .cs-countdown-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 6px;
+  gap: 0;
   margin-bottom: 28px;
+  max-width: 100%;
 }
 
 .cs-cbox {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 66px;
 }
 
 .cs-cnum {
@@ -701,6 +704,8 @@ button { font: inherit; }
   font-weight: 600;
   color: #f5ede0;
   line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .cs-clbl {
@@ -709,14 +714,18 @@ button { font: inherit; }
   letter-spacing: .22em;
   color: #a69882;
   font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 7px;
 }
 
 .cs-csep {
   color: #c9a860;
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1;
-  margin: 0 14px;
+  margin: 5px 14px 0;
   opacity: 0.85;
+  font-family: var(--serif-d);
+  user-select: none;
 }
 
 .cs-btn-row {
@@ -808,6 +817,11 @@ button { font: inherit; }
   .cs-slot-1 { --slot-x: 145px; --slot-scale: 0.85; --slot-rot: -12deg; }
   .cs-slot--2 { --slot-x: -220px; --slot-scale: 0.68; --slot-rot: 16deg; opacity: 0.35; }
   .cs-slot-2 { --slot-x: 220px; --slot-scale: 0.68; --slot-rot: -16deg; opacity: 0.35; }
+  .cs-countdown-row { margin-bottom: 26px; }
+  .cs-cbox { min-width: 56px; }
+  .cs-cnum { font-size: clamp(28px, 4.4vw, 36px); }
+  .cs-clbl { font-size: 10px; letter-spacing: .2em; margin-top: 6px; }
+  .cs-csep { font-size: 22px; margin: 4px 10px 0; }
 }
 
 @media (max-width: 480px) {
@@ -822,7 +836,32 @@ button { font: inherit; }
   .cs-slot-1 { --slot-x: 115px; --slot-scale: 0.86; --slot-rot: -10deg; }
   .cs-slot--2 { opacity: 0; pointer-events: none; }
   .cs-slot-2 { opacity: 0; pointer-events: none; }
-  .cs-csep { margin: 0 8px; font-size: 20px; }
+  .cs-countdown-row { margin-bottom: 22px; }
+  .cs-cbox { min-width: 46px; }
+  .cs-cnum { font-size: 28px; }
+  .cs-clbl { font-size: 9px; letter-spacing: .16em; margin-top: 5px; }
+  .cs-csep { margin: 4px 6px 0; font-size: 18px; }
+  .cs-gold-btn {
+    padding: 14px 26px;
+    font-size: 11px;
+    letter-spacing: .18em;
+    width: 100%;
+    max-width: 340px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .cs-cbox { min-width: 38px; }
+  .cs-cnum { font-size: 24px; }
+  .cs-clbl { font-size: 8px; letter-spacing: .12em; margin-top: 4px; }
+  .cs-csep { margin: 3px 3px 0; font-size: 15px; }
+  .cs-gold-btn {
+    padding: 13px 18px;
+    font-size: 10px;
+    letter-spacing: .14em;
+  }
 }
 
 
