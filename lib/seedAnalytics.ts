@@ -371,12 +371,12 @@ export interface DailyTrafficPoint {
   adNote?: string;
 }
 
-export function generateDailyTrafficHistory(): DailyTrafficPoint[] {
+export function generateDailyTrafficHistory(days = 30): DailyTrafficPoint[] {
   const points: DailyTrafficPoint[] = [];
   const now = new Date();
 
-  // 30 days history leading up to today
-  for (let i = 29; i >= 0; i--) {
+  // Daily history leading up to today
+  for (let i = Math.max(1, days) - 1; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 86400000);
     const dayStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const isoDate = d.toISOString().slice(0, 10);

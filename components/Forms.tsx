@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitContact, submitReader, type FormState } from '@/app/actions';
 import Turnstile, { Traps } from './Turnstile';
@@ -27,6 +27,7 @@ function Err({ id, text, dark }: { id: string; text?: string; dark?: boolean }) 
 export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
   const [state, action] = useActionState(submitReader, initial);
   const [sessionId, setSessionId] = useState('');
+  const leadReported = useRef(false);
 
   useEffect(() => {
     try {
@@ -34,6 +35,12 @@ export function AdvanceForm({ bookTitle }: { bookTitle?: string }) {
       if (sid) setSessionId(sid);
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (!state.ok || state.message !== 'verify' || leadReported.current) return;
+    leadReported.current = true;
+    window.dispatchEvent(new Event('km:meta-lead'));
+  }, [state, leadReported]);
 
   const v = state.values || {};
   if (state.ok) {

@@ -43,7 +43,7 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     );
   }
 
-  const { name, email, format, agreed, bookTitle } = payload;
+  const { name, email, format, agreed, bookTitle, sessionId } = payload;
   
   // Add to DB
   const res = await addReader({
@@ -55,6 +55,16 @@ export default async function VerifyReaderPage(props: { searchParams: Promise<{ 
     bookTitle: bookTitle || undefined,
     createdAt: new Date().toISOString()
   });
+
+  // Attribute a confirmed lead only after the email link has been verified.
+  if (typeof sessionId === 'string' && sessionId) {
+    try {
+      const { bridgeReaderIdentity } = await import('@/lib/analytics');
+      await bridgeReaderIdentity(sessionId, { name, email, format, bookTitle });
+    } catch (error) {
+      console.error('Could not attach verified reader attribution:', error);
+    }
+  }
   
   // Notify admin
   const site = await getSite();

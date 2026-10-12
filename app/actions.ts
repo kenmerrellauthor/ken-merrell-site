@@ -68,7 +68,8 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
 
   const { SignJWT } = await import('jose');
   const secret = process.env.SESSION_SECRET || 'dev-only-secret-change-me-please-min-32-chars';
-  const token = await new SignJWT({ name, email, format, agreed, bookTitle })
+  const sessionId = sanitizeSingleLine(String(form.get('sessionId') || '')).slice(0, 100);
+  const token = await new SignJWT({ name, email, format, agreed, bookTitle, sessionId })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
     .sign(new TextEncoder().encode(secret));
@@ -80,17 +81,6 @@ export async function submitReader(_prev: FormState, form: FormData): Promise<Fo
     subject: bookTitle ? `Confirm your advance reader subscription for ${bookTitle}` : `Confirm your advance reader subscription`,
     html: (await import('@/lib/email')).verifyReaderEmail(link, bookTitle),
   });
-
-  // Identity Bridging: Link anonymous ad click session to real reader contact
-  const sessionId = sanitizeSingleLine(String(form.get('sessionId') || '')).slice(0, 50);
-  if (sessionId) {
-    try {
-      const { bridgeReaderIdentity } = await import('@/lib/analytics');
-      await bridgeReaderIdentity(sessionId, { name, email, format, bookTitle });
-    } catch {
-      /* ignore */
-    }
-  }
 
   return { ok: true, errors: {}, name: name.split(' ')[0], format, bookTitle, message: 'verify' };
 }

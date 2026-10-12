@@ -30,15 +30,19 @@ In local development with `.env.local`: admin login credentials are set via `ADM
 
 ## Launch checklist (Vercel + Supabase + Resend + Turnstile)
 
-1. **Supabase** (free): create a project, open SQL editor, run `supabase/schema.sql` (tables + public `media` bucket). Copy the project URL and the `service_role` key (Settings > API). The key is only used on the server.
+1. **Supabase** (free): create a project, open SQL editor, run `supabase/schema.sql` (content, reader, analytics tables + public `media` bucket). Analytics sessions and events are server-only; row level security is enabled and no public policies are added. Copy the project URL and the `service_role` key (Settings > API). The key is only used on the server.
 2. **Resend** (free): add and verify Ken's domain, create an API key. `RESEND_FROM` must use that domain.
 3. **Cloudflare Turnstile** (free): add a widget for the domain, mode "Managed". Copy the site key and secret.
 4. **Vercel**: import the repo, add every variable from `.env.example`:
    `ADMIN_EMAIL`, `ADMIN_PASSWORD` (long), `SESSION_SECRET` (64 random chars, e.g. `openssl rand -hex 32`), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=media`, `RESEND_API_KEY`, `RESEND_FROM`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`.
-   Supabase is required on Vercel because its disk is read-only.
+   Supabase is required on Vercel because its disk is read-only. Analytics fails closed if its production Supabase variables are missing; it will not substitute sample analytics.
 5. Deploy, then connect Ken's domain in Vercel (Settings > Domains) and update his DNS.
 6. Sign in at `/admin`, open **Author & bio** and set **Where messages and signups are sent**. The first visit seeds the database with the 7 books.
 7. Replace the placeholders (every `[...]` text): real titles, covers, descriptions, sample chapters, Amazon/Audible links, author photo, videos, upcoming book. Test both forms once live.
+
+### Analytics attribution
+
+The admin analytics page reads actual first-party sessions and events stored in Supabase. It keeps a 120-day dashboard window. UTM parameters such as `utm_source=instagram&utm_medium=paid_social&utm_campaign=fall_launch` provide the clearest campaign attribution. The tracker also records supported ad click IDs (Meta, TikTok, Google, Microsoft Ads, LinkedIn, Pinterest, X and Reddit) and social referrers when the browser sends them. Some browsers and privacy settings remove referrers or click IDs, so those visits may appear as Direct or Unknown. Costs and purchases are not inferred: the website records outbound Amazon clicks, not completed Amazon orders or advertising spend. Reader email is attached only when someone submits the Advance Reader form; anonymous visitors are not identified by email.
 
 ## Where things live
 

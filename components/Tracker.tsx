@@ -1,11 +1,101 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '';
+const AD_CLICK_PARAMS: Array<[string, string]> = [
+  ['fbclid', 'Meta'],
+  ['ttclid', 'TikTok'],
+  ['gclid', 'Google'],
+  ['gbraid', 'Google'],
+  ['wbraid', 'Google'],
+  ['msclkid', 'Microsoft Ads'],
+  ['li_fat_id', 'LinkedIn'],
+  ['epik', 'Pinterest'],
+  ['twclid', 'X'],
+  ['rdt_cid', 'Reddit'],
+];
+function createVisitorId() {
+  const uuid = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `USR-${uuid}`;
+}
+type MetaWindow = Window & { fbq?: (...args: any[]) => void; _fbq?: (...args: any[]) => void };
+
+function trackMeta(event: string, params?: Record<string, string>, custom = false) {
+  try {
+    if (localStorage.getItem('km_marketing_consent') !== 'accepted') return;
+    const fbq = (window as MetaWindow).fbq;
+    if (fbq) fbq(custom ? 'trackCustom' : 'track', event, params);
+  } catch {
+    /* ignore blocked storage */
+  }
+}
+
+function initializeMetaPixel(pixelId: string) {
+  const w = window as MetaWindow;
+  if (w.fbq) return;
+
+  const fbq: any = function (...args: any[]) {
+    if (fbq.callMethod) fbq.callMethod.apply(fbq, args);
+    else fbq.queue.push(args);
+  };
+  fbq.push = fbq;
+  fbq.loaded = true;
+  fbq.version = '2.0';
+  fbq.queue = [];
+  w.fbq = fbq;
+  w._fbq = fbq;
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  document.head.appendChild(script);
+  fbq('init', pixelId);
+}
 
 export default function Tracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastPath = useRef<string | null>(null);
+  const lastMetaPath = useRef<string | null>(null);
+  const [marketingConsent, setMarketingConsent] = useState<'accepted' | 'declined' | null>(null);
+  const [showConsent, setShowConsent] = useState(false);
+
+  useEffect(() => {
+    if (!META_PIXEL_ID) return;
+    try {
+      const saved = localStorage.getItem('km_marketing_consent');
+      if (saved === 'accepted' || saved === 'declined') setMarketingConsent(saved);
+      else setShowConsent(true);
+    } catch {
+      setShowConsent(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!META_PIXEL_ID || marketingConsent !== 'accepted') return;
+    initializeMetaPixel(META_PIXEL_ID);
+
+    const query = searchParams.toString();
+    const pageKey = pathname + (query ? `?${query}` : '');
+    if (lastMetaPath.current === pageKey) return;
+    lastMetaPath.current = pageKey;
+    trackMeta('PageView');
+
+    if (pathname.startsWith('/books/')) {
+      trackMeta('ViewContent', {
+        content_name: document.title.slice(0, 100),
+        content_type: 'product',
+      });
+    }
+  }, [marketingConsent, pathname, searchParams]);
+
+  useEffect(() => {
+    if (!META_PIXEL_ID || marketingConsent !== 'accepted') return;
+    const handleLead = () => trackMeta('Lead', { content_name: 'Advance Reader signup' });
+    window.addEventListener('km:meta-lead', handleLead);
+    return () => window.removeEventListener('km:meta-lead', handleLead);
+  }, [marketingConsent]);
 
   useEffect(() => {
     // Only run on client and ignore admin routes from ad tracking
@@ -17,11 +107,11 @@ export default function Tracker() {
     try {
       sessionId = sessionStorage.getItem('km_session_id') || '';
       if (!sessionId) {
-        sessionId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+        sessionId = createVisitorId();
         sessionStorage.setItem('km_session_id', sessionId);
       }
     } catch {
-      sessionId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+      sessionId = createVisitorId();
     }
 
     // Check for UTM parameters
@@ -29,6 +119,17 @@ export default function Tracker() {
     let utmMedium = searchParams.get('utm_medium') || '';
     let utmCampaign = searchParams.get('utm_campaign') || '';
     let utmContent = searchParams.get('utm_content') || '';
+    let adClickId = '';
+    let adClickSource = '';
+
+    for (const [parameter, platform] of AD_CLICK_PARAMS) {
+      const value = searchParams.get(parameter);
+      if (value) {
+        adClickId = value.slice(0, 300);
+        adClickSource = platform;
+        break;
+      }
+    }
 
     // Cache UTM parameters for the session
     try {
@@ -43,6 +144,14 @@ export default function Tracker() {
 
       if (utmContent) sessionStorage.setItem('km_utm_content', utmContent);
       else utmContent = sessionStorage.getItem('km_utm_content') || '';
+
+      if (adClickId) {
+        sessionStorage.setItem('km_ad_click_id', adClickId);
+        sessionStorage.setItem('km_ad_click_source', adClickSource);
+      } else {
+        adClickId = sessionStorage.getItem('km_ad_click_id') || '';
+        adClickSource = sessionStorage.getItem('km_ad_click_source') || '';
+      }
     } catch {
       /* ignore storage block */
     }
@@ -62,6 +171,8 @@ export default function Tracker() {
         utmMedium: utmMedium || undefined,
         utmCampaign: utmCampaign || undefined,
         utmContent: utmContent || undefined,
+        adClickId: adClickId || undefined,
+        adClickSource: adClickSource || undefined,
         referrer: typeof document !== 'undefined' ? document.referrer : undefined,
       };
 
@@ -111,6 +222,8 @@ export default function Tracker() {
           if (mainH1) bookTitle = mainH1.textContent?.trim() || '';
         }
 
+        trackMeta('AmazonOutboundClick', { content_name: bookTitle || 'Ken Merrell book' }, true);
+
         const payload = {
           sessionId,
           eventType: 'amazon_click',
@@ -148,6 +261,7 @@ export default function Tracker() {
 
         const titleEl = videoBtn.closest('.vcard')?.querySelector('.vt') || videoBtn.querySelector('.vt');
         const videoTitle = titleEl?.textContent?.trim() || 'Book Trailer Video';
+        trackMeta('WatchVideo', { content_name: videoTitle }, true);
 
         const payload = {
           sessionId,
@@ -169,5 +283,28 @@ export default function Tracker() {
     return () => document.removeEventListener('click', handleGlobalClick, { capture: true });
   }, []);
 
-  return null;
+  if (!META_PIXEL_ID || !showConsent) return null;
+
+  const chooseConsent = (choice: 'accepted' | 'declined') => {
+    try {
+      localStorage.setItem('km_marketing_consent', choice);
+    } catch {
+      /* keep the choice for this page view even if storage is blocked */
+    }
+    setMarketingConsent(choice);
+    setShowConsent(false);
+  };
+
+  return (
+    <aside className="marketing-consent" role="dialog" aria-label="Marketing tracking preferences">
+      <div>
+        <strong>Help us understand which campaigns bring readers here</strong>
+        <p>Optional Meta marketing measurement records page and signup events. Your email address is not sent to Meta.</p>
+      </div>
+      <div className="marketing-consent-actions">
+        <button type="button" className="marketing-consent-decline" onClick={() => chooseConsent('declined')}>No thanks</button>
+        <button type="button" className="marketing-consent-accept" onClick={() => chooseConsent('accepted')}>Allow</button>
+      </div>
+    </aside>
+  );
 }

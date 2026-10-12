@@ -149,6 +149,8 @@ export interface AnalyticsSession {
   campaign: string;
   content?: string;
   term?: string;
+  adClickId?: string;
+  adClickSource?: string;
   location: AnalyticsLocation;
   device: string; // "iPhone", "Android", "iPad", "Mac", "Windows", "Desktop", "Mobile"
   browser: string; // "Safari", "Chrome", "Firefox", "Edge"
