@@ -123,15 +123,6 @@ export default function Sidebar({
 
         {/* Right: In a straight line to the opposite side of the Ken CRM logo */}
         <div className="crm-topbar-right">
-          <Link
-            href="/admin/analytics"
-            className={`crm-topbar-link crm-topbar-analytics${path.startsWith('/admin/analytics') ? ' on' : ''}`}
-            aria-current={path.startsWith('/admin/analytics') ? 'page' : undefined}
-            title="Open analytics dashboard"
-          >
-            <Ic k="chart" s={14} />
-            <span>Analytics</span>
-          </Link>
           <a href="/" target="_blank" className="crm-topbar-link" title="Open live site in new tab">
             <Ic k="ext" s={14} />
             <span>Live site</span>
