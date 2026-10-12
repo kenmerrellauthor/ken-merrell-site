@@ -1077,3 +1077,91 @@ select.crm-in { appearance: auto; }
   }
 }
 
+/* Analytics dashboard: keep every section usable from phone to desktop. */
+.an-container,
+.an-container > *,
+.an-card,
+.an-card-head,
+.an-social-card,
+.an-leads-card {
+  min-width: 0;
+}
+
+.an-container { width: 100%; }
+.an-card-sub { line-height: 1.5; overflow-wrap: anywhere; }
+.an-split-stat > span:last-child { min-width: 0; }
+.an-table-wrap,
+.an-social-table-wrap { max-width: 100%; overscroll-behavior-x: contain; }
+.an-table { min-width: 900px; }
+.an-social-table { min-width: 560px; }
+.an-table th,
+.an-table td { white-space: nowrap; }
+.an-table td:last-child { white-space: normal; min-width: 190px; }
+.an-card-head > div:first-child { min-width: 0; }
+.an-chart-container { min-width: 0; }
+.an-gen-preview { max-width: 100%; overflow-wrap: anywhere; }
+
+@media (max-width: 980px) {
+  .an-container { gap: 24px; }
+  .an-grid2 { gap: 18px; }
+  .an-card { padding: 20px; }
+  .an-card-head { align-items: flex-start; }
+  .an-card-head > .crm-tabs { max-width: 100%; flex-wrap: wrap; }
+  .an-lead-row { gap: 14px; }
+}
+
+@media (max-width: 640px) {
+  .crm-main { padding: 24px 14px 48px; }
+  .crm-top { align-items: stretch; gap: 18px; padding-bottom: 20px; }
+  .crm-top > div:first-child { min-width: 0; }
+  .crm-top h1 { font-size: clamp(28px, 8vw, 36px); line-height: 1.08; overflow-wrap: anywhere; }
+  .crm-top p { font-size: 14px; line-height: 1.5; }
+  .an-container { gap: 20px; }
+  .an-kpis { gap: 12px; }
+  .an-kpi-card { padding: 18px 16px; }
+  .an-kpi-lbl { font-size: 9px; letter-spacing: .14em; line-height: 1.4; }
+  .an-kpi-val { font-size: clamp(30px, 9vw, 40px); }
+  .an-kpi-foot { align-items: flex-start; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+  .an-split-box { padding: 16px; }
+  .an-split-head,
+  .an-split-stats { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .an-split-title { font-size: 10px; letter-spacing: .12em; line-height: 1.5; }
+  .an-split-stat { align-items: flex-start; font-size: 12px; line-height: 1.45; }
+  .an-split-dot { flex: 0 0 10px; margin-top: 3px; }
+  .an-card { padding: 17px 15px; gap: 16px; }
+  .an-card-title { align-items: flex-start; gap: 8px; font-size: 19px; line-height: 1.25; }
+  .an-card-title svg { flex: 0 0 auto; margin-top: 2px; }
+  .an-card-sub { font-size: 12px; }
+  .an-card-head { flex-direction: column; }
+  .an-card-head > .crm-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .an-card-head > .crm-tabs button { justify-content: center; padding: 0 8px; font-size: 13px; white-space: nowrap; }
+  .an-chart-container { padding: 11px 7px 6px; }
+  .an-chart-tooltip { top: 46px; right: 8px; left: 8px; min-width: 0; max-width: calc(100% - 16px); padding: 8px 10px; }
+  .an-chart-legend { flex-wrap: wrap; }
+  .an-dist-row { align-items: flex-start; flex-wrap: wrap; gap: 6px 9px; }
+  .an-dist-name { min-width: 0; flex: 1 1 calc(55% - 34px); overflow-wrap: anywhere; }
+  .an-dist-val { margin-left: auto; font-size: 13px; }
+  .an-social-heading { gap: 10px; }
+  .an-social-total { align-self: flex-start; }
+  .an-leads-heading .an-card-title { font-size: 19px; }
+  .an-leads-toolbar { align-items: stretch; flex-direction: column; }
+  .an-leads-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .an-leads-filters button { justify-content: center; padding: 0 8px; font-size: 12px; }
+  .an-lead-identity strong { overflow-wrap: anywhere; }
+  .an-lead-identity a { white-space: normal; overflow-wrap: anywhere; }
+  .an-lead-campaign { white-space: normal; overflow-wrap: anywhere; }
+  .an-lead-date { font-size: 11px; }
+  .an-leads-empty { align-items: flex-start; }
+  .an-ad-click-detail { flex-direction: column; gap: 5px; }
+  .an-ad-click-detail code { max-width: 100%; text-align: left; }
+}
+
+@media (max-width: 380px) {
+  .crm-main { padding-right: 11px; padding-left: 11px; }
+  .an-kpis { grid-template-columns: 1fr; }
+  .an-card { padding-right: 12px; padding-left: 12px; }
+  .an-card-head > .crm-tabs { grid-template-columns: 1fr; }
+  .an-chart-legend { gap: 8px; }
+  .an-leads-filters { grid-template-columns: 1fr; }
+}
+
