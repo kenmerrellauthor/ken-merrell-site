@@ -697,12 +697,15 @@ select.crm-in { appearance: auto; }
 .an-legend-promo { width: 8px; height: 8px; border-radius: 50%; background: #86aaff; box-shadow: 0 0 0 3px rgba(134, 170, 255, .14); }
 
 .an-chart-tooltip {
-  position: relative;
-  inset: auto;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  box-sizing: border-box;
   width: max-content;
   min-width: 0;
   max-width: 100%;
-  margin: 0 0 10px auto;
+  margin: 0;
   padding: 8px 11px;
   border: 1px solid rgba(201, 168, 96, .4);
   border-radius: 8px;
@@ -1410,7 +1413,7 @@ select.crm-in { appearance: auto; }
   .an-card-head > .crm-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .an-card-head > .crm-tabs button { justify-content: center; padding: 0 8px; font-size: 13px; white-space: nowrap; }
   .an-chart-container { padding: 11px 7px 6px; }
-  .an-chart-tooltip { width: 100%; margin: 0 0 8px; padding: 8px 10px; gap: 7px 10px; }
+  .an-chart-tooltip { top: 10px; right: 8px; width: calc(100% - 16px); padding: 8px 10px; gap: 7px 10px; }
   .an-dist-list { grid-template-columns: minmax(0, 1fr); }
   .an-chart-legend { flex-wrap: wrap; }
   .an-dist-row { align-items: flex-start; flex-wrap: wrap; gap: 6px 9px; }
