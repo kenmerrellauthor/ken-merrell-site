@@ -505,43 +505,66 @@ export default function AnalyticsClient({
       </div>
 
       {/* ── Paid vs. Organic Traffic Attribution ── */}
-      <div className="an-split-box">
-        <div className="an-split-head">
-          <div className="an-split-title">
-            <Ic k="funnel" s={16} /> TRAFFIC ATTRIBUTION · {rangeLabel.toUpperCase()}
+      <section className="an-attribution-panel" aria-labelledby="an-attribution-title">
+        <div className="an-attribution-header">
+          <span className="an-attribution-heading-icon"><Ic k="funnel" s={18} /></span>
+          <div className="an-attribution-heading-copy">
+            <h2 id="an-attribution-title">Traffic attribution</h2>
+            <p>See how visitors found the site during this period.</p>
           </div>
+          <span className="an-attribution-period">{rangeLabel}</span>
         </div>
-        <div className="an-attribution-layout">
-          <div
-            className={`an-donut${rangeTotals.visitors ? '' : ' is-empty'}`}
-            role="img"
-            aria-label={`Traffic attribution: ${paidPercentage}% paid ad traffic, ${organicPercentage}% organic traffic, ${rangeTotals.visitors} visitors`}
-            style={{ '--paid-share': `${paidPercentage}%` } as React.CSSProperties}
-            title={`Paid: ${paidPercentage}% | Organic: ${organicPercentage}%`}
-          >
-            <div className="an-donut-center">
-              <strong>{rangeTotals.visitors.toLocaleString()}</strong>
-              <span>visitors</span>
-            </div>
-          </div>
-          <div className="an-split-stats">
-            <div className="an-split-stat paid">
-              <span className="an-split-dot paid" />
-              <div className="an-split-copy">
-                <strong>Paid ad traffic</strong>
-                <span className="an-split-values"><b>{paidPercentage}%</b><span>{rangeTotals.paidVisitors.toLocaleString()} visitors</span></span>
+
+        <div className="an-attribution-grid">
+          <div className="an-attribution-total">
+            <div
+              className={`an-donut${rangeTotals.visitors ? '' : ' is-empty'}`}
+              role="img"
+              aria-label={`Traffic attribution: ${paidPercentage}% paid ad traffic, ${organicPercentage}% organic traffic, ${rangeTotals.visitors} visitors`}
+              style={{ '--paid-share': `${paidPercentage}%` } as React.CSSProperties}
+              title={`Paid: ${paidPercentage}% | Organic: ${organicPercentage}%`}
+            >
+              <div className="an-donut-center">
+                <strong>{rangeTotals.visitors.toLocaleString()}</strong>
+                <span>visitors</span>
               </div>
             </div>
-            <div className="an-split-stat org">
-              <span className="an-split-dot org" />
-              <div className="an-split-copy">
-                <strong>Organic traffic</strong>
-                <span className="an-split-values"><b>{organicPercentage}%</b><span>{rangeTotals.organicVisitors.toLocaleString()} visitors</span></span>
-              </div>
+            <div className="an-attribution-total-copy">
+              <span>Traffic mix</span>
+              <strong>By source</strong>
+              <small>Paid and organic</small>
+            </div>
+          </div>
+
+          <div className="an-attribution-source paid">
+            <div className="an-attribution-source-head">
+              <span className="an-attribution-source-mark" />
+              <span>Paid ad traffic</span>
+            </div>
+            <div className="an-attribution-source-value">
+              <strong>{paidPercentage}%</strong>
+              <span>{rangeTotals.paidVisitors.toLocaleString()} visitors</span>
+            </div>
+            <div className="an-attribution-meter" aria-label={`${paidPercentage}% paid ad traffic`}>
+              <span style={{ width: `${paidPercentage}%` }} />
+            </div>
+          </div>
+
+          <div className="an-attribution-source organic">
+            <div className="an-attribution-source-head">
+              <span className="an-attribution-source-mark" />
+              <span>Organic traffic</span>
+            </div>
+            <div className="an-attribution-source-value">
+              <strong>{organicPercentage}%</strong>
+              <span>{rangeTotals.organicVisitors.toLocaleString()} visitors</span>
+            </div>
+            <div className="an-attribution-meter" aria-label={`${organicPercentage}% organic traffic`}>
+              <span style={{ width: `${organicPercentage}%` }} />
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <section className="an-card an-social-card" aria-labelledby="social-sources-title">
         <div className="an-social-heading">
