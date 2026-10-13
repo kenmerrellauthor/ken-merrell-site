@@ -124,7 +124,6 @@ export default function AnalyticsClient({
 }: AnalyticsClientProps) {
   // Filters & State
   const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | '120d'>('30d');
-  const [metricTab, setMetricTab] = useState<'visitors' | 'amazon' | 'arc'>('visitors');
   const [hoveredPoint, setHoveredPoint] = useState<DailyTrafficPoint | null>(null);
 
   // Link Generator State
@@ -314,16 +313,10 @@ export default function AnalyticsClient({
       .some((value) => value?.toLowerCase().includes(query));
   }), [campaignLeads, leadFilter, leadSearch]);
 
-  const maxMetricVal = useMemo(() => {
-    return Math.max(
-      ...visibleTraffic.map((d) => {
-        if (metricTab === 'visitors') return d.visitors;
-        if (metricTab === 'amazon') return d.amazonClicks;
-        return d.arcSignups;
-      }),
-      10
-    );
-  }, [visibleTraffic, metricTab]);
+  const maxMetricVal = useMemo(() => Math.max(
+    ...visibleTraffic.flatMap((point) => [point.paidVisitors, point.organicVisitors]),
+    10
+  ), [visibleTraffic]);
 
   const chartPoints = useMemo(() => {
     const left = 52;
@@ -333,26 +326,17 @@ export default function AnalyticsClient({
     const denominator = Math.max(visibleTraffic.length - 1, 1);
 
     return visibleTraffic.map((point, index) => {
-      const value = metricTab === 'visitors'
-        ? point.visitors
-        : metricTab === 'amazon'
-          ? point.amazonClicks
-          : point.arcSignups;
-
       return {
         point,
-        value,
         x: left + (index / denominator) * (right - left),
-        y: bottom - (value / maxMetricVal) * (bottom - top),
+        paidY: bottom - (point.paidVisitors / maxMetricVal) * (bottom - top),
+        organicY: bottom - (point.organicVisitors / maxMetricVal) * (bottom - top),
       };
     });
-  }, [visibleTraffic, maxMetricVal, metricTab]);
+  }, [visibleTraffic, maxMetricVal]);
 
-  const chartColor = metricTab === 'visitors' ? '#d7b66f' : metricTab === 'amazon' ? '#79c9a2' : '#86aaff';
-  const chartAreaPath = chartPoints.length
-    ? `M ${chartPoints[0].x} 218 ${chartPoints.map(({ x, y }) => `L ${x} ${y}`).join(' ')} L ${chartPoints[chartPoints.length - 1].x} 218 Z`
-    : '';
-  const chartLinePath = chartPoints.map(({ x, y }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+  const paidLinePath = chartPoints.map(({ x, paidY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${paidY}`).join(' ');
+  const organicLinePath = chartPoints.map(({ x, organicY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${organicY}`).join(' ');
 
   return (
     <div className="an-container">
@@ -546,34 +530,9 @@ export default function AnalyticsClient({
           <div className="an-card-head">
             <div>
               <h2 className="an-card-title">
-                <Ic k="chart" s={22} /> {timeRange === 'today' ? 'Today' : `${rangeDays}-Day`} Traffic Trend & Promo Spikes
+                <Ic k="chart" s={22} /> {timeRange === 'today' ? 'Today' : `${rangeDays}-Day`} Paid vs. Organic Traffic
               </h2>
-            <p className="an-card-sub">Explore the daily trend and spot the campaigns behind each lift.</p>
-            </div>
-
-            {/* Metric Switcher */}
-            <div className="crm-tabs" aria-label="Traffic metric">
-              <button
-                type="button"
-                className={metricTab === 'visitors' ? 'on' : ''}
-                onClick={() => setMetricTab('visitors')}
-              >
-                Visitors
-              </button>
-              <button
-                type="button"
-                className={metricTab === 'amazon' ? 'on' : ''}
-                onClick={() => setMetricTab('amazon')}
-              >
-                Amazon Clicks
-              </button>
-              <button
-                type="button"
-                className={metricTab === 'arc' ? 'on' : ''}
-                onClick={() => setMetricTab('arc')}
-              >
-                ARC Signups
-              </button>
+            <p className="an-card-sub">Compare daily visitors from paid campaigns with visitors from organic sources.</p>
             </div>
           </div>
 
@@ -582,8 +541,14 @@ export default function AnalyticsClient({
             {hoveredPoint && (
               <div className="an-chart-tooltip">
                 <strong style={{ color: '#f7f2e8', fontSize: 13 }}>{hoveredPoint.date}</strong>
-                <span style={{ color: '#93c5fd', fontSize: 12 }}>
-                  Visitors: <strong>{hoveredPoint.visitors}</strong> ({hoveredPoint.paidVisitors} paid / {hoveredPoint.organicVisitors} org)
+                <span style={{ color: '#86aaff', fontSize: 12 }}>
+                  Paid visitors: <strong>{hoveredPoint.paidVisitors.toLocaleString()}</strong>
+                </span>
+                <span style={{ color: '#d7b66f', fontSize: 12 }}>
+                  Organic visitors: <strong>{hoveredPoint.organicVisitors.toLocaleString()}</strong>
+                </span>
+                <span style={{ color: '#ded3c1', fontSize: 12 }}>
+                  Total visitors: <strong>{hoveredPoint.visitors.toLocaleString()}</strong>
                 </span>
                 <span style={{ color: '#86efac', fontSize: 12 }}>
                   Amazon Clicks: <strong>{hoveredPoint.amazonClicks}</strong>
@@ -600,9 +565,8 @@ export default function AnalyticsClient({
             )}
 
             <div className="an-chart-legend" aria-hidden="true">
-              <span><i className="an-legend-line" style={{ background: chartColor }} />
-                {metricTab === 'visitors' ? 'Visitors' : metricTab === 'amazon' ? 'Amazon clicks' : 'ARC signups'}
-              </span>
+              <span><i className="an-legend-line" style={{ background: '#86aaff' }} /> Paid visitors</span>
+              <span><i className="an-legend-line" style={{ background: '#d7b66f' }} /> Organic visitors</span>
               <span><i className="an-legend-promo" /> Campaign launch</span>
             </div>
 
@@ -611,15 +575,9 @@ export default function AnalyticsClient({
               className="an-chart-svg"
               viewBox="0 0 680 270"
               role="img"
-              aria-label={`${rangeDays}-day ${metricTab} trend`}
+              aria-label={`${rangeDays}-day paid and organic visitors trend`}
               onMouseLeave={() => setHoveredPoint(null)}
             >
-              <defs>
-                <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={chartColor} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={chartColor} stopOpacity="0.015" />
-                </linearGradient>
-              </defs>
               {[0, 0.5, 1].map((fraction) => {
                 const y = 218 - fraction * 194;
                 return (
@@ -631,21 +589,25 @@ export default function AnalyticsClient({
                   </g>
                 );
               })}
-              <path d={chartAreaPath} fill="url(#trendArea)" />
-              <path d={chartLinePath} fill="none" stroke={chartColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="an-chart-line" />
-              {chartPoints.map(({ point, value, x, y }, index) => {
+              <path d={paidLinePath} fill="none" stroke="#86aaff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="an-chart-line paid" />
+              <path d={organicLinePath} fill="none" stroke="#d7b66f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="an-chart-line organic" />
+              {chartPoints.map(({ point, x, paidY, organicY }, index) => {
                 const isPromo = !!point.adNote;
                 const labelInterval = Math.max(1, Math.ceil(chartPoints.length / 4));
                 const showDate = index === 0 || index === chartPoints.length - 1 || index % labelInterval === 0;
                 return (
                   <g key={point.isoDate} onMouseEnter={() => setHoveredPoint(point)}>
-                    {isPromo && <circle cx={x} cy={y} r="8" className="an-chart-promo-ring" />}
-                    <circle cx={x} cy={y} r={hoveredPoint?.isoDate === point.isoDate ? 6 : isPromo ? 4.5 : 3} fill={isPromo ? '#86aaff' : chartColor} className="an-chart-point" />
-                    <circle cx={x} cy={y} r="11" fill="transparent" />
+                    {isPromo && <line x1={x} y1="24" x2={x} y2="218" className="an-chart-promo-guide" />}
+                    {isPromo && <circle cx={x} cy={paidY} r="8" className="an-chart-promo-ring" />}
+                    {isPromo && <circle cx={x} cy={organicY} r="8" className="an-chart-promo-ring" />}
+                    <circle cx={x} cy={paidY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : 3} fill="#86aaff" className="an-chart-point" />
+                    <circle cx={x} cy={organicY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : 3} fill="#d7b66f" className="an-chart-point" />
+                    <circle cx={x} cy={paidY} r="11" fill="transparent" />
+                    <circle cx={x} cy={organicY} r="11" fill="transparent" />
                     {showDate && (
                       <text x={x} y="250" textAnchor="middle" className="an-chart-axis-label">{point.date}</text>
                     )}
-                    <title>{`${point.date}: ${value}${point.adNote ? ` — ${point.adNote}` : ''}`}</title>
+                    <title>{`${point.date}: ${point.paidVisitors} paid visitors, ${point.organicVisitors} organic visitors${point.adNote ? ` — ${point.adNote}` : ''}`}</title>
                   </g>
                 );
               })}
