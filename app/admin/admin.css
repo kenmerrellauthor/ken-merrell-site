@@ -414,9 +414,9 @@ select.crm-in { appearance: auto; }
 
 /* Traffic Split Bar */
 .an-split-box {
-  width: min(100%, 960px);
-  align-self: center;
-  background: #181410;
+  width: 100%;
+  align-self: stretch;
+  background: linear-gradient(135deg, #1b1712, #17130f 70%);
   border: 1px solid rgba(239, 231, 214, 0.1);
   border-radius: 12px;
   padding: 24px 28px 26px;
@@ -437,9 +437,12 @@ select.crm-in { appearance: auto; }
 .an-split-title {
   display: flex;
   align-items: center;
+  min-width: 0;
+  flex-wrap: wrap;
   gap: 10px;
   font-family: var(--serif-c);
   font-size: 11px;
+  line-height: 1.5;
   font-weight: 700;
   letter-spacing: 0.18em;
   color: #ded3c1;
@@ -496,7 +499,7 @@ select.crm-in { appearance: auto; }
   grid-template-columns: 132px minmax(0, 1fr);
   align-items: center;
   gap: 22px;
-  width: min(100%, 680px);
+  width: min(100%, 760px);
   margin: 0 auto;
 }
 
@@ -536,7 +539,7 @@ select.crm-in { appearance: auto; }
 .an-donut-center span { color: #a89b87; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 
 @media (max-width: 640px) {
-  .an-split-box { width: 100%; align-self: stretch; padding: 17px 15px; gap: 14px; }
+  .an-split-box { padding: 17px 15px; gap: 14px; }
   .an-attribution-layout { grid-template-columns: 88px minmax(0, 1fr); width: 100%; gap: 12px; }
   .an-split-stats { grid-template-columns: 1fr; gap: 8px; }
   .an-split-stat { min-height: 54px; padding: 9px 10px; gap: 9px; }
@@ -984,6 +987,10 @@ select.crm-in { appearance: auto; }
   }
 }
 
+@media (max-width: 1100px) {
+  .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 600px) {
   .crm-actions { width: 100%; align-items: stretch; }
   .crm-actions > .crm-tabs {
@@ -1248,5 +1255,9 @@ select.crm-in { appearance: auto; }
   .an-card-head > .crm-tabs { grid-template-columns: 1fr; }
   .an-chart-legend { gap: 8px; }
   .an-leads-filters { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .an-kpis { grid-template-columns: 1fr; }
 }
 
