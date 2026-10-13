@@ -693,17 +693,18 @@ select.crm-in { appearance: auto; }
 /* Distribution / Top Pages bars */
 .an-dist-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  flex-direction: column;
-  gap: 10px;
+  min-width: 0;
+  gap: 9px;
 }
 
 .an-dist-item {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 8px;
-  padding: 11px 12px;
+  gap: 7px;
+  padding: 10px 12px;
   border: 1px solid rgba(239, 231, 214, .07);
   border-radius: 8px;
   background: linear-gradient(100deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .008));
@@ -715,6 +716,7 @@ select.crm-in { appearance: auto; }
 .an-dist-row {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 9px;
   font-size: 14px;
 }
@@ -729,16 +731,21 @@ select.crm-in { appearance: auto; }
 }
 
 .an-dist-name {
+  min-width: 0;
+  flex: 1 1 auto;
   color: #ded3c1;
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .an-dist-val {
+  flex: 0 0 auto;
   margin-left: auto;
   color: #c9a860;
   font-family: var(--serif-d);
   font-weight: 600;
   font-size: 15px;
+  white-space: nowrap;
 }
 
 .an-dist-track {
@@ -1211,10 +1218,10 @@ select.crm-in { appearance: auto; }
   .an-card-head > .crm-tabs button { justify-content: center; padding: 0 8px; font-size: 13px; white-space: nowrap; }
   .an-chart-container { padding: 11px 7px 6px; }
   .an-chart-tooltip { width: 100%; margin: 0 0 8px; padding: 8px 10px; gap: 7px 10px; }
-  .an-dist-list { grid-template-columns: 1fr; }
+  .an-dist-list { grid-template-columns: minmax(0, 1fr); }
   .an-chart-legend { flex-wrap: wrap; }
   .an-dist-row { align-items: flex-start; flex-wrap: wrap; gap: 6px 9px; }
-  .an-dist-name { min-width: 0; flex: 1 1 calc(55% - 34px); overflow-wrap: anywhere; }
+  .an-dist-name { min-width: 0; flex: 1 1 0; overflow-wrap: anywhere; }
   .an-dist-val { margin-left: auto; font-size: 13px; }
   .an-social-heading { gap: 10px; }
   .an-social-total { align-self: flex-start; }
