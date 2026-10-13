@@ -10,6 +10,16 @@ function isPaidMedium(medium: string) {
     || normalized.startsWith('paid_') || normalized.endsWith('_paid');
 }
 
+function formatPageLabel(path: string) {
+  const pathname = (path || '/').split(/[?#]/, 1)[0].replace(/\/+$/, '') || '/';
+  if (pathname === '/') return 'Home';
+  try {
+    return decodeURIComponent(pathname);
+  } catch {
+    return pathname;
+  }
+}
+
 interface AnalyticsClientProps {
   initialKpis: AnalyticsKPIs;
   dailyTraffic: DailyTrafficPoint[];
@@ -154,6 +164,7 @@ export default function AnalyticsClient({
     };
   }, [refreshTraffic]);
   const [hoveredPoint, setHoveredPoint] = useState<DailyTrafficPoint | null>(null);
+  useEffect(() => setHoveredPoint(null), [timeRange]);
 
   // Link Generator State
   const [selectedBookSlug, setSelectedBookSlug] = useState<string>(books[0]?.slug || 'petticoats-and-ash');
@@ -608,8 +619,26 @@ export default function AnalyticsClient({
               <h2 className="an-card-title">
                 <Ic k="chart" s={22} /> {timeRange === 'today' ? 'Today' : `${rangeDays}-Day`} Paid vs. Organic Traffic
               </h2>
-            <p className="an-card-sub">Compare daily visitors from paid campaigns with visitors from organic sources.</p>
+                <p className="an-card-sub">Compare daily visitors from paid campaigns with visitors from organic sources.</p>
             </div>
+              <div className="crm-tabs an-chart-range-tabs" role="group" aria-label="Chart date range">
+                {([
+                  ['today', 'Today'],
+                  ['7d', '7 days'],
+                  ['30d', '30 days'],
+                  ['120d', '120 days'],
+                ] as const).map(([range, label]) => (
+                  <button
+                    key={range}
+                    type="button"
+                    className={timeRange === range ? 'on' : ''}
+                    aria-pressed={timeRange === range}
+                    onClick={() => setTimeRange(range)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
           </div>
 
           <div className="an-chart-container">
@@ -709,11 +738,11 @@ export default function AnalyticsClient({
                 type="button"
                 className="an-dist-item an-dist-button"
                 onClick={() => setSelectedPage(p.page)}
-                aria-label={`View all ${p.visits} page views for ${p.page}`}
+                aria-label={`View all ${p.visits} page views for ${formatPageLabel(p.page)}`}
               >
                 <div className="an-dist-row">
                   <span className="an-dist-rank">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="an-dist-name">{p.page}</span>
+                  <span className="an-dist-name">{formatPageLabel(p.page)}</span>
                   <span className="an-dist-val">{p.percentage}% ({p.visits.toLocaleString()})</span>
                 </div>
                 <div className="an-dist-track">
@@ -1280,14 +1309,16 @@ export default function AnalyticsClient({
                         <div className="an-tl-content">
                           <span className="an-tl-time">{timeStr}</span>
                           <span className="an-tl-title" style={{ color: e.eventType === 'amazon_click' ? '#86efac' : '#f7f2e8' }}>
-                            {e.eventType === 'pageview' && `Visited ${e.pagePath}`}
+                            {e.eventType === 'pageview' && `Visited ${formatPageLabel(e.pagePath)}`}
                             {e.eventType === 'amazon_click' && `Clicked "BUY ON AMAZON" (${e.bookTitle || 'Book'})`}
                             {e.eventType === 'video_play' && `Watched Book Video Trailer`}
                             {e.eventType === 'arc_signup' && `Joined Advance Reader Team`}
                             {e.eventType === 'scroll_quote' && `Read Reviews & Chapter Sample`}
                           </span>
                           <p className="an-tl-desc">
-                            {e.details || `Interacted on ${e.pagePath}`}
+                            {e.details === `Interacted on ${e.pagePath}`
+                              ? `Interacted on ${formatPageLabel(e.pagePath)}`
+                              : e.details || `Interacted on ${formatPageLabel(e.pagePath)}`}
                           </p>
                         </div>
                       </div>
@@ -1295,7 +1326,7 @@ export default function AnalyticsClient({
                   })
                 ) : (
                   <div style={{ color: '#8c7e6c', fontSize: 14, fontStyle: 'italic', padding: '12px 0' }}>
-                    Standard session recorded on {selectedVisitor.landingPage}.
+                    Standard session recorded on {formatPageLabel(selectedVisitor.landingPage)}.
                   </div>
                 )}
               </div>
@@ -1316,7 +1347,7 @@ export default function AnalyticsClient({
             <div className="an-page-drawer-header">
               <div>
                 <span className="an-badge gold">PAGE PERFORMANCE</span>
-                <h3 id="an-page-drawer-title" className="an-page-drawer-title">{selectedPage}</h3>
+                <h3 id="an-page-drawer-title" className="an-page-drawer-title">{formatPageLabel(selectedPage)}</h3>
                 <p className="an-card-sub">Every recorded visit to this page in the last 120 days.</p>
               </div>
               <button
@@ -1341,7 +1372,7 @@ export default function AnalyticsClient({
                     <div className="an-page-view-index">{String(index + 1).padStart(2, '0')}</div>
                     <div className="an-page-view-content">
                       <div className="an-page-view-topline">
-                        <strong>{event.pageTitle || selectedPage}</strong>
+                        <strong>{event.pageTitle && event.pageTitle !== '/' ? event.pageTitle : formatPageLabel(event.pagePath)}</strong>
                         <time dateTime={event.timestamp}>
                           {new Date(event.timestamp).toLocaleString(undefined, {
                             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -1409,12 +1440,12 @@ export default function AnalyticsClient({
                     setShowAllPagesDrawer(false);
                     setSelectedPage(page.page);
                   }}
-                  aria-label={`${page.page}, ${page.visits} views. Open page view details.`}
+                  aria-label={`${formatPageLabel(page.page)}, ${page.visits} views. Open page view details.`}
                 >
                   <span className="an-page-view-index">{String(index + 1).padStart(2, '0')}</span>
                   <span className="an-all-page-main">
                     <span className="an-all-page-label">
-                      <strong>{page.page}</strong>
+                      <strong>{formatPageLabel(page.page)}</strong>
                       <span>{page.visits.toLocaleString()} {page.visits === 1 ? 'view' : 'views'} · {page.percentage}%</span>
                     </span>
                     <span className="an-dist-track">
