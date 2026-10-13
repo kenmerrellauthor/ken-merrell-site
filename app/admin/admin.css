@@ -647,34 +647,33 @@ select.crm-in { appearance: auto; }
 .an-legend-promo { width: 8px; height: 8px; border-radius: 50%; background: #86aaff; box-shadow: 0 0 0 3px rgba(134, 170, 255, .14); }
 
 .an-chart-tooltip {
-  min-width: 190px;
-  border-color: rgba(201, 168, 96, .55);
-  background: rgba(18, 15, 12, .97);
-  backdrop-filter: blur(10px);
+  position: relative;
+  inset: auto;
+  width: max-content;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 0 10px auto;
+  padding: 8px 11px;
+  border: 1px solid rgba(201, 168, 96, .4);
   border-radius: 8px;
-}
-
-.an-chart-tooltip {
-  position: absolute;
-  top: 18px;
-  right: 20px;
-  background: rgba(20, 17, 14, 0.95);
-  border: 1px solid #c9a860;
-  padding: 10px 14px;
-  border-radius: 4px;
+  background: rgba(20, 17, 14, .82);
+  backdrop-filter: blur(10px);
   pointer-events: none;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  z-index: 10;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .28);
 }
 
 /* Distribution / Top Pages bars */
 .an-dist-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .an-dist-item {
@@ -1190,7 +1189,8 @@ select.crm-in { appearance: auto; }
   .an-card-head > .crm-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .an-card-head > .crm-tabs button { justify-content: center; padding: 0 8px; font-size: 13px; white-space: nowrap; }
   .an-chart-container { padding: 11px 7px 6px; }
-  .an-chart-tooltip { top: 46px; right: 8px; left: 8px; min-width: 0; max-width: calc(100% - 16px); padding: 8px 10px; }
+  .an-chart-tooltip { width: 100%; margin: 0 0 8px; padding: 8px 10px; gap: 7px 10px; }
+  .an-dist-list { grid-template-columns: 1fr; }
   .an-chart-legend { flex-wrap: wrap; }
   .an-dist-row { align-items: flex-start; flex-wrap: wrap; gap: 6px 9px; }
   .an-dist-name { min-width: 0; flex: 1 1 calc(55% - 34px); overflow-wrap: anywhere; }
