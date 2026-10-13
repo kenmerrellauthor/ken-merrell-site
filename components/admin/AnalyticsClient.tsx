@@ -168,6 +168,7 @@ export default function AnalyticsClient({
   const [visitorFilter, setVisitorFilter] = useState<'all' | 'amazon' | 'arc' | 'paid' | 'organic'>('all');
   const [visitorSearch, setVisitorSearch] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<AnalyticsSession | null>(null);
+  const [selectedPage, setSelectedPage] = useState<string | null>(null);
   const [leadFilter, setLeadFilter] = useState<'all' | 'paid' | 'marketing'>('all');
   const [leadSearch, setLeadSearch] = useState('');
 
@@ -273,6 +274,16 @@ export default function AnalyticsClient({
       .filter((e) => e.sessionId === selectedVisitor.id)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [selectedVisitor, initialEvents]);
+
+  // Keep every recorded pageview for the selected path, with its session context.
+  const selectedPageViews = useMemo(() => {
+    if (!selectedPage) return [];
+    const sessionsById = new Map(initialSessions.map((session) => [session.id, session]));
+    return initialEvents
+      .filter((event) => event.eventType === 'pageview' && event.pagePath === selectedPage)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .map((event) => ({ event, session: sessionsById.get(event.sessionId) }));
+  }, [selectedPage, initialEvents, initialSessions]);
 
   // Chart calculations (30 Days)
   const rangeDays = timeRange === 'today' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 120;
@@ -666,7 +677,13 @@ export default function AnalyticsClient({
 
           <div className="an-dist-list">
             {topPages.slice(0, 4).map((p, index) => (
-              <div key={p.page} className="an-dist-item">
+              <button
+                key={p.page}
+                type="button"
+                className="an-dist-item an-dist-button"
+                onClick={() => setSelectedPage(p.page)}
+                aria-label={`View all ${p.visits} page views for ${p.page}`}
+              >
                 <div className="an-dist-row">
                   <span className="an-dist-rank">{String(index + 1).padStart(2, '0')}</span>
                   <span className="an-dist-name">{p.page}</span>
@@ -675,7 +692,7 @@ export default function AnalyticsClient({
                 <div className="an-dist-track">
                   <div className="an-dist-fill" style={{ width: `${p.percentage}%` }} />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -1246,6 +1263,71 @@ export default function AnalyticsClient({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {selectedPage && (
+        <div className="an-drawer-overlay" onClick={() => setSelectedPage(null)}>
+          <aside
+            className="an-drawer an-page-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="an-page-drawer-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="an-page-drawer-header">
+              <div>
+                <span className="an-badge gold">PAGE PERFORMANCE</span>
+                <h3 id="an-page-drawer-title" className="an-page-drawer-title">{selectedPage}</h3>
+                <p className="an-card-sub">Every recorded visit to this page in the selected reporting period.</p>
+              </div>
+              <button
+                type="button"
+                className="crm-header-toggle"
+                onClick={() => setSelectedPage(null)}
+                aria-label="Close page views panel"
+              >
+                <Ic k="close" />
+              </button>
+            </div>
+
+            <div className="an-page-views-summary">
+              <strong>{selectedPageViews.length.toLocaleString()}</strong>
+              <span>page views</span>
+            </div>
+
+            {selectedPageViews.length > 0 ? (
+              <div className="an-page-views-list" aria-label="Page view details">
+                {selectedPageViews.map(({ event, session }, index) => (
+                  <article className="an-page-view-row" key={event.id}>
+                    <div className="an-page-view-index">{String(index + 1).padStart(2, '0')}</div>
+                    <div className="an-page-view-content">
+                      <div className="an-page-view-topline">
+                        <strong>{event.pageTitle || selectedPage}</strong>
+                        <time dateTime={event.timestamp}>
+                          {new Date(event.timestamp).toLocaleString(undefined, {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                          })}
+                        </time>
+                      </div>
+                      <div className="an-page-view-meta">
+                        <span>{session ? `${session.source} · ${session.medium}` : 'Source unavailable'}</span>
+                        {session?.campaign && session.campaign !== '(not set)' && <span>{session.campaign}</span>}
+                        {session && <span>{session.device} · {session.browser}</span>}
+                      </div>
+                      {event.details && <p>{event.details}</p>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="an-page-views-empty">
+                <Ic k="books" s={22} />
+                <strong>No page-view events recorded</strong>
+                <span>The summary count may include older or aggregated visits that do not have individual event details.</span>
+              </div>
+            )}
+          </aside>
         </div>
       )}
     </div>
