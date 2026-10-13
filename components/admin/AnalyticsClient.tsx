@@ -20,6 +20,99 @@ interface AnalyticsClientProps {
   books: Book[];
 }
 
+const linkPlacementGuides: Record<string, { title: string; intro: string; steps: Array<{ label: string; detail: string }> }> = {
+  instagram_ad: {
+    title: 'Instagram Paid Story / Reel Ad',
+    intro: 'Use this generated link as the destination for your Instagram ad.',
+    steps: [
+      { label: 'Open Meta Ads Manager', detail: 'Edit your Facebook or Instagram ad and find the Website URL field in the ad destination settings.' },
+      { label: 'Paste the tracking link', detail: 'Paste the complete generated link into Website URL. If you already have a destination URL, put only the query string beginning with ?utm_source= in URL Parameters.' },
+      { label: 'Check before publishing', detail: 'Preview the ad and confirm its button opens the selected book or homepage.' },
+    ],
+  },
+  instagram_bio: {
+    title: 'Instagram Profile Bio Link (Free)',
+    intro: 'Use this link for organic visits from your Instagram profile, not a paid ad.',
+    steps: [
+      { label: 'Open your Instagram profile', detail: 'Choose Edit Profile, then Links, then Add external link.' },
+      { label: 'Add the generated link', detail: 'Paste the complete tracking link, give it a clear title, and save. Keep this link in your profile while you want to measure bio traffic.' },
+    ],
+  },
+  facebook_ad: {
+    title: 'Facebook Newsfeed Paid Ad',
+    intro: 'Use this generated link as the destination for your Facebook ad.',
+    steps: [
+      { label: 'Open Meta Ads Manager', detail: 'Edit the Facebook ad and locate the Website URL field under its destination settings.' },
+      { label: 'Paste the tracking link', detail: 'Paste the complete generated link into Website URL. If using URL Parameters, paste only the query string beginning with ?utm_source=.' },
+      { label: 'Check before publishing', detail: 'Preview the ad and confirm its button opens the selected book or homepage.' },
+    ],
+  },
+  bookbub_deal: {
+    title: 'BookBub Featured Deal / Ad',
+    intro: 'Use this link as the book destination for the BookBub promotion.',
+    steps: [
+      { label: 'Edit the promotion destination', detail: 'In the BookBub deal or ad setup, choose the destination URL for your book.' },
+      { label: 'Paste and verify', detail: 'Paste the complete generated link, then preview or test it to confirm it opens the selected page on your site.' },
+    ],
+  },
+  newsletter: {
+    title: 'Author Email Newsletter',
+    intro: 'Use this link on the email button or text link for this campaign.',
+    steps: [
+      { label: 'Edit your email', detail: 'In your email platform, select the button or text that should send readers to the book.' },
+      { label: 'Set the link destination', detail: 'Paste the complete generated link as the button or hyperlink URL, then send yourself a test email and check it.' },
+    ],
+  },
+  tiktok_bio: {
+    title: 'TikTok Profile Bio Link',
+    intro: 'Use this link for organic visits from your TikTok profile.',
+    steps: [
+      { label: 'Edit your TikTok profile', detail: 'Open Edit profile and find the website or link field available for your account.' },
+      { label: 'Add the generated link', detail: 'Paste the complete tracking link and save. Test the profile link to confirm it opens the selected page.' },
+    ],
+  },
+  youtube: {
+    title: 'YouTube Channel / Video',
+    intro: 'Choose where viewers should find the tracked link.',
+    steps: [
+      { label: 'For a video', detail: 'Paste the complete link into the video description near the top, with a short call to action.' },
+      { label: 'For your channel', detail: 'Add the complete link to your channel profile links. Test it from the public channel or video page.' },
+    ],
+  },
+  pinterest: {
+    title: 'Pinterest Pin',
+    intro: 'Attach this link to the Pin that promotes the selected book or page.',
+    steps: [
+      { label: 'Edit or create a Pin', detail: 'Open the Pin details and find its destination link field.' },
+      { label: 'Set the destination', detail: 'Paste the complete generated link, save the Pin, and open it once to verify the destination.' },
+    ],
+  },
+  linkedin: {
+    title: 'LinkedIn Post',
+    intro: 'Use this link on the LinkedIn post promoting the selected book or page.',
+    steps: [
+      { label: 'Create or edit the post', detail: 'Paste the complete generated link into the post and add a clear call to action.' },
+      { label: 'Check the preview', detail: 'Confirm the link preview and destination are correct before publishing.' },
+    ],
+  },
+  x: {
+    title: 'X / Twitter Post',
+    intro: 'Use this link in the post promoting the selected book or page.',
+    steps: [
+      { label: 'Compose the post', detail: 'Paste the complete generated link into your post with a short call to action.' },
+      { label: 'Verify the destination', detail: 'Open the link in a preview or test post to confirm it leads to the right page.' },
+    ],
+  },
+  custom: {
+    title: 'Custom Marketing Channel',
+    intro: 'Place this link wherever you promote the selected book or page.',
+    steps: [
+      { label: 'Set the destination', detail: 'Paste the complete generated link into the channel’s website, button, or call-to-action URL field.' },
+      { label: 'Test the link', detail: 'Open it once before sharing to confirm the page and campaign details are correct.' },
+    ],
+  },
+};
+
 export default function AnalyticsClient({
   initialKpis,
   dailyTraffic,
@@ -41,6 +134,7 @@ export default function AnalyticsClient({
   const [adContent, setAdContent] = useState<string>('cinematic_trailer_9x16');
   const [copied, setCopied] = useState(false);
   const [showHowToPaste, setShowHowToPaste] = useState(false);
+  const selectedLinkGuide = linkPlacementGuides[selectedPlatform] ?? linkPlacementGuides.custom;
 
   // Visitor Feed State
   const [visitorFilter, setVisitorFilter] = useState<'all' | 'amazon' | 'arc' | 'paid' | 'organic'>('all');
@@ -763,16 +857,13 @@ export default function AnalyticsClient({
 
         {showHowToPaste && (
           <div style={{ background: '#120f0d', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 4, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: '#b5a895', lineHeight: 1.5 }}>
-            <strong style={{ color: '#93c5fd', fontSize: 14 }}>How to use this tracking link in Meta Ads Manager & Instagram:</strong>
-            <div>
-              <strong>1. Meta Ads Manager (Facebook/Instagram Ads):</strong> In your ad setup, paste this link directly into the <em>Website URL</em> box, or paste the parameter part (<code>utm_source=...</code>) into the <em>URL Parameters</em> box.
-            </div>
-            <div>
-              <strong>2. Instagram Profile Bio:</strong> Go to your Instagram profile -&gt; <em>Edit Profile</em> -&gt; <em>Links</em> -&gt; paste the generated link so all profile clicks are credited to your organic bio.
-            </div>
-            <div>
-              <strong>3. BookBub or Email Newsletter:</strong> Set this link as the destination for your email buttons or BookBub deal ads.
-            </div>
+            <strong style={{ color: '#93c5fd', fontSize: 14 }}>How to use this tracking link: {selectedLinkGuide.title}</strong>
+            <div>{selectedLinkGuide.intro}</div>
+            {selectedLinkGuide.steps.map((step, index) => (
+              <div key={step.label}>
+                <strong>{index + 1}. {step.label}:</strong> {step.detail}
+              </div>
+            ))}
           </div>
         )}
 
