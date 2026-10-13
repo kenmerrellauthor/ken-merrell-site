@@ -732,6 +732,29 @@ select.crm-in { appearance: auto; }
   outline-offset: 3px;
 }
 
+.an-pages-toggle {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 9px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(201, 168, 96, .28);
+  border-radius: 7px;
+  background: rgba(201, 168, 96, .07);
+  color: #d9bd79;
+  font: 600 13px/1 var(--serif-c);
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.an-pages-toggle:hover {
+  border-color: rgba(201, 168, 96, .55);
+  background: rgba(201, 168, 96, .13);
+}
+
+.an-pages-toggle:focus-visible { outline: 2px solid #c9a860; outline-offset: 3px; }
+
 .an-dist-row {
   display: flex;
   align-items: center;

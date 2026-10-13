@@ -169,6 +169,7 @@ export default function AnalyticsClient({
   const [visitorSearch, setVisitorSearch] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<AnalyticsSession | null>(null);
   const [selectedPage, setSelectedPage] = useState<string | null>(null);
+  const [showAllTopPages, setShowAllTopPages] = useState(false);
   const [leadFilter, setLeadFilter] = useState<'all' | 'paid' | 'marketing'>('all');
   const [leadSearch, setLeadSearch] = useState('');
 
@@ -675,8 +676,8 @@ export default function AnalyticsClient({
             <p className="an-card-sub">Most visited sections across all campaigns</p>
           </div>
 
-          <div className="an-dist-list">
-            {topPages.slice(0, 4).map((p, index) => (
+          <div className="an-dist-list" id="top-book-pages-list">
+            {topPages.slice(0, showAllTopPages ? topPages.length : 4).map((p, index) => (
               <button
                 key={p.page}
                 type="button"
@@ -695,6 +696,19 @@ export default function AnalyticsClient({
               </button>
             ))}
           </div>
+
+          {topPages.length > 4 && (
+            <button
+              type="button"
+              className="an-pages-toggle"
+              aria-expanded={showAllTopPages}
+              aria-controls="top-book-pages-list"
+              onClick={() => setShowAllTopPages((shown) => !shown)}
+            >
+              {showAllTopPages ? 'Show fewer pages' : `Show all ${topPages.length} pages`}
+              <span aria-hidden="true">{showAllTopPages ? '↑' : '↓'}</span>
+            </button>
+          )}
 
           <div style={{ borderTop: '1px solid rgba(239,231,214,0.08)', paddingTop: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>

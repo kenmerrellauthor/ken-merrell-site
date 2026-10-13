@@ -192,7 +192,7 @@ function buildTopPages(events: AnalyticsEvent[]) {
   for (const event of events) if (event.eventType === 'pageview') counts.set(event.pagePath, (counts.get(event.pagePath) ?? 0) + 1);
   const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
   return [...counts.entries()].map(([page, visits]) => ({ page, visits, percentage: total ? Math.round((visits / total) * 100) : 0 }))
-    .sort((a, b) => b.visits - a.visits).slice(0, 20);
+    .sort((a, b) => b.visits - a.visits);
 }
 
 export async function getAnalyticsDashboardData() {
