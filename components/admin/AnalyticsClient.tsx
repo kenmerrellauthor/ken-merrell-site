@@ -663,7 +663,7 @@ export default function AnalyticsClient({
           </div>
 
           <div className="an-dist-list">
-            {topPages.map((p, index) => (
+            {topPages.slice(0, 4).map((p, index) => (
               <div key={p.page} className="an-dist-item">
                 <div className="an-dist-row">
                   <span className="an-dist-rank">{String(index + 1).padStart(2, '0')}</span>
