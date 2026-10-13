@@ -498,21 +498,8 @@ export default function AnalyticsClient({
           <div className="an-split-title">
             <Ic k="funnel" s={16} /> TRAFFIC ATTRIBUTION · {rangeLabel.toUpperCase()}
           </div>
-          <div className="an-attribution-layout">
-          <div className="an-split-stats">
-            <div className="an-split-stat">
-              <span className="an-split-dot paid" />
-              <span>
-                <strong>Paid Ad Traffic:</strong> {paidPercentage}% ({rangeTotals.paidVisitors} visitors)
-              </span>
-            </div>
-            <div className="an-split-stat">
-              <span className="an-split-dot org" />
-              <span>
-                <strong>Organic Traffic:</strong> {organicPercentage}% ({rangeTotals.organicVisitors} visitors)
-              </span>
-            </div>
-          </div>
+        </div>
+        <div className="an-attribution-layout">
           <div
             className={`an-donut${rangeTotals.visitors ? '' : ' is-empty'}`}
             role="img"
@@ -525,6 +512,21 @@ export default function AnalyticsClient({
               <span>visitors</span>
             </div>
           </div>
+          <div className="an-split-stats">
+            <div className="an-split-stat paid">
+              <span className="an-split-dot paid" />
+              <div className="an-split-copy">
+                <strong>Paid ad traffic</strong>
+                <span className="an-split-values"><b>{paidPercentage}%</b><span>{rangeTotals.paidVisitors.toLocaleString()} visitors</span></span>
+              </div>
+            </div>
+            <div className="an-split-stat org">
+              <span className="an-split-dot org" />
+              <div className="an-split-copy">
+                <strong>Organic traffic</strong>
+                <span className="an-split-values"><b>{organicPercentage}%</b><span>{rangeTotals.organicVisitors.toLocaleString()} visitors</span></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
