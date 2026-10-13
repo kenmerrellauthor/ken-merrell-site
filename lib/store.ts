@@ -436,11 +436,11 @@ export async function updateReader(id: string, patch: Partial<Reader>): Promise<
   return updated;
 }
 
-const ALLOWED_EXTENSIONS = new Map([
-  ['image/jpeg', 'jpg'],
-  ['image/png', 'png'],
-  ['image/webp', 'webp']
-]);
+const IMAGE_FORMATS = [
+  { ext: 'jpg', contentType: 'image/jpeg', matches: (bytes: Buffer) => bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff },
+  { ext: 'png', contentType: 'image/png', matches: (bytes: Buffer) => bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
+  { ext: 'webp', contentType: 'image/webp', matches: (bytes: Buffer) => bytes.length >= 12 && bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP' },
+] as const;
 
 const ALLOWED_UPLOAD_FOLDERS = new Set(['covers', 'banners', 'author', 'videos']);
 
@@ -448,17 +448,13 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
   if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
     throw new Error('Invalid upload destination folder.');
   }
-  let ext = ALLOWED_EXTENSIONS.get(file.type);
-  if (!ext) {
-    const lname = (file.name || '').toLowerCase();
-    if (lname.endsWith('.jpg') || lname.endsWith('.jpeg')) ext = 'jpg';
-    else if (lname.endsWith('.png')) ext = 'png';
-    else if (lname.endsWith('.webp')) ext = 'webp';
-  }
-  if (!ext) throw new Error('Please upload a JPG, PNG or WebP image.');
   if (file.size > 4.2 * 1024 * 1024) throw new Error('Images must be under 4 MB for upload on Vercel.');
-  const name = `${folder}/${Date.now()}-${newId()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
+  // Browsers and mobile photo pickers sometimes send a blank or non-standard
+  // MIME type for valid images. Detect the actual format from its signature.
+  const format = IMAGE_FORMATS.find((candidate) => candidate.matches(buf));
+  if (!format) throw new Error('Please upload a JPG, PNG or WebP image. HEIC and AVIF files need to be converted first.');
+  const name = `${folder}/${Date.now()}-${newId()}.${format.ext}`;
 
   const db = supabase();
   if (!db) {
@@ -472,8 +468,7 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
     return `/uploads/${name}`;
   }
   const bucket = process.env.SUPABASE_BUCKET || 'media';
-  const contentType = file.type || (ext === 'jpg' ? 'image/jpeg' : `image/${ext}`);
-  const { error } = await db.storage.from(bucket).upload(name, buf, { contentType, upsert: true });
+  const { error } = await db.storage.from(bucket).upload(name, buf, { contentType: format.contentType, upsert: true });
   if (error) throw new Error(`Upload failed: ${error.message}`);
   return db.storage.from(bucket).getPublicUrl(name).data.publicUrl;
 }

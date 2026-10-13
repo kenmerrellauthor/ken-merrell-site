@@ -37,7 +37,7 @@ export function ImagePick({ name, current, label, aspect, removeName, sizeHint, 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <label className="drop" style={{ position: 'relative', justifyContent: 'center', minHeight: 44 }}>
           <Ic k="up" s={16} />{label}
-          <input type="file" name={name} form={formId} accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} />
+          <input type="file" name={name} form={formId} accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/jpg,image/png,image/webp" onChange={handleFileChange} />
         </label>
         {err ? (
           <span style={{ fontSize: 12, color: '#f28b7e', textAlign: 'center', fontWeight: 600 }}>{err}</span>
