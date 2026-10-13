@@ -975,6 +975,37 @@ select.crm-in { appearance: auto; }
 
 .an-page-views-list { display: flex; flex-direction: column; gap: 9px; }
 
+.an-all-pages-list { display: flex; flex-direction: column; gap: 8px; }
+
+.an-all-page-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid rgba(239, 231, 214, .08);
+  border-radius: 8px;
+  background: linear-gradient(110deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.an-all-page-row:hover {
+  border-color: rgba(201, 168, 96, .32);
+  background: rgba(201, 168, 96, .06);
+}
+
+.an-all-page-row:focus-visible { outline: 2px solid #c9a860; outline-offset: 2px; }
+.an-all-page-main { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; }
+.an-all-page-label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; min-width: 0; }
+.an-all-page-label strong { color: #ded3c1; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.an-all-page-label > span { flex: 0 0 auto; color: #c9a860; font-size: 12px; white-space: nowrap; }
+.an-all-page-row .an-dist-track { width: 100%; margin-left: 0; }
+.an-all-page-arrow { flex: 0 0 auto; color: #c9a860; font-size: 22px; line-height: 1; }
+
 .an-page-view-row {
   display: flex;
   gap: 13px;
@@ -1141,6 +1172,7 @@ select.crm-in { appearance: auto; }
   .an-page-drawer-title { font-size: 24px; }
   .an-page-view-row { padding: 12px 10px; gap: 8px; }
   .an-page-view-topline { flex-direction: column; gap: 3px; }
+  .an-all-page-label { align-items: flex-start; flex-direction: column; gap: 3px; }
 }
 
 /* Reader leads: a quieter, people-first view of campaign signups */

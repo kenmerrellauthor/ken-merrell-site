@@ -169,7 +169,7 @@ export default function AnalyticsClient({
   const [visitorSearch, setVisitorSearch] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<AnalyticsSession | null>(null);
   const [selectedPage, setSelectedPage] = useState<string | null>(null);
-  const [showAllTopPages, setShowAllTopPages] = useState(false);
+  const [showAllPagesDrawer, setShowAllPagesDrawer] = useState(false);
   const [leadFilter, setLeadFilter] = useState<'all' | 'paid' | 'marketing'>('all');
   const [leadSearch, setLeadSearch] = useState('');
 
@@ -676,8 +676,8 @@ export default function AnalyticsClient({
             <p className="an-card-sub">Most visited sections across all campaigns</p>
           </div>
 
-          <div className="an-dist-list" id="top-book-pages-list">
-            {topPages.slice(0, showAllTopPages ? topPages.length : 4).map((p, index) => (
+          <div className="an-dist-list">
+            {topPages.slice(0, 4).map((p, index) => (
               <button
                 key={p.page}
                 type="button"
@@ -701,12 +701,10 @@ export default function AnalyticsClient({
             <button
               type="button"
               className="an-pages-toggle"
-              aria-expanded={showAllTopPages}
-              aria-controls="top-book-pages-list"
-              onClick={() => setShowAllTopPages((shown) => !shown)}
+              onClick={() => setShowAllPagesDrawer(true)}
             >
-              {showAllTopPages ? 'Show fewer pages' : `Show all ${topPages.length} pages`}
-              <span aria-hidden="true">{showAllTopPages ? '↑' : '↓'}</span>
+              Show more
+              <span aria-hidden="true">→</span>
             </button>
           )}
 
@@ -1293,7 +1291,7 @@ export default function AnalyticsClient({
               <div>
                 <span className="an-badge gold">PAGE PERFORMANCE</span>
                 <h3 id="an-page-drawer-title" className="an-page-drawer-title">{selectedPage}</h3>
-                <p className="an-card-sub">Every recorded visit to this page in the selected reporting period.</p>
+                <p className="an-card-sub">Every recorded visit to this page in the last 120 days.</p>
               </div>
               <button
                 type="button"
@@ -1341,6 +1339,66 @@ export default function AnalyticsClient({
                 <span>The summary count may include older or aggregated visits that do not have individual event details.</span>
               </div>
             )}
+          </aside>
+        </div>
+      )}
+
+      {showAllPagesDrawer && (
+        <div className="an-drawer-overlay" onClick={() => setShowAllPagesDrawer(false)}>
+          <aside
+            className="an-drawer an-page-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="an-all-pages-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="an-page-drawer-header">
+              <div>
+                <span className="an-badge gold">PAGE PERFORMANCE</span>
+                <h3 id="an-all-pages-title" className="an-page-drawer-title">All viewed pages</h3>
+                <p className="an-card-sub">Every page visited in the last 120 days, ranked by views.</p>
+              </div>
+              <button
+                type="button"
+                className="crm-header-toggle"
+                onClick={() => setShowAllPagesDrawer(false)}
+                aria-label="Close all pages panel"
+              >
+                <Ic k="close" />
+              </button>
+            </div>
+
+            <div className="an-page-views-summary">
+              <strong>{topPages.length.toLocaleString()}</strong>
+              <span>unique pages viewed</span>
+            </div>
+
+            <div className="an-all-pages-list" aria-label="All pages ranked by page views">
+              {topPages.map((page, index) => (
+                <button
+                  type="button"
+                  key={page.page}
+                  className="an-all-page-row"
+                  onClick={() => {
+                    setShowAllPagesDrawer(false);
+                    setSelectedPage(page.page);
+                  }}
+                  aria-label={`${page.page}, ${page.visits} views. Open page view details.`}
+                >
+                  <span className="an-page-view-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="an-all-page-main">
+                    <span className="an-all-page-label">
+                      <strong>{page.page}</strong>
+                      <span>{page.visits.toLocaleString()} {page.visits === 1 ? 'view' : 'views'} · {page.percentage}%</span>
+                    </span>
+                    <span className="an-dist-track">
+                      <span className="an-dist-fill" style={{ width: `${page.percentage}%` }} />
+                    </span>
+                  </span>
+                  <span className="an-all-page-arrow" aria-hidden="true">›</span>
+                </button>
+              ))}
+            </div>
           </aside>
         </div>
       )}
