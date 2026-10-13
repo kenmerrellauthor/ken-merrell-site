@@ -378,7 +378,7 @@ export default function AnalyticsClient({
 
   const paidLinePath = chartPoints.map(({ x, paidY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${paidY}`).join(' ');
   const organicLinePath = chartPoints.map(({ x, organicY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${organicY}`).join(' ');
-  const chartTooltipPoint = hoveredPoint ?? chartPoints[chartPoints.length - 1]?.point ?? null;
+  const chartSummaryPoint = hoveredPoint ?? chartPoints[chartPoints.length - 1]?.point ?? null;
 
   return (
     <div className="an-container">
@@ -613,28 +613,32 @@ export default function AnalyticsClient({
           </div>
 
           <div className="an-chart-container">
-            {/* Fixed summary row: it remains visible without covering the chart. */}
-            {chartTooltipPoint && (
-              <div className="an-chart-tooltip">
-                <strong className="an-chart-tooltip-date">{chartTooltipPoint.date}</strong>
-                <span className="an-chart-tooltip-item paid">
-                  Paid visitors <strong>{chartTooltipPoint.paidVisitors.toLocaleString()}</strong>
-                </span>
-                <span className="an-chart-tooltip-item organic">
-                  Organic visitors <strong>{chartTooltipPoint.organicVisitors.toLocaleString()}</strong>
-                </span>
-                <span className="an-chart-tooltip-item total">
-                  Total visitors <strong>{chartTooltipPoint.visitors.toLocaleString()}</strong>
-                </span>
-                <span className="an-chart-tooltip-item amazon">
-                  Amazon clicks <strong>{chartTooltipPoint.amazonClicks}</strong>
-                </span>
-                <span className="an-chart-tooltip-item arc">
-                  ARC signups <strong>{chartTooltipPoint.arcSignups}</strong>
-                </span>
-                <span className={`an-chart-tooltip-note${chartTooltipPoint.adNote ? '' : ' is-empty'}`}>
-                  {chartTooltipPoint.adNote ? `★ ${chartTooltipPoint.adNote}` : ' '}
-                </span>
+            {chartSummaryPoint && (
+              <div className="an-chart-summary" aria-label={`Daily summary for ${chartSummaryPoint.date}`}>
+                <div className="an-chart-summary-item date">
+                  <span className="an-chart-summary-label">Date</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.date}</strong>
+                </div>
+                <div className="an-chart-summary-item paid">
+                  <span className="an-chart-summary-label">Paid visitors</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.paidVisitors.toLocaleString()}</strong>
+                </div>
+                <div className="an-chart-summary-item organic">
+                  <span className="an-chart-summary-label">Organic visitors</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.organicVisitors.toLocaleString()}</strong>
+                </div>
+                <div className="an-chart-summary-item total">
+                  <span className="an-chart-summary-label">Total visitors</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.visitors.toLocaleString()}</strong>
+                </div>
+                <div className="an-chart-summary-item amazon">
+                  <span className="an-chart-summary-label">Amazon clicks</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.amazonClicks.toLocaleString()}</strong>
+                </div>
+                <div className="an-chart-summary-item arc">
+                  <span className="an-chart-summary-label">ARC signups</span>
+                  <strong className="an-chart-summary-value">{chartSummaryPoint.arcSignups.toLocaleString()}</strong>
+                </div>
               </div>
             )}
 
