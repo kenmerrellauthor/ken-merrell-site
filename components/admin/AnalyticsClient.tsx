@@ -613,30 +613,28 @@ export default function AnalyticsClient({
           </div>
 
           <div className="an-chart-container">
-            {/* Hover Tooltip display */}
+            {/* Fixed summary row: it remains visible without covering the chart. */}
             {chartTooltipPoint && (
               <div className="an-chart-tooltip">
-                <strong style={{ color: '#f7f2e8', fontSize: 13 }}>{chartTooltipPoint.date}</strong>
-                <span style={{ color: '#86aaff', fontSize: 12 }}>
-                  Paid visitors: <strong>{chartTooltipPoint.paidVisitors.toLocaleString()}</strong>
+                <strong className="an-chart-tooltip-date">{chartTooltipPoint.date}</strong>
+                <span className="an-chart-tooltip-item paid">
+                  Paid visitors <strong>{chartTooltipPoint.paidVisitors.toLocaleString()}</strong>
                 </span>
-                <span style={{ color: '#d7b66f', fontSize: 12 }}>
-                  Organic visitors: <strong>{chartTooltipPoint.organicVisitors.toLocaleString()}</strong>
+                <span className="an-chart-tooltip-item organic">
+                  Organic visitors <strong>{chartTooltipPoint.organicVisitors.toLocaleString()}</strong>
                 </span>
-                <span style={{ color: '#ded3c1', fontSize: 12 }}>
-                  Total visitors: <strong>{chartTooltipPoint.visitors.toLocaleString()}</strong>
+                <span className="an-chart-tooltip-item total">
+                  Total visitors <strong>{chartTooltipPoint.visitors.toLocaleString()}</strong>
                 </span>
-                <span style={{ color: '#86efac', fontSize: 12 }}>
-                  Amazon Clicks: <strong>{chartTooltipPoint.amazonClicks}</strong>
+                <span className="an-chart-tooltip-item amazon">
+                  Amazon clicks <strong>{chartTooltipPoint.amazonClicks}</strong>
                 </span>
-                <span style={{ color: '#e8c48c', fontSize: 12 }}>
-                  ARC Signups: <strong>{chartTooltipPoint.arcSignups}</strong>
+                <span className="an-chart-tooltip-item arc">
+                  ARC signups <strong>{chartTooltipPoint.arcSignups}</strong>
                 </span>
-                {chartTooltipPoint.adNote && (
-                  <span style={{ color: '#f59e0b', fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
-                    ★ {chartTooltipPoint.adNote}
-                  </span>
-                )}
+                <span className={`an-chart-tooltip-note${chartTooltipPoint.adNote ? '' : ' is-empty'}`}>
+                  {chartTooltipPoint.adNote ? `★ ${chartTooltipPoint.adNote}` : ' '}
+                </span>
               </div>
             )}
 
