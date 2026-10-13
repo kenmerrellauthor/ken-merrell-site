@@ -378,6 +378,7 @@ export default function AnalyticsClient({
 
   const paidLinePath = chartPoints.map(({ x, paidY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${paidY}`).join(' ');
   const organicLinePath = chartPoints.map(({ x, organicY }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${organicY}`).join(' ');
+  const chartTooltipPoint = hoveredPoint ?? chartPoints[chartPoints.length - 1]?.point ?? null;
 
   return (
     <div className="an-container">
@@ -613,27 +614,27 @@ export default function AnalyticsClient({
 
           <div className="an-chart-container">
             {/* Hover Tooltip display */}
-            {hoveredPoint && (
+            {chartTooltipPoint && (
               <div className="an-chart-tooltip">
-                <strong style={{ color: '#f7f2e8', fontSize: 13 }}>{hoveredPoint.date}</strong>
+                <strong style={{ color: '#f7f2e8', fontSize: 13 }}>{chartTooltipPoint.date}</strong>
                 <span style={{ color: '#86aaff', fontSize: 12 }}>
-                  Paid visitors: <strong>{hoveredPoint.paidVisitors.toLocaleString()}</strong>
+                  Paid visitors: <strong>{chartTooltipPoint.paidVisitors.toLocaleString()}</strong>
                 </span>
                 <span style={{ color: '#d7b66f', fontSize: 12 }}>
-                  Organic visitors: <strong>{hoveredPoint.organicVisitors.toLocaleString()}</strong>
+                  Organic visitors: <strong>{chartTooltipPoint.organicVisitors.toLocaleString()}</strong>
                 </span>
                 <span style={{ color: '#ded3c1', fontSize: 12 }}>
-                  Total visitors: <strong>{hoveredPoint.visitors.toLocaleString()}</strong>
+                  Total visitors: <strong>{chartTooltipPoint.visitors.toLocaleString()}</strong>
                 </span>
                 <span style={{ color: '#86efac', fontSize: 12 }}>
-                  Amazon Clicks: <strong>{hoveredPoint.amazonClicks}</strong>
+                  Amazon Clicks: <strong>{chartTooltipPoint.amazonClicks}</strong>
                 </span>
                 <span style={{ color: '#e8c48c', fontSize: 12 }}>
-                  ARC Signups: <strong>{hoveredPoint.arcSignups}</strong>
+                  ARC Signups: <strong>{chartTooltipPoint.arcSignups}</strong>
                 </span>
-                {hoveredPoint.adNote && (
+                {chartTooltipPoint.adNote && (
                   <span style={{ color: '#f59e0b', fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
-                    ★ {hoveredPoint.adNote}
+                    ★ {chartTooltipPoint.adNote}
                   </span>
                 )}
               </div>
