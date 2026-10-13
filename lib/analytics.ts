@@ -212,6 +212,11 @@ export async function getAnalyticsDashboardData() {
   };
 }
 
+export async function getDailyTrafficSeries() {
+  const { sessions, events } = await snapshot();
+  return buildDailyTraffic(sessions, events, 120);
+}
+
 // Kept as small wrappers for any existing internal callers.
 export async function getAllSessions() { return (await snapshot()).sessions; }
 export async function getAllEvents() { return (await snapshot()).events; }

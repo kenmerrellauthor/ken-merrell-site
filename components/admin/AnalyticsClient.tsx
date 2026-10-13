@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Book, AnalyticsKPIs, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from './AdIcons';
@@ -124,6 +124,35 @@ export default function AnalyticsClient({
 }: AnalyticsClientProps) {
   // Filters & State
   const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | '120d'>('30d');
+  const [trafficPoints, setTrafficPoints] = useState(dailyTraffic);
+
+  const refreshTraffic = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/analytics/traffic', { cache: 'no-store' });
+      if (!response.ok) return;
+      const data = await response.json() as { dailyTraffic?: DailyTrafficPoint[] };
+      if (Array.isArray(data.dailyTraffic)) setTrafficPoints(data.dailyTraffic);
+    } catch {
+      // Keep the last successful snapshot if the network is temporarily unavailable.
+    }
+  }, []);
+
+  useEffect(() => {
+    let busy = false;
+    const refreshWhenVisible = async () => {
+      if (document.visibilityState !== 'visible' || busy) return;
+      busy = true;
+      await refreshTraffic();
+      busy = false;
+    };
+    void refreshWhenVisible();
+    const interval = window.setInterval(refreshWhenVisible, 30_000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [refreshTraffic]);
   const [hoveredPoint, setHoveredPoint] = useState<DailyTrafficPoint | null>(null);
 
   // Link Generator State
@@ -247,7 +276,7 @@ export default function AnalyticsClient({
 
   // Chart calculations (30 Days)
   const rangeDays = timeRange === 'today' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 120;
-  const visibleTraffic = useMemo(() => dailyTraffic.slice(-rangeDays), [dailyTraffic, rangeDays]);
+  const visibleTraffic = useMemo(() => trafficPoints.slice(-rangeDays), [trafficPoints, rangeDays]);
   const rangeTotals = useMemo(() => visibleTraffic.reduce((totals, point) => ({
     visitors: totals.visitors + point.visitors,
     paidVisitors: totals.paidVisitors + point.paidVisitors,
@@ -256,7 +285,7 @@ export default function AnalyticsClient({
     arcSignups: totals.arcSignups + point.arcSignups,
   }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 }), [visibleTraffic]);
   const paidPercentage = rangeTotals.visitors ? Math.round((rangeTotals.paidVisitors / rangeTotals.visitors) * 100) : 0;
-  const organicPercentage = 100 - paidPercentage;
+  const organicPercentage = rangeTotals.visitors ? 100 - paidPercentage : 0;
   const amazonIntentRate = rangeTotals.visitors
     ? Math.round((rangeTotals.amazonClicks / rangeTotals.visitors) * 1000) / 10
     : 0;
@@ -387,7 +416,7 @@ export default function AnalyticsClient({
           <button
             type="button"
             className="crm-btn"
-            onClick={() => window.location.reload()}
+            onClick={() => void refreshTraffic()}
             title="Refresh Live Metrics"
           >
             <Ic k="chart" s={16} /> Refresh Metrics
@@ -463,12 +492,13 @@ export default function AnalyticsClient({
         </div>
       </div>
 
-      {/* ── Paid vs. Organic Traffic Split Pill Bar ── */}
+      {/* ── Paid vs. Organic Traffic Attribution ── */}
       <div className="an-split-box">
         <div className="an-split-head">
           <div className="an-split-title">
             <Ic k="funnel" s={16} /> TRAFFIC ATTRIBUTION · {rangeLabel.toUpperCase()}
           </div>
+          <div className="an-attribution-layout">
           <div className="an-split-stats">
             <div className="an-split-stat">
               <span className="an-split-dot paid" />
@@ -483,11 +513,19 @@ export default function AnalyticsClient({
               </span>
             </div>
           </div>
-        </div>
-
-        <div className="an-progress-bar" title={`Paid: ${paidPercentage}% | Organic: ${organicPercentage}%`}>
-          <div className="an-progress-paid" style={{ width: `${paidPercentage}%` }} />
-          <div className="an-progress-org" style={{ width: `${organicPercentage}%` }} />
+          <div
+            className={`an-donut${rangeTotals.visitors ? '' : ' is-empty'}`}
+            role="img"
+            aria-label={`Traffic attribution: ${paidPercentage}% paid ad traffic, ${organicPercentage}% organic traffic, ${rangeTotals.visitors} visitors`}
+            style={{ '--paid-share': `${paidPercentage}%` } as React.CSSProperties}
+            title={`Paid: ${paidPercentage}% | Organic: ${organicPercentage}%`}
+          >
+            <div className="an-donut-center">
+              <strong>{rangeTotals.visitors.toLocaleString()}</strong>
+              <span>visitors</span>
+            </div>
+          </div>
+          </div>
         </div>
       </div>
 
@@ -600,8 +638,8 @@ export default function AnalyticsClient({
                     {isPromo && <line x1={x} y1="24" x2={x} y2="218" className="an-chart-promo-guide" />}
                     {isPromo && <circle cx={x} cy={paidY} r="8" className="an-chart-promo-ring" />}
                     {isPromo && <circle cx={x} cy={organicY} r="8" className="an-chart-promo-ring" />}
-                    <circle cx={x} cy={paidY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : 3} fill="#86aaff" className="an-chart-point" />
-                    <circle cx={x} cy={organicY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : 3} fill="#d7b66f" className="an-chart-point" />
+                    <circle cx={x} cy={paidY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : point.paidVisitors > 0 ? 4 : 2.5} fill="#86aaff" className="an-chart-point" />
+                    <circle cx={x} cy={organicY} r={hoveredPoint?.isoDate === point.isoDate ? 5 : point.organicVisitors > 0 ? 4 : 2.5} fill="#d7b66f" className="an-chart-point" />
                     <circle cx={x} cy={paidY} r="11" fill="transparent" />
                     <circle cx={x} cy={organicY} r="11" fill="transparent" />
                     {showDate && (
