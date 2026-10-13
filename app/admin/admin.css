@@ -541,6 +541,7 @@ select.crm-in { appearance: auto; }
 .an-grid2 {
   display: grid;
   grid-template-columns: 2fr 1fr;
+  align-items: start;
   gap: 24px;
 }
 
