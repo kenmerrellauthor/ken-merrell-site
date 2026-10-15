@@ -56,6 +56,10 @@ export default function AdTrackingClient({
   const [leadFilter, setLeadFilter] = useState<'all' | 'paid' | 'marketing'>('all');
   const [leadSearch, setLeadSearch] = useState('');
 
+  // Paid Social Traffic Section Custom Date State
+  const [socialStartDate, setSocialStartDate] = useState<string>('');
+  const [socialEndDate, setSocialEndDate] = useState<string>('');
+
   // Reset the feed back to the first 30 whenever the filter or search changes.
   useEffect(() => {
     setVisibleCount(FEED_PAGE_SIZE);
@@ -293,9 +297,65 @@ export default function AdTrackingClient({
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [selectedVisitor, initialEvents]);
 
+  // Paid social traffic window (defaults to active page range, or custom date/range if chosen)
+  const socialWindowSessions = useMemo(() => {
+    if (!socialStartDate) {
+      return windowSessions;
+    }
+    const startMs = parseDateBoundary(socialStartDate, false);
+    const endMs = parseDateBoundary(socialEndDate || socialStartDate, true);
+    return initialSessions.filter((s) => {
+      const t = new Date(s.createdAt).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }, [socialStartDate, socialEndDate, windowSessions, initialSessions]);
+
+  const socialWindowEvents = useMemo(() => {
+    if (!socialStartDate) {
+      return windowEvents;
+    }
+    const startMs = parseDateBoundary(socialStartDate, false);
+    const endMs = parseDateBoundary(socialEndDate || socialStartDate, true);
+    return initialEvents.filter((e) => {
+      const t = new Date(e.timestamp).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }, [socialStartDate, socialEndDate, windowEvents, initialEvents]);
+
+  const effectiveSocialRangeLabel = useMemo(() => {
+    if (!socialStartDate) {
+      return rangeLabel.toLowerCase();
+    }
+    const s = new Date(socialStartDate + 'T12:00:00');
+    const sStr = s.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (!socialEndDate || socialEndDate === socialStartDate) {
+      return sStr;
+    }
+    const e = new Date(socialEndDate + 'T12:00:00');
+    const eStr = e.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${sStr} – ${eStr}`;
+  }, [socialStartDate, socialEndDate, rangeLabel]);
+
+  const pickRandomSocialDate = () => {
+    const paidDates = initialSessions
+      .filter((s) => isPaidSession(s))
+      .map((s) => s.createdAt.slice(0, 10));
+    const unique = Array.from(new Set(paidDates));
+    if (unique.length > 0) {
+      const pick = unique[Math.floor(Math.random() * unique.length)];
+      setSocialStartDate(pick);
+      setSocialEndDate('');
+    } else if (initialSessions.length > 0) {
+      const anyDates = Array.from(new Set(initialSessions.map((s) => s.createdAt.slice(0, 10))));
+      const pick = anyDates[Math.floor(Math.random() * anyDates.length)];
+      setSocialStartDate(pick);
+      setSocialEndDate('');
+    }
+  };
+
   const socialPlatformRows = useMemo(() => {
     const sessionAmazonMap = new Map<string, number>();
-    for (const e of windowEvents) {
+    for (const e of socialWindowEvents) {
       if (e.eventType === 'amazon_click') {
         sessionAmazonMap.set(e.sessionId, (sessionAmazonMap.get(e.sessionId) ?? 0) + 1);
       }
@@ -308,7 +368,7 @@ export default function AdTrackingClient({
       amazonClicks: number;
     }>();
 
-    windowSessions.forEach((session) => {
+    socialWindowSessions.forEach((session) => {
       const isPaid = isPaidSession(session);
       if (!isPaid) return;
 
@@ -336,8 +396,8 @@ export default function AdTrackingClient({
       totals.set(platform, row);
     });
 
-    // Fallback if windowSessions is empty but campaigns prop contains paid campaigns
-    if (totals.size === 0 && windowSessions.length === 0 && campaigns.length > 0) {
+    // Fallback if socialWindowSessions is empty and no custom date is selected, but campaigns prop contains paid campaigns
+    if (!socialStartDate && totals.size === 0 && socialWindowSessions.length === 0 && campaigns.length > 0) {
       campaigns.filter((c) => c.isPaid).forEach((c) => {
         const platform = resolvePlatformName(c.source);
         const row = totals.get(platform) || {
@@ -356,7 +416,7 @@ export default function AdTrackingClient({
     }
 
     return [...totals.values()].sort((a, b) => b.paidVisitors - a.paidVisitors);
-  }, [windowSessions, windowEvents, campaigns]);
+  }, [socialWindowSessions, socialWindowEvents, campaigns, socialStartDate]);
 
   const campaignLeads = useMemo(() => windowSessions
     .filter((session) => session.exitOutcome === 'arc_signup' && Boolean(session.readerEmail?.trim()))
@@ -524,10 +584,71 @@ export default function AdTrackingClient({
         <div className="an-social-heading">
           <div>
             <h2 id="social-sources-title" className="an-card-title"><Ic k="globe" s={21} /> Paid social traffic</h2>
-            <p className="an-card-sub">Paid visits by platform and campaign, with outbound Amazon clicks for {rangeLabel.toLowerCase()}.</p>
+            <p className="an-card-sub">
+              Paid visits by platform and campaign, with outbound Amazon clicks for {effectiveSocialRangeLabel}.
+            </p>
           </div>
-          <span className="an-social-total">{socialPlatformRows.reduce((sum, row) => sum + row.paidVisitors, 0).toLocaleString()} paid visits</span>
+
+          <div className="an-heat-picker-bar">
+            <div className="an-heat-inputs">
+              <label htmlFor="social-custom-date" className="an-heat-lbl">
+                <Ic k="calendar" s={15} /> Custom date:
+              </label>
+              <input
+                type="date"
+                id="social-custom-date"
+                value={socialStartDate}
+                onChange={(e) => setSocialStartDate(e.target.value)}
+                className="an-heat-date-field"
+                aria-label="Select custom date for paid social traffic"
+                title="Select date to inspect paid traffic"
+              />
+              {socialStartDate ? (
+                <>
+                  <span style={{ color: '#8c7e6c', fontSize: 12 }}>to</span>
+                  <input
+                    type="date"
+                    id="social-custom-end-date"
+                    value={socialEndDate}
+                    min={socialStartDate}
+                    onChange={(e) => setSocialEndDate(e.target.value)}
+                    className="an-heat-date-field"
+                    aria-label="Select custom end date for paid social traffic (optional)"
+                    title="Optional end date for a date range"
+                  />
+                </>
+              ) : null}
+            </div>
+
+            <button
+              type="button"
+              className="an-heat-btn-rand"
+              onClick={pickRandomSocialDate}
+              title="Pick a random date from recorded paid traffic to inspect its campaigns"
+            >
+              🎲 Random date
+            </button>
+
+            {socialStartDate ? (
+              <button
+                type="button"
+                className="an-heat-btn-reset"
+                onClick={() => {
+                  setSocialStartDate('');
+                  setSocialEndDate('');
+                }}
+                title="Reset back to current page range"
+              >
+                ✕ Reset to page filter
+              </button>
+            ) : null}
+
+            <span className="an-social-total">
+              {socialPlatformRows.reduce((sum, row) => sum + row.paidVisitors, 0).toLocaleString()} paid visits
+            </span>
+          </div>
         </div>
+
         {socialPlatformRows.length ? (
           <div className="an-social-table-wrap">
             <table className="an-social-table">
@@ -547,7 +668,11 @@ export default function AdTrackingClient({
             </table>
           </div>
         ) : (
-          <p className="an-social-empty">No paid social visits in this period yet. Use tagged ad links to see paid traffic by platform and campaign.</p>
+          <p className="an-social-empty">
+            {socialStartDate
+              ? `No paid social visits recorded for ${effectiveSocialRangeLabel}. Try another date or click "Reset to page filter".`
+              : 'No paid social visits in this period yet. Use tagged ad links to see paid traffic by platform and campaign.'}
+          </p>
         )}
         <p className="an-social-note">Only paid social visits are included here. Campaign names come from the ad link’s UTM tags.</p>
       </section>
