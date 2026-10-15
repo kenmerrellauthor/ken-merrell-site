@@ -24,6 +24,16 @@ export default function AdTrackingClient({
   books,
 }: AdTrackingClientProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+
+  const handleRangeChange = (range: TimeRange, start?: string, end?: string) => {
+    setTimeRange(range);
+    if (start && end) {
+      setCustomStart(start);
+      setCustomEnd(end);
+    }
+  };
 
   // Link Generator State
   const [selectedBookSlug, setSelectedBookSlug] = useState<string>(books[0]?.slug || 'petticoats-and-ash');
@@ -150,10 +160,20 @@ export default function AdTrackingClient({
   }, [selectedVisitor, initialEvents]);
 
   // Date window shared by the paid-social table and the reader signups list
-  const rangeDays = rangeDaysOf(timeRange);
-  const visibleTraffic = useMemo(() => dailyTraffic.slice(-rangeDays), [dailyTraffic, rangeDays]);
-  const rangeLabel = rangeLabelOf(timeRange);
-  const leadWindowStart = windowStartOf(visibleTraffic);
+  const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
+  const visibleTraffic = useMemo(() => {
+    if (timeRange === 'custom' && customStart && customEnd) {
+      return dailyTraffic.filter((p) => p.isoDate >= customStart && p.isoDate <= customEnd);
+    }
+    return dailyTraffic.slice(-rangeDays);
+  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
+  const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
+  const leadWindowStart = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      return new Date(`${customStart}T00:00:00.000Z`).getTime();
+    }
+    return windowStartOf(visibleTraffic);
+  }, [timeRange, customStart, visibleTraffic]);
 
   const socialPlatformRows = useMemo(() => {
     const platformNames: Record<string, string> = {
@@ -222,16 +242,12 @@ export default function AdTrackingClient({
         </div>
 
         <div className="crm-actions">
-          <RangeTabs value={timeRange} onChange={setTimeRange} />
-          <button
-            type="button"
-            id="tracking-refresh"
-            className="crm-btn"
-            onClick={() => window.location.reload()}
-            title="Refresh live tracking data"
-          >
-            <Ic k="chart" s={16} /> Refresh
-          </button>
+          <RangeTabs
+            value={timeRange}
+            onChange={handleRangeChange}
+            customStart={customStart}
+            customEnd={customEnd}
+          />
         </div>
       </div>
 
@@ -631,7 +647,7 @@ export default function AdTrackingClient({
                       </span>
                       {v.adClickId && (
                         <span className="an-ad-click-id" title={`${v.adClickSource || 'Ad'} click ID: ${v.adClickId}`}>
-                          {v.adClickSource || 'Ad'} · {v.adClickId.slice(0, 12)}{v.adClickId.length > 12 ? '…' : ''}
+                          {v.adClickSource || 'Ad'} · {v.adClickId}
                         </span>
                       )}
                     </td>

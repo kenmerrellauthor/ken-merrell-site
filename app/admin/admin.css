@@ -1339,3 +1339,150 @@ select.crm-in { appearance: auto; }
   .an-camp-conv { margin-left: 0; }
   .an-feed-more .crm-btn { width: 100%; justify-content: center; flex-wrap: wrap; height: auto; padding: 12px 18px; }
 }
+
+/* ── Custom Date Selector Popover & Controls ── */
+.an-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.an-custom-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  background: #181410;
+  border: 1px solid #c9a860;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.an-popover-title {
+  font-family: var(--serif-c);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #c9a860;
+  text-transform: uppercase;
+}
+
+.an-popover-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.an-popover-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.an-popover-fields label span {
+  font-size: 12px;
+  color: #b5a895;
+  font-weight: 500;
+}
+
+.an-popover-fields input[type="date"] {
+  height: 38px;
+  color-scheme: dark;
+}
+
+.an-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Font size balancing: eliminate overly tiny text across analytics ── */
+.an-kpi-lbl {
+  font-size: 12px !important;
+  letter-spacing: 0.16em !important;
+}
+
+.an-split-title {
+  font-size: 13px !important;
+}
+
+.an-stat > span {
+  font-size: 12px !important;
+}
+
+.an-chart-axis-label {
+  font-size: 12px !important;
+}
+
+.an-chart-legend {
+  font-size: 13px !important;
+}
+
+.an-toggle-note {
+  font-size: 13px !important;
+}
+
+.an-tip-note {
+  font-size: 13px !important;
+}
+
+.an-funnel-idx, .an-hbar-rank {
+  font-size: 13px !important;
+}
+
+.an-funnel-meta small, .an-funnel-drop {
+  font-size: 13px !important;
+}
+
+.an-hbar-hint, .an-camp-sub small {
+  font-size: 13px !important;
+}
+
+.an-heat-hour, .an-heat-day, .an-heat-foot {
+  font-size: 12px !important;
+}
+
+.an-feed-more-hint {
+  font-size: 13px !important;
+}
+
+.an-donut-center span {
+  font-size: 13px !important;
+  max-width: 140px !important;
+}
+
+.an-ad-click-id {
+  font-size: 12px !important;
+  max-width: none !important;
+}
+
+.an-ad-click-detail code {
+  font-size: 13px !important;
+}
+
+.an-social-table th {
+  font-size: 12px !important;
+}
+
+.an-leads-foot {
+  font-size: 13px !important;
+}
+
+/* ── Do not truncate or hide text with ellipsis ── */
+.an-lead-campaign,
+.an-lead-identity a,
+.an-donut-legend .lbl,
+.an-hbar-label,
+.an-camp-head strong {
+  text-overflow: clip !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+}
