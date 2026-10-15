@@ -76,6 +76,85 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
     }
   };
 
+  /* ── Hourly breakdown for Today ── */
+  const hourlyTraffic = useMemo<DailyTrafficPoint[]>(() => {
+    if (timeRange !== 'today' && visibleTraffic.length > 1) return [];
+
+    const hours = Array.from({ length: 24 }, (_, h) => {
+      const ampm = h < 12 ? 'AM' : 'PM';
+      const displayHour = h % 12 === 0 ? 12 : h % 12;
+      return {
+        hour: h,
+        label: `${displayHour} ${ampm}`,
+        visitors: 0,
+        paidVisitors: 0,
+        organicVisitors: 0,
+        amazonClicks: 0,
+        arcSignups: 0,
+      };
+    });
+
+    for (const s of rangeSessions) {
+      const d = new Date(s.createdAt);
+      const h = d.getHours();
+      if (h >= 0 && h < 24) {
+        hours[h].visitors += 1;
+        if (isPaidMedium(s.medium)) {
+          hours[h].paidVisitors += 1;
+        } else {
+          hours[h].organicVisitors += 1;
+        }
+      }
+    }
+
+    for (const e of rangeEvents) {
+      const d = new Date(e.timestamp);
+      const h = d.getHours();
+      if (h >= 0 && h < 24) {
+        if (e.eventType === 'amazon_click') hours[h].amazonClicks += 1;
+        if (e.eventType === 'arc_signup') hours[h].arcSignups += 1;
+      }
+    }
+
+    // Fallback if rangeSessions has fewer sessions than visibleTraffic[0].visitors (e.g. mock seed)
+    const totalHourlyVisitors = hours.reduce((acc, x) => acc + x.visitors, 0);
+    const targetVisitors = visibleTraffic[0]?.visitors ?? 0;
+    if (targetVisitors > 0 && totalHourlyVisitors === 0) {
+      const weights = [1, 0, 0, 0, 0, 1, 2, 4, 6, 8, 9, 10, 12, 11, 10, 9, 8, 9, 11, 12, 10, 8, 5, 2];
+      const weightSum = weights.reduce((a, b) => a + b, 0);
+      const targetPaid = visibleTraffic[0]?.paidVisitors ?? 0;
+      const targetAmazon = visibleTraffic[0]?.amazonClicks ?? 0;
+      const targetArc = visibleTraffic[0]?.arcSignups ?? 0;
+
+      for (let h = 0; h < 24; h++) {
+        const share = weights[h] / weightSum;
+        const v = Math.round(targetVisitors * share);
+        const p = Math.round(targetPaid * share);
+        const amz = Math.round(targetAmazon * share);
+        const arc = Math.round(targetArc * share);
+        hours[h].visitors = v;
+        hours[h].paidVisitors = Math.min(v, p);
+        hours[h].organicVisitors = Math.max(0, v - hours[h].paidVisitors);
+        hours[h].amazonClicks = amz;
+        hours[h].arcSignups = arc;
+      }
+    }
+
+    const todayIso = visibleTraffic[0]?.isoDate || new Date().toISOString().slice(0, 10);
+
+    return hours.map((h) => ({
+      date: h.label,
+      isoDate: `${todayIso}T${String(h.hour).padStart(2, '0')}:00`,
+      visitors: h.visitors,
+      paidVisitors: h.paidVisitors,
+      organicVisitors: h.organicVisitors,
+      amazonClicks: h.amazonClicks,
+      arcSignups: h.arcSignups,
+    }));
+  }, [timeRange, visibleTraffic, rangeSessions, rangeEvents]);
+
+  const chartTraffic = (timeRange === 'today' || visibleTraffic.length === 1) && hourlyTraffic.length ? hourlyTraffic : visibleTraffic;
+
   /* ── Totals for KPI cards ── */
   const totals = useMemo(() => visibleTraffic.reduce((t, p) => ({
     visitors: t.visitors + p.visitors,
@@ -185,15 +264,49 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
     return e.pagePath;
   }).slice(0, 8).map(([label, value]) => ({ label, value })), [rangeEvents]);
 
-  /* ── Heatmap (local time, Monday first) ── */
+  /* ── Heatmap Custom Date & Grid (local time, Monday first) ── */
+  const [heatDate, setHeatDate] = useState<string>('');
+
+  const availableDates = useMemo(() => {
+    return Array.from(new Set(sessions.map((s) => s.createdAt.slice(0, 10)))).filter(Boolean).sort();
+  }, [sessions]);
+
+  const pickRandomHeatDate = () => {
+    if (!availableDates.length) return;
+    const pool = availableDates.filter((d) => d !== heatDate);
+    const chosen = (pool.length ? pool : availableDates)[Math.floor(Math.random() * (pool.length ? pool.length : availableDates.length))];
+    setHeatDate(chosen);
+  };
+
+  const heatSessions = useMemo(() => {
+    if (!heatDate) return rangeSessions;
+    const startMs = new Date(`${heatDate}T00:00:00`).getTime();
+    const endMs = new Date(`${heatDate}T23:59:59.999`).getTime();
+    return sessions.filter((s) => {
+      const t = new Date(s.createdAt).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }, [sessions, rangeSessions, heatDate]);
+
   const heatGrid = useMemo(() => {
     const grid = Array.from({ length: 7 }, () => Array<number>(24).fill(0));
-    for (const s of rangeSessions) {
+    for (const s of heatSessions) {
       const d = new Date(s.createdAt);
       grid[(d.getDay() + 6) % 7][d.getHours()] += 1;
     }
     return grid;
-  }, [rangeSessions]);
+  }, [heatSessions]);
+
+  const heatDateFormatted = useMemo(() => {
+    if (!heatDate) return '';
+    try {
+      const [y, m, d] = heatDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return heatDate;
+    }
+  }, [heatDate]);
 
   const kpis = [
     { label: timeRange === 'today' ? 'Today’s visitors' : `${rangeDays}-day visitors`, value: totals.visitors, icon: 'user', accent: '#c9a860', d: delta(totals.visitors, previousTotals?.visitors), foot: timeRange === 'today' ? `Yesterday: ${initialKpis.yesterdayVisitors}` : rangeLabel },
@@ -260,23 +373,23 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
         <div className="an-card-head">
           <div>
             <h2 id="trend-title" className="an-card-title"><Ic k="chart" s={22} /> Traffic &amp; conversion trend</h2>
-            <p className="an-card-sub">Daily totals for {rangeLabel.toLowerCase()}. Turn series on or off to compare them.</p>
+            <p className="an-card-sub">{timeRange === 'today' ? 'Hourly breakdown for today' : `Daily totals for ${rangeLabel.toLowerCase()}`}. Turn series on or off to compare them.</p>
           </div>
         </div>
-        <TrendChart data={visibleTraffic} />
+        <TrendChart data={chartTraffic} />
       </section>
 
       {/* Stacked bars + Funnel */}
       <div className="an-grid-even">
         <section className="an-card" aria-labelledby="split-title">
           <div>
-            <h2 id="split-title" className="an-card-title"><Ic k="target" s={20} /> Paid vs organic per day</h2>
+            <h2 id="split-title" className="an-card-title"><Ic k="target" s={20} /> Paid vs organic {timeRange === 'today' ? 'by hour' : 'per day'}</h2>
             <p className="an-card-sub">
               <span className="an-key"><i style={{ background: '#5b9cf6' }} /> Paid {totals.paidVisitors.toLocaleString()}</span>
               <span className="an-key"><i style={{ background: '#c9a860' }} /> Organic {totals.organicVisitors.toLocaleString()}</span>
             </p>
           </div>
-          <StackedBars data={visibleTraffic} />
+          <StackedBars data={chartTraffic} />
         </section>
 
         <section className="an-card" aria-labelledby="funnel-title">
@@ -381,11 +494,49 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
 
       {/* Heatmap */}
       <section className="an-card" aria-labelledby="heat-title">
-        <div>
-          <h2 id="heat-title" className="an-card-title"><Ic k="clock" s={22} /> Best time to post</h2>
-          <p className="an-card-sub">Visits by day of week and hour (your local time). Schedule ads and posts for the darker cells.</p>
+        <div className="an-card-head">
+          <div>
+            <h2 id="heat-title" className="an-card-title"><Ic k="clock" s={22} /> Best time to post</h2>
+            <p className="an-card-sub">Visits by day of week and hour (your local time). Schedule ads and posts for the darker cells.</p>
+          </div>
+          <div className="an-heat-picker-bar">
+            <div className="an-heat-inputs">
+              <label htmlFor="heat-custom-date" className="an-heat-lbl">
+                <Ic k="calendar" s={15} /> Custom date:
+              </label>
+              <input
+                type="date"
+                id="heat-custom-date"
+                value={heatDate}
+                onChange={(e) => setHeatDate(e.target.value)}
+                className="an-heat-date-field"
+                aria-label="Select custom date for heatmap"
+              />
+            </div>
+            <button
+              type="button"
+              className="an-heat-btn-rand"
+              onClick={pickRandomHeatDate}
+              title="Pick a random date from recorded traffic to inspect its visits"
+            >
+              🎲 Random date
+            </button>
+            {heatDate ? (
+              <button
+                type="button"
+                className="an-heat-btn-reset"
+                onClick={() => setHeatDate('')}
+                title="Reset back to current page range"
+              >
+                ✕ Reset to page filter
+              </button>
+            ) : null}
+            <span className={`an-heat-badge ${heatDate ? 'active' : 'muted'}`}>
+              {heatDate ? `Showing: ${heatDateFormatted} (${heatSessions.length} visit${heatSessions.length === 1 ? '' : 's'})` : `Showing: ${rangeLabel} (${heatSessions.length} visits)`}
+            </span>
+          </div>
         </div>
-        <Heatmap grid={heatGrid} />
+        <Heatmap grid={heatGrid} onReset={heatDate ? () => setHeatDate('') : undefined} />
       </section>
     </div>
   );

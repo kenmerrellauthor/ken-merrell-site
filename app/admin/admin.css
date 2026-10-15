@@ -1404,53 +1404,140 @@ select.crm-in { appearance: auto; }
 }
 
 /* ── Font size balancing: eliminate overly tiny text across analytics ── */
+.an-card-sub {
+  font-size: 14.5px !important;
+  color: #a89b89 !important;
+  line-height: 1.5 !important;
+}
+
 .an-kpi-lbl {
-  font-size: 12px !important;
+  font-size: 13px !important;
   letter-spacing: 0.16em !important;
+  font-weight: 700 !important;
+}
+
+.an-kpi-foot {
+  font-size: 14.5px !important;
+  color: #a89b89 !important;
+}
+
+.an-badge-delta {
+  font-size: 12.5px !important;
 }
 
 .an-split-title {
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 .an-stat > span {
-  font-size: 12px !important;
+  font-size: 13px !important;
+  letter-spacing: 0.14em !important;
+  font-weight: 700 !important;
+  color: #b5a895 !important;
+}
+
+.an-stat strong {
+  font-size: 28px !important;
 }
 
 .an-chart-axis-label {
-  font-size: 12px !important;
+  font-size: 13px !important;
+  fill: #b5a895 !important;
+  font-weight: 500 !important;
+}
+
+.an-toggle {
+  font-size: 13px !important;
+  padding: 8px 14px !important;
 }
 
 .an-chart-legend {
-  font-size: 13px !important;
+  font-size: 13.5px !important;
 }
 
 .an-toggle-note {
-  font-size: 13px !important;
+  font-size: 13.5px !important;
+  color: #a89b89 !important;
+}
+
+.an-tip-date {
+  font-size: 15px !important;
+}
+
+.an-tip-row {
+  font-size: 13.5px !important;
 }
 
 .an-tip-note {
   font-size: 13px !important;
 }
 
-.an-funnel-idx, .an-hbar-rank {
+.an-donut-legend li {
+  font-size: 14px !important;
+}
+
+.an-chip {
   font-size: 13px !important;
+}
+
+.an-funnel-idx, .an-hbar-rank {
+  font-size: 13.5px !important;
+}
+
+.an-funnel-meta strong {
+  font-size: 15.5px !important;
 }
 
 .an-funnel-meta small, .an-funnel-drop {
   font-size: 13px !important;
+  color: #a89b89 !important;
+}
+
+.an-hbar-row {
+  font-size: 14.5px !important;
+}
+
+.an-hbar-label {
+  font-size: 14.5px !important;
 }
 
 .an-hbar-hint, .an-camp-sub small {
   font-size: 13px !important;
+  color: #a89b89 !important;
 }
 
-.an-heat-hour, .an-heat-day, .an-heat-foot {
+.an-camp-head strong {
+  font-size: 15.5px !important;
+}
+
+.an-camp-conv {
+  font-size: 13.5px !important;
+}
+
+.an-heat-hour {
   font-size: 12px !important;
+  color: #a89b89 !important;
 }
 
-.an-feed-more-hint {
+.an-heat-day {
   font-size: 13px !important;
+  color: #b5a895 !important;
+  font-weight: 600 !important;
+}
+
+.an-heat-foot {
+  font-size: 14px !important;
+  color: #b5a895 !important;
+}
+
+.an-heat-foot strong {
+  font-size: 14.5px !important;
+  color: #f7f2e8 !important;
+}
+
+.an-key {
+  font-size: 13.5px !important;
+  color: #ded3c1 !important;
 }
 
 .an-donut-center span {
@@ -1571,3 +1658,129 @@ select.crm-in { appearance: auto; }
   display: flex;
   align-items: center;
 }
+
+/* ── Best Time to Post (Heatmap) Custom Date Controls ── */
+.an-heat-picker-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.an-heat-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(239, 231, 214, 0.12);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.an-heat-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #c9a860;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.an-heat-date-field {
+  background: #14110e;
+  border: 1px solid rgba(201, 168, 96, 0.35);
+  border-radius: 4px;
+  color: #f7f2e8;
+  padding: 5px 9px;
+  font-size: 13px;
+  font-family: inherit;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.an-heat-date-field:focus {
+  outline: none;
+  border-color: #c9a860;
+  box-shadow: 0 0 8px rgba(201, 168, 96, 0.3);
+}
+
+.an-heat-date-field::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8) sepia(0.5);
+}
+
+.an-heat-btn-rand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(201, 168, 96, 0.12);
+  border: 1px solid rgba(201, 168, 96, 0.4);
+  color: #e5cb93;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.an-heat-btn-rand:hover {
+  background: rgba(201, 168, 96, 0.22);
+  border-color: #c9a860;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.an-heat-btn-reset {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(239, 231, 214, 0.16);
+  color: #a89b89;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.an-heat-btn-reset:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(201, 168, 96, 0.4);
+  color: #ded3c1;
+}
+
+.an-heat-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.an-heat-badge.active {
+  background: rgba(201, 168, 96, 0.16);
+  color: #e5cb93;
+  border: 1px solid rgba(201, 168, 96, 0.35);
+  font-weight: 600;
+}
+
+.an-heat-badge.muted {
+  background: rgba(255, 255, 255, 0.04);
+  color: #9c8e7b;
+  border: 1px solid rgba(239, 231, 214, 0.08);
+}
+
+.an-heat-empty-box {
+  padding: 36px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
