@@ -114,7 +114,7 @@ export interface Reader {
 
 export interface CrmNotification {
   id: string;
-  type: 'reader' | 'review';
+  type: 'reader' | 'review' | 'comment';
   title: string;
   subtitle: string;
   detail?: string;
@@ -128,6 +128,8 @@ export interface CrmNotification {
     bookId?: string;
     rating?: number;
     readerName?: string;
+    blogTitle?: string;
+    blogId?: string;
   };
 }
 
@@ -212,6 +214,18 @@ export interface BlogFAQItem {
   answer: string;
 }
 
+export interface BlogComment {
+  id: string;
+  blogId: string;
+  authorName: string;
+  authorEmail: string;
+  content: string;
+  createdAt: string;
+  approved: boolean;
+  authorReply?: string;
+  authorReplyAt?: string;
+}
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -235,5 +249,6 @@ export interface BlogPost {
   canonicalUrl?: string;
   keyTakeaways?: string[]; // High-density bullet takeaways for ChatGPT Search, Perplexity, and readers
   faqItems?: BlogFAQItem[]; // Question & Answer pairs for JSON-LD FAQPage schema and public accordion
+  comments?: BlogComment[]; // Reader reflections and discussion
 }
 

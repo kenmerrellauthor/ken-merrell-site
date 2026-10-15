@@ -12,7 +12,7 @@ interface Props {
   books: Book[];
 }
 
-const COLS = '64px minmax(0, 2fr) 140px 190px 100px 170px';
+const COLS = '58px minmax(280px, 1.8fr) 160px 200px 100px 140px';
 
 export default function BlogListClient({ initialBlogs, books }: Props) {
   const router = useRouter();
@@ -169,8 +169,8 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
       </div>
 
       {/* ── Native CRM Table ── */}
-      <div className="crm-table">
-        <div className="crm-tr head" style={{ gridTemplateColumns: COLS }}>
+      <div className="crm-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="crm-tr head" style={{ gridTemplateColumns: COLS, minWidth: 1040 }}>
           <span>COVER</span>
           <span>ARTICLE</span>
           <span>CATEGORY</span>
@@ -191,15 +191,16 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
             const hasTakeaways = Boolean(post.keyTakeaways && post.keyTakeaways.length > 0);
             const hasFaqs = Boolean(post.faqItems && post.faqItems.length > 0);
             const bookTitle = getBookTitle(post.relatedBookSlug);
+            const commentsCount = (post.comments || []).length;
 
             return (
               <div
                 key={post.id}
                 className="crm-tr row"
-                style={{ gridTemplateColumns: COLS, minHeight: 96, padding: '16px 20px' }}
+                style={{ gridTemplateColumns: COLS, minHeight: 96, padding: '16px 20px', minWidth: 1040 }}
               >
                 {/* Cover Thumbnail */}
-                <div style={{ width: 54, height: 76, borderRadius: 3, overflow: 'hidden', background: '#120f0d', boxShadow: '0 3px 10px rgba(0,0,0,.6)', position: 'relative' }}>
+                <div style={{ width: 50, height: 72, borderRadius: 3, overflow: 'hidden', background: '#120f0d', boxShadow: '0 3px 10px rgba(0,0,0,.6)', position: 'relative', flexShrink: 0 }}>
                   {post.coverImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -215,41 +216,97 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                 </div>
 
                 {/* Article Info */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <Link
                       href={`/admin/blogs/${post.id}`}
                       className="crm-title"
-                      style={{ fontSize: 18, color: 'var(--cream-2)' }}
+                      style={{
+                        fontSize: 17,
+                        color: 'var(--cream-2)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%',
+                      }}
+                      title={post.title}
                     >
                       {post.title}
                     </Link>
                     {post.featured && (
-                      <span className="pill gold" style={{ height: 22, fontSize: 10, padding: '0 8px' }}>
+                      <span className="pill gold" style={{ height: 20, fontSize: 9, padding: '0 6px', flexShrink: 0 }}>
                         FEATURED
                       </span>
                     )}
                   </div>
 
-                  <span className="crm-meta">
-                    {post.readTimeMinutes} min read · {new Date(post.publishedAt || post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    <span style={{ color: 'var(--muted)', opacity: 0.7 }}> · /blog/{post.slug}</span>
-                    {post.views !== undefined && post.views > 0 ? (
-                      <span style={{ color: 'var(--gold)' }}> · {post.views.toLocaleString()} readers</span>
-                    ) : null}
-                  </span>
+                  <div className="crm-meta" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontSize: 12 }}>
+                    <span>{post.readTimeMinutes} min read</span>
+                    <span>·</span>
+                    <span>{new Date(post.publishedAt || post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span>·</span>
+                    <span
+                      style={{
+                        color: 'var(--muted)',
+                        opacity: 0.7,
+                        maxWidth: 160,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
+                      }}
+                      title={`/blog/${post.slug}`}
+                    >
+                      /blog/{post.slug}
+                    </span>
+                    {post.views !== undefined && post.views > 0 && (
+                      <>
+                        <span>·</span>
+                        <span style={{ color: 'var(--gold)' }}>{post.views.toLocaleString()} readers</span>
+                      </>
+                    )}
+                    <span>·</span>
+                    <Link
+                      href={`/admin/blogs/${post.id}#comments`}
+                      style={{
+                        color: commentsCount > 0 ? 'var(--gold)' : 'var(--muted)',
+                        fontWeight: commentsCount > 0 ? 600 : 400,
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3,
+                      }}
+                      title="View & moderate reader comments"
+                    >
+                      💬 {commentsCount} {commentsCount === 1 ? 'comment' : 'comments'}
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Category */}
-                <div>
-                  <span className="pill" style={{ height: 26, fontSize: 11, padding: '0 10px' }}>
+                <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                  <span
+                    className="pill"
+                    style={{
+                      height: 26,
+                      fontSize: 11,
+                      padding: '0 10px',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-block',
+                      lineHeight: '24px',
+                    }}
+                    title={post.category || 'General'}
+                  >
                     {post.category || 'General'}
                   </span>
                 </div>
 
                 {/* SEO & GEO status */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     <span
                       title="GEO Key Takeaways for ChatGPT, Perplexity & Claude"
                       style={{
@@ -260,6 +317,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                         background: hasTakeaways ? 'rgba(109,191,120,.12)' : 'rgba(255,255,255,.04)',
                         color: hasTakeaways ? '#6dbf78' : 'var(--muted)',
                         border: `1px solid ${hasTakeaways ? 'rgba(109,191,120,.3)' : 'rgba(255,255,255,.08)'}`,
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {hasTakeaways ? `✓ ${post.keyTakeaways!.length} GEO Takeaways` : 'No takeaways'}
@@ -274,6 +332,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                         background: hasFaqs ? 'rgba(109,191,120,.12)' : 'rgba(255,255,255,.04)',
                         color: hasFaqs ? '#6dbf78' : 'var(--muted)',
                         border: `1px solid ${hasFaqs ? 'rgba(109,191,120,.3)' : 'rgba(255,255,255,.08)'}`,
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {hasFaqs ? `✓ ${post.faqItems!.length} FAQs` : 'No FAQs'}
@@ -281,14 +340,24 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   </div>
 
                   {bookTitle && (
-                    <span style={{ fontSize: 11, color: 'var(--gold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--gold)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: 190,
+                      }}
+                      title={`Book: ${bookTitle}`}
+                    >
                       📖 Book: {bookTitle}
                     </span>
                   )}
                 </div>
 
                 {/* Published Switch */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <button
                     type="button"
                     role="switch"
@@ -299,13 +368,13 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   >
                     <span />
                   </button>
-                  <span style={{ fontSize: 13, color: post.isPublished ? 'var(--cream)' : 'var(--muted)' }}>
+                  <span style={{ fontSize: 13, color: post.isPublished ? 'var(--cream)' : 'var(--muted)', minWidth: 38 }}>
                     {post.isPublished ? 'Live' : 'Draft'}
                   </span>
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                   {post.isPublished && (
                     <a
                       href={`/blog/${post.slug}`}

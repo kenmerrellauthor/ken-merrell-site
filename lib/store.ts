@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Book, CrmNotification, Reader, Review, SiteSettings, Video, BlogPost } from './types';
+import type { Book, CrmNotification, Reader, Review, SiteSettings, Video, BlogPost, BlogComment } from './types';
 import { seedBooks, seedSite, seedVideos } from './seed';
 
 /*
@@ -537,7 +537,7 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
 
 /* ---------------- CRM Notifications ---------------- */
 export async function getCrmNotifications(limit?: number): Promise<{ notifications: CrmNotification[]; unreadCount: number }> {
-  const [readers, books, site] = await Promise.all([getReaders(), getBooks(), getSite()]);
+  const [readers, books, site, blogs] = await Promise.all([getReaders(), getBooks(), getSite(), getBlogs()]);
   const lastSeen = site.lastSeenReaders ? new Date(site.lastSeenReaders).getTime() : 0;
 
   const notifications: CrmNotification[] = [];
@@ -583,6 +583,28 @@ export async function getCrmNotifications(limit?: number): Promise<{ notificatio
     }
   }
 
+  for (const blog of blogs) {
+    for (const c of blog.comments ?? []) {
+      const isUnread = !c.approved || (new Date(c.createdAt).getTime() > lastSeen);
+      notifications.push({
+        id: `comment-${c.id}`,
+        type: 'comment',
+        title: `${c.authorName} commented on "${blog.title}"`,
+        subtitle: `${c.authorEmail} · ${c.approved ? 'Approved' : 'Pending'}`,
+        detail: c.content,
+        createdAt: c.createdAt,
+        href: `/admin/blogs/${blog.id}#comments`,
+        unread: isUnread,
+        metadata: {
+          blogTitle: blog.title,
+          blogId: blog.id,
+          readerName: c.authorName,
+          email: c.authorEmail,
+        }
+      });
+    }
+  }
+
   notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const unreadCount = notifications.filter(n => n.unread).length;
 
@@ -618,6 +640,7 @@ function sanitizeBlog(post: BlogPost): BlogPost {
     canonicalUrl: post.canonicalUrl?.trim() || undefined,
     keyTakeaways: Array.isArray(post.keyTakeaways) ? post.keyTakeaways.filter(Boolean) : [],
     faqItems: Array.isArray(post.faqItems) ? post.faqItems.filter((f) => f.question && f.answer) : [],
+    comments: Array.isArray(post.comments) ? post.comments : [],
   };
 }
 
@@ -692,4 +715,65 @@ export async function incrementBlogViews(id: string): Promise<void> {
   blog.views = (blog.views || 0) + 1;
   return upsert('blogs', blog);
 }
+
+export async function addBlogComment(
+  blogIdOrSlug: string,
+  comment: { authorName: string; authorEmail: string; content: string }
+): Promise<BlogComment> {
+  const blogs = await getBlogs();
+  const blog = blogs.find((b) => b.id === blogIdOrSlug || b.slug === blogIdOrSlug);
+  if (!blog) throw new Error('Blog post not found.');
+
+  const newComment: BlogComment = {
+    id: `c-${crypto.randomUUID().slice(0, 8)}`,
+    blogId: blog.id,
+    authorName: comment.authorName.trim(),
+    authorEmail: comment.authorEmail.trim(),
+    content: comment.content.trim(),
+    createdAt: new Date().toISOString(),
+    approved: true, // published immediately, can be moderated in admin
+  };
+
+  const comments = [...(blog.comments || []), newComment];
+  const updatedBlog: BlogPost = { ...blog, comments, updatedAt: new Date().toISOString() };
+  await saveBlog(updatedBlog);
+  return newComment;
+}
+
+export async function deleteBlogComment(blogId: string, commentId: string): Promise<void> {
+  const blog = await getBlog(blogId);
+  if (!blog) throw new Error('Blog post not found.');
+  const comments = (blog.comments || []).filter((c) => c.id !== commentId);
+  await saveBlog({ ...blog, comments });
+}
+
+export async function replyBlogComment(blogId: string, commentId: string, replyText: string): Promise<BlogComment | null> {
+  const blog = await getBlog(blogId);
+  if (!blog) throw new Error('Blog post not found.');
+  const comments = [...(blog.comments || [])];
+  const idx = comments.findIndex((c) => c.id === commentId);
+  if (idx === -1) throw new Error('Comment not found.');
+  comments[idx] = {
+    ...comments[idx],
+    authorReply: replyText.trim(),
+    authorReplyAt: new Date().toISOString(),
+  };
+  await saveBlog({ ...blog, comments });
+  return comments[idx];
+}
+
+export async function toggleBlogCommentApproval(blogId: string, commentId: string): Promise<BlogComment | null> {
+  const blog = await getBlog(blogId);
+  if (!blog) throw new Error('Blog post not found.');
+  const comments = [...(blog.comments || [])];
+  const idx = comments.findIndex((c) => c.id === commentId);
+  if (idx === -1) throw new Error('Comment not found.');
+  comments[idx] = {
+    ...comments[idx],
+    approved: !comments[idx].approved,
+  };
+  await saveBlog({ ...blog, comments });
+  return comments[idx];
+}
+
 
