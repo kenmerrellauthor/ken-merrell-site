@@ -4,7 +4,7 @@ import type { AnalyticsEvent, AnalyticsKPIs, AnalyticsSession } from '@/lib/type
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
 import {
-  RangeTabs, eventsInWindow, isPaidMedium, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, type TimeRange,
+  RangeTabs, cleanCity, cleanLocation, eventsInWindow, isPaidMedium, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, type TimeRange,
 } from './shared';
 import { Donut, Funnel, HBarList, Heatmap, StackedBars, TrendChart, type DonutSegment } from './charts';
 
@@ -154,7 +154,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
   /* ── Geography ── */
   const geoRows = useMemo(() => countBy(
     rangeSessions.filter((s) => (geoMode === 'country' ? s.location.country : s.location.city) !== 'Unknown'),
-    (s) => (geoMode === 'country' ? s.location.country : `${s.location.city}, ${s.location.country}`),
+    (s) => (geoMode === 'country' ? s.location.country : cleanLocation(s.location.city, s.location.region, s.location.country)),
   ).slice(0, 8).map(([label, value]) => ({ label, value })), [rangeSessions, geoMode]);
 
   /* ── Campaign performance ── */
@@ -180,8 +180,10 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
   const campaignMax = Math.max(1, ...campaignRows.map((c) => c.visitors));
 
   /* ── Top pages ── */
-  const pageRows = useMemo(() => countBy(rangeEvents.filter((e) => e.eventType === 'pageview'), (e) => e.pagePath)
-    .slice(0, 8).map(([label, value]) => ({ label, value })), [rangeEvents]);
+  const pageRows = useMemo(() => countBy(rangeEvents.filter((e) => e.eventType === 'pageview'), (e) => {
+    if (!e.pagePath || e.pagePath === '/') return 'Home';
+    return e.pagePath;
+  }).slice(0, 8).map(([label, value]) => ({ label, value })), [rangeEvents]);
 
   /* ── Heatmap (local time, Monday first) ── */
   const heatGrid = useMemo(() => {

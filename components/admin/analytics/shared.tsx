@@ -6,6 +6,33 @@ import { Ic } from '../AdIcons';
 
 export type TimeRange = 'today' | '7d' | '30d' | '90d' | 'custom';
 
+export function cleanLocation(city?: string, region?: string, country?: string): string {
+  const parts: string[] = [];
+  if (city && city !== 'Unknown') {
+    try {
+      parts.push(decodeURIComponent(city.replace(/\+/g, ' ')));
+    } catch {
+      parts.push(city.replace(/%20/g, ' ').replace(/\+/g, ' '));
+    }
+  }
+  if (region && region !== 'Unknown') {
+    parts.push(region);
+  }
+  if (country && country !== 'Unknown') {
+    parts.push(country);
+  }
+  return parts.length ? parts.join(' ') : 'Unknown';
+}
+
+export function cleanCity(city?: string): string {
+  if (!city || city === 'Unknown') return 'Unknown';
+  try {
+    return decodeURIComponent(city.replace(/\+/g, ' '));
+  } catch {
+    return city.replace(/%20/g, ' ').replace(/\+/g, ' ');
+  }
+}
+
 export function isPaidMedium(medium: string) {
   const normalized = medium.toLowerCase().replace(/[\s-]+/g, '_');
   return ['paid', 'cpc', 'ppc', 'display', 'sponsored'].includes(normalized)

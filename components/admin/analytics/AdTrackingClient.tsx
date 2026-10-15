@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
-import { RangeTabs, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, type TimeRange } from './shared';
+import { RangeTabs, cleanLocation, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, type TimeRange } from './shared';
 
 /** Number of visitors shown per "page" in the journey feed. */
 const FEED_PAGE_SIZE = 30;
@@ -294,7 +294,7 @@ export default function AdTrackingClient({
               value={selectedBookSlug}
               onChange={(e) => setSelectedBookSlug(e.target.value)}
             >
-              <option value="home">Homepage & Showcase (/)</option>
+              <option value="home">Home (Homepage & Showcase)</option>
               {books.map((b) => (
                 <option key={b.id} value={b.slug}>
                   {b.title} (/books/{b.slug})
@@ -664,7 +664,7 @@ export default function AdTrackingClient({
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Ic k="globe" s={14} />
-                        <span>{v.location.city}, {v.location.country}</span>
+                        <span>{cleanLocation(v.location.city, v.location.region, v.location.country)}</span>
                       </div>
                     </td>
                     <td>
@@ -700,9 +700,17 @@ export default function AdTrackingClient({
                       )}
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <span style={{ color: '#c9a860', fontSize: 12, fontWeight: 600 }}>
-                        View Journey →
-                      </span>
+                      <button
+                        type="button"
+                        className="an-view-journey-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVisitor(v);
+                        }}
+                      >
+                        <span>View Journey</span>
+                        <span className="an-btn-arrow">→</span>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -783,7 +791,7 @@ export default function AdTrackingClient({
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                 <span style={{ color: '#8c7e6c' }}>Geographic Location:</span>
                 <span style={{ color: '#ded3c1' }}>
-                  {selectedVisitor.location.city}, {selectedVisitor.location.region}, {selectedVisitor.location.country}
+                  {cleanLocation(selectedVisitor.location.city, selectedVisitor.location.region, selectedVisitor.location.country)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
