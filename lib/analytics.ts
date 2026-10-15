@@ -287,6 +287,16 @@ export async function recordIncomingEvent(payload: IncomingEvent): Promise<{ ses
     };
   } else {
     session.updatedAt = now;
+    if (payload.utmSource) session.source = payload.utmSource;
+    if (payload.utmMedium) session.medium = payload.utmMedium;
+    if (payload.utmCampaign) session.campaign = payload.utmCampaign;
+    if (payload.utmContent) session.content = payload.utmContent;
+    if (payload.referrer && (!session.referrer || session.referrer === 'Direct')) {
+      session.referrer = payload.referrer;
+    }
+    if (payload.utmSource || payload.utmCampaign || adClickId) {
+      session.createdAt = now;
+    }
     if (adClickId) {
       session.adClickId = adClickId;
       session.adClickSource = adClickSource;

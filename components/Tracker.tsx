@@ -102,18 +102,6 @@ export default function Tracker() {
     if (typeof window === 'undefined') return;
     if (pathname.startsWith('/admin') || pathname.startsWith('/api')) return;
 
-    // Get or initialize session ID
-    let sessionId = '';
-    try {
-      sessionId = sessionStorage.getItem('km_session_id') || '';
-      if (!sessionId) {
-        sessionId = createVisitorId();
-        sessionStorage.setItem('km_session_id', sessionId);
-      }
-    } catch {
-      sessionId = createVisitorId();
-    }
-
     // Check for UTM parameters
     let utmSource = searchParams.get('utm_source') || '';
     let utmMedium = searchParams.get('utm_medium') || '';
@@ -129,6 +117,24 @@ export default function Tracker() {
         adClickSource = platform;
         break;
       }
+    }
+
+    const hasNewCampaign = Boolean(utmSource || utmCampaign || utmMedium || adClickId);
+
+    // Get or initialize session ID
+    let sessionId = '';
+    try {
+      const prevSource = sessionStorage.getItem('km_utm_source') || '';
+      const prevCampaign = sessionStorage.getItem('km_utm_campaign') || '';
+      sessionId = sessionStorage.getItem('km_session_id') || '';
+
+      // Starting a new session if arriving with campaign parameters or if no session yet
+      if (!sessionId || (hasNewCampaign && (utmCampaign !== prevCampaign || utmSource !== prevSource))) {
+        sessionId = createVisitorId();
+        sessionStorage.setItem('km_session_id', sessionId);
+      }
+    } catch {
+      sessionId = createVisitorId();
     }
 
     // Cache UTM parameters for the session
