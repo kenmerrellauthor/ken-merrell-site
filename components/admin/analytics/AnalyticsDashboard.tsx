@@ -4,7 +4,7 @@ import type { AnalyticsEvent, AnalyticsKPIs, AnalyticsSession } from '@/lib/type
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
 import {
-  RangeTabs, cleanCity, cleanLocation, eventsInWindow, isPaidMedium, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, parseDateBoundary, type TimeRange,
+  RangeTabs, cleanCity, cleanLocation, eventsInWindow, isPaidMedium, isPaidSession, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, parseDateBoundary, type TimeRange,
 } from './shared';
 import { Donut, Funnel, HBarList, Heatmap, StackedBars, TrendChart, type DonutSegment } from './charts';
 
@@ -121,7 +121,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
           return `${ey}-${em}-${edate}` === iso;
         });
 
-        const paid = daySessions.filter((s) => isPaidMedium(s.medium)).length;
+        const paid = daySessions.filter((s) => isPaidSession(s)).length;
         const org = Math.max(0, daySessions.length - paid);
         const amz = dayEvents.filter((e) => e.eventType === 'amazon_click').length;
         const arc = dayEvents.filter((e) => e.eventType === 'arc_signup').length;
@@ -191,7 +191,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
       const h = d.getHours();
       if (h >= 0 && h < 24) {
         hours[h].visitors += 1;
-        if (isPaidMedium(s.medium)) {
+        if (isPaidSession(s)) {
           hours[h].paidVisitors += 1;
         } else {
           hours[h].organicVisitors += 1;
@@ -250,7 +250,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
   /* ── Totals for KPI cards ── */
   const totals = useMemo(() => {
     if (rangeSessions.length > 0 || rangeEvents.length > 0) {
-      const paid = rangeSessions.filter((s) => isPaidMedium(s.medium)).length;
+      const paid = rangeSessions.filter((s) => isPaidSession(s)).length;
       const amz = rangeEvents.filter((e) => e.eventType === 'amazon_click').length;
       const arc = rangeEvents.filter((e) => e.eventType === 'arc_signup').length;
       return {
@@ -354,7 +354,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
     const groups = new Map<string, { campaign: string; source: string; paid: boolean; visitors: number; amazon: number; arc: number }>();
     for (const s of rangeSessions) {
       const key = `${s.campaign}\u0000${s.source}`;
-      const g = groups.get(key) ?? { campaign: s.campaign || '(not set)', source: s.source, paid: isPaidMedium(s.medium), visitors: 0, amazon: 0, arc: 0 };
+      const g = groups.get(key) ?? { campaign: s.campaign || '(not set)', source: s.source, paid: isPaidSession(s), visitors: 0, amazon: 0, arc: 0 };
       g.visitors += 1;
       const conv = bySession.get(s.id);
       if (conv) { g.amazon += conv.amazon; g.arc += conv.arc; }

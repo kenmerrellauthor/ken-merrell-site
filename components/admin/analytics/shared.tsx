@@ -33,11 +33,60 @@ export function cleanCity(city?: string): string {
   }
 }
 
-export function isPaidMedium(medium: string) {
-  const normalized = medium.toLowerCase().replace(/[\s-]+/g, '_');
-  return ['paid', 'cpc', 'ppc', 'display', 'sponsored'].includes(normalized)
-    || normalized.startsWith('paid_') || normalized.endsWith('_paid');
+export function isPaidMedium(medium?: string, adClickId?: string, adClickSource?: string): boolean {
+  if (adClickId || adClickSource) return true;
+  if (!medium) return false;
+  const normalized = medium.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  if (['paid', 'cpc', 'ppc', 'display', 'sponsored', 'ad', 'ads', 'promoted', 'boosted', 'paidsocial', 'paidad'].includes(normalized)) return true;
+  if (normalized.includes('paid') || normalized.includes('cpc') || normalized.includes('ppc') || normalized.includes('sponsor')) return true;
+  if (normalized.startsWith('paid_') || normalized.endsWith('_paid')) return true;
+  return false;
 }
+
+export function isPaidSession(session?: {
+  medium?: string;
+  adClickId?: string;
+  adClickSource?: string;
+  source?: string;
+  campaign?: string;
+}): boolean {
+  if (!session) return false;
+  if (session.adClickId || session.adClickSource) return true;
+  const src = (session.source || '').trim().toLowerCase();
+  if (src === 'meta' || src === 'meta_ads' || src === 'facebook_ads' || src === 'instagram_ads') return true;
+  return isPaidMedium(session.medium, session.adClickId, session.adClickSource);
+}
+
+export function resolvePlatformName(source?: string, adClickSource?: string, referrer?: string): string {
+  const src = (source || adClickSource || '').trim().toLowerCase();
+  const ref = (referrer || '').toLowerCase();
+
+  if (src.includes('instagram') || src === 'ig' || ref.includes('instagram.com') || ref.includes('instagr.am')) return 'Instagram';
+  if (src.includes('facebook') || src === 'fb' || ref.includes('facebook.com') || ref.includes('fb.com')) return 'Facebook';
+  if (src.includes('meta')) {
+    if (ref.includes('instagram')) return 'Instagram';
+    if (ref.includes('facebook')) return 'Facebook';
+    return 'Meta (Instagram / Facebook)';
+  }
+  if (src.includes('tiktok') || ref.includes('tiktok.com')) return 'TikTok';
+  if (src.includes('youtube') || ref.includes('youtube.com') || ref.includes('youtu.be')) return 'YouTube';
+  if (src.includes('pinterest') || ref.includes('pinterest.com')) return 'Pinterest';
+  if (src.includes('linkedin') || ref.includes('linkedin.com')) return 'LinkedIn';
+  if (src === 'x' || src.includes('twitter') || ref.includes('twitter.com') || ref.includes('t.co') || ref.includes('x.com')) return 'X (Twitter)';
+  if (src.includes('threads') || ref.includes('threads.net')) return 'Threads';
+  if (src.includes('reddit') || ref.includes('reddit.com')) return 'Reddit';
+  if (src.includes('snapchat') || ref.includes('snapchat.com')) return 'Snapchat';
+  if (src.includes('bookbub') || ref.includes('bookbub.com')) return 'BookBub';
+  if (src.includes('google')) return 'Google Ads';
+  if (src.includes('bing') || src.includes('microsoft')) return 'Microsoft Ads';
+
+  if (adClickSource) return adClickSource;
+  if (source && !['(direct)', 'direct', '(not set)', 'none', 'unknown'].includes(src)) {
+    return source.charAt(0).toUpperCase() + source.slice(1);
+  }
+  return 'Paid Ad';
+}
+
 
 export function parseDateBoundary(dateStr?: string, isEndOfDay: boolean = false): number {
   if (!dateStr) return isEndOfDay ? Date.now() : 0;
