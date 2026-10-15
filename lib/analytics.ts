@@ -272,9 +272,16 @@ export async function recordIncomingEvent(payload: IncomingEvent): Promise<{ ses
     const referral = referralAttribution(payload.referrer);
     session = {
       id: sessionId, createdAt: now, updatedAt: now, durationSeconds: 1,
-      source: payload.utmSource || (adClickId ? adClickSource : undefined) || referral?.source || 'Direct',
+      source: payload.utmSource || (adClickId ? (adClickSource === 'Meta' ? 'instagram_ad' : adClickSource) : undefined) || referral?.source || 'Direct',
       medium: payload.utmMedium || (adClickId ? (adClickSource === 'Google' || adClickSource === 'Microsoft Ads' ? 'paid_search' : 'paid_social') : referral?.medium) || 'direct',
-      campaign: payload.utmCampaign || referral?.campaign || '(direct)', content: payload.utmContent,
+      campaign: payload.utmCampaign || (adClickId ? (
+        payload.pagePath.includes('advance-readers') ? 'Advance Readers (Meta Campaign)' :
+        payload.pagePath.includes('petticoats-and-ash') ? 'Petticoats and Ash (Meta Campaign)' :
+        payload.pagePath.includes('traitors-death') ? "Traitor's Death (Meta Campaign)" :
+        payload.pagePath.includes('craven-dawn') ? 'Of Craven Dawn (Meta Campaign)' :
+        payload.pagePath.includes('author') ? 'Author Profile (Meta Campaign)' :
+        'Meta Social Ad'
+      ) : referral?.campaign) || '(direct)', content: payload.utmContent,
       adClickId: adClickId || undefined, adClickSource: adClickId ? adClickSource : undefined,
       location: { city: payload.city || 'Unknown', region: payload.region || 'Unknown', country: payload.country || 'Unknown' },
       device: payload.device || 'Unknown', browser: payload.browser || 'Unknown', landingPage: payload.pagePath,
@@ -295,6 +302,14 @@ export async function recordIncomingEvent(payload: IncomingEvent): Promise<{ ses
     if (adClickId) {
       session.adClickId = adClickId;
       session.adClickSource = adClickSource;
+      if (!session.campaign || session.campaign === '(direct)') {
+        if (payload.pagePath.includes('advance-readers')) session.campaign = 'Advance Readers (Meta Campaign)';
+        else if (payload.pagePath.includes('petticoats-and-ash')) session.campaign = 'Petticoats and Ash (Meta Campaign)';
+        else if (payload.pagePath.includes('traitors-death')) session.campaign = "Traitor's Death (Meta Campaign)";
+        else if (payload.pagePath.includes('craven-dawn')) session.campaign = 'Of Craven Dawn (Meta Campaign)';
+        else if (payload.pagePath.includes('author')) session.campaign = 'Author Profile (Meta Campaign)';
+        else session.campaign = 'Meta Social Ad';
+      }
       if (!isPaid(session)) {
         session.medium = adClickSource === 'Google' || adClickSource === 'Microsoft Ads' ? 'paid_search' : 'paid_social';
       }
