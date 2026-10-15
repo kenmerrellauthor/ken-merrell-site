@@ -207,3 +207,33 @@ export interface AnalyticsKPIs {
   organicPercentage: number;
 }
 
+export interface BlogFAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string; // Markdown / HTML formatted text
+  coverImage?: string | null;
+  category: string;
+  tags: string[];
+  readTimeMinutes: number;
+  authorName: string;
+  publishedAt: string;
+  updatedAt: string;
+  isPublished: boolean;
+  featured?: boolean;
+  views?: number;
+  relatedBookSlug?: string | null;
+  // SEO & Generative Engine Optimization (GEO) Fields
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  keyTakeaways?: string[]; // High-density bullet takeaways for ChatGPT Search, Perplexity, and readers
+  faqItems?: BlogFAQItem[]; // Question & Answer pairs for JSON-LD FAQPage schema and public accordion
+}
+

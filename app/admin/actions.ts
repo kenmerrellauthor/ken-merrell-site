@@ -14,9 +14,9 @@ import {
 import {
   addReader, deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
   saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage,
-  sanitizeBook
+  sanitizeBook, deleteBlog, getBlog, getBlogs, saveBlog
 } from '@/lib/store';
-import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType } from '@/lib/types';
+import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType, BlogPost, BlogFAQItem } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 import { formatStylishTitle } from '@/components/Bits';
 
@@ -674,3 +674,164 @@ export async function updateReviewContentAction(_p: AdminState, form: FormData):
     return { error: e instanceof Error ? e.message : 'Could not update review.' };
   }
 }
+
+export type BlogAdminState = {
+  ok?: boolean;
+  error?: string;
+  id?: string;
+  slug?: string;
+  post?: BlogPost;
+};
+
+export async function saveBlogPostAction(_p: BlogAdminState, form: FormData): Promise<BlogAdminState> {
+  await requireAdmin();
+  try {
+    const id = str(form, 'id') || newId();
+    const existing = await getBlog(id);
+    const blogs = await getBlogs();
+
+    const title = str(form, 'title', 250) || 'Untitled Blog Post';
+    let slug = slugify(str(form, 'slug', 120) || title);
+    if (!slug) slug = `post-${id.slice(0, 5)}`;
+    if (blogs.some((b) => b.slug === slug && b.id !== id)) {
+      slug = `${slug}-${id.slice(0, 4)}`;
+    }
+
+    const excerpt = str(form, 'excerpt', 1500);
+    const content = str(form, 'content', 100000);
+    const category = str(form, 'category', 80) || 'Behind the Book';
+    const authorName = str(form, 'authorName', 120) || 'Ken Merrell';
+    const isPublished = form.get('isPublished') === 'on' || form.get('isPublished') === 'true';
+    const featured = form.get('featured') === 'on' || form.get('featured') === 'true';
+    const rawBookSlug = str(form, 'relatedBookSlug', 100);
+    const relatedBookSlug = rawBookSlug && rawBookSlug !== 'none' ? rawBookSlug : null;
+
+    // Cover image
+    let coverImage = existing?.coverImage ?? null;
+    const directCoverUrl = str(form, 'coverImageUrl', 1000);
+    if (directCoverUrl) coverImage = directCoverUrl;
+    const cf = file(form, 'coverImageFile');
+    if (cf) coverImage = await uploadImage(cf, 'covers');
+    if (form.get('removeCover') === 'on' || form.get('removeCover') === 'true') {
+      coverImage = null;
+    }
+
+    // Tags
+    const rawTags = str(form, 'tags', 1000);
+    const tags = rawTags
+      ? rawTags.split(',').map((t) => t.trim()).filter(Boolean)
+      : (existing?.tags || []);
+
+    // Estimated read time
+    const wordCount = (content || '').trim().split(/\s+/).filter(Boolean).length;
+    const calculatedMinutes = Math.max(1, Math.ceil(wordCount / 200));
+    const readTimeMinutes = parseInt(str(form, 'readTimeMinutes'), 10) || calculatedMinutes;
+
+    // Dates
+    const publishedAt = str(form, 'publishedAt') || existing?.publishedAt || new Date().toISOString();
+    const updatedAt = new Date().toISOString();
+
+    // SEO & GEO Fields
+    const metaTitle = str(form, 'metaTitle', 160) || title;
+    const metaDescription = str(form, 'metaDescription', 320) || excerpt;
+    const canonicalUrl = str(form, 'canonicalUrl', 500) || undefined;
+
+    // Key Takeaways (GEO)
+    let keyTakeaways: string[] = [];
+    const rawTakeaways = str(form, 'keyTakeaways', 20000);
+    if (rawTakeaways) {
+      try {
+        const parsed = JSON.parse(rawTakeaways);
+        if (Array.isArray(parsed)) {
+          keyTakeaways = parsed.map((s) => String(s || '').trim()).filter(Boolean);
+        }
+      } catch {
+        keyTakeaways = rawTakeaways.split('\n').map((s) => s.trim().replace(/^[-*•]\s*/, '')).filter(Boolean);
+      }
+    }
+
+    // FAQ Items (GEO)
+    let faqItems: BlogFAQItem[] = [];
+    const rawFaqs = str(form, 'faqItems', 30000);
+    if (rawFaqs) {
+      try {
+        const parsed = JSON.parse(rawFaqs);
+        if (Array.isArray(parsed)) {
+          faqItems = parsed
+            .map((item: any) => ({
+              question: String(item?.question || '').trim(),
+              answer: String(item?.answer || '').trim(),
+            }))
+            .filter((item) => item.question && item.answer);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const post: BlogPost = {
+      id,
+      slug,
+      title,
+      excerpt,
+      content,
+      coverImage,
+      category,
+      tags,
+      readTimeMinutes,
+      authorName,
+      publishedAt,
+      updatedAt,
+      isPublished,
+      featured,
+      views: existing?.views ?? 0,
+      relatedBookSlug,
+      metaTitle,
+      metaDescription,
+      canonicalUrl,
+      keyTakeaways,
+      faqItems,
+    };
+
+    await saveBlog(post);
+
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/blog', 'page');
+      revalidatePath(`/blog/${slug}`, 'page');
+      if (existing?.slug && existing.slug !== slug) {
+        revalidatePath(`/blog/${existing.slug}`, 'page');
+      }
+      revalidatePath('/admin/blogs', 'page');
+      revalidatePath(`/admin/blogs/${id}`, 'page');
+      revalidatePath('/sitemap.xml');
+    } catch {
+      /* ignore */
+    }
+
+    return { ok: true, id, slug, post };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not save blog post.' };
+  }
+}
+
+export async function deleteBlogPostAction(id: string): Promise<{ ok?: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    const post = await getBlog(id);
+    await deleteBlog(id);
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/blog', 'page');
+      if (post?.slug) revalidatePath(`/blog/${post.slug}`, 'page');
+      revalidatePath('/admin/blogs', 'page');
+      revalidatePath('/sitemap.xml');
+    } catch {
+      /* ignore */
+    }
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Could not delete blog post.' };
+  }
+}
+
