@@ -496,6 +496,45 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
             </p>
           </div>
           <StackedBars data={chartTraffic} />
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            paddingTop: 12,
+            borderTop: '1px solid rgba(239, 231, 214, 0.08)',
+            marginTop: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#9c8e7b' }}>
+              <span>
+                <strong style={{ color: '#7cb2ff' }}>{totals.paidVisitors.toLocaleString()}</strong> ({totals.visitors ? Math.round((totals.paidVisitors / totals.visitors) * 100) : 0}%) Paid
+              </span>
+              <span>
+                <strong style={{ color: '#ecd296' }}>{totals.organicVisitors.toLocaleString()}</strong> ({totals.visitors ? Math.round((totals.organicVisitors / totals.visitors) * 100) : 0}%) Organic
+              </span>
+            </div>
+            <div style={{
+              height: 7,
+              borderRadius: 4,
+              overflow: 'hidden',
+              display: 'flex',
+              background: 'rgba(255, 255, 255, 0.05)',
+            }}>
+              <div
+                style={{
+                  width: `${totals.visitors ? (totals.paidVisitors / totals.visitors) * 100 : 0}%`,
+                  background: 'linear-gradient(90deg, #2f6fe0, #7cb2ff)',
+                  transition: 'width 0.4s ease',
+                }}
+              />
+              <div
+                style={{
+                  width: `${totals.visitors ? (totals.organicVisitors / totals.visitors) * 100 : 0}%`,
+                  background: 'linear-gradient(90deg, #b8954d, #ecd296)',
+                  transition: 'width 0.4s ease',
+                }}
+              />
+            </div>
+          </div>
         </section>
 
         <section className="an-card" aria-labelledby="funnel-title">

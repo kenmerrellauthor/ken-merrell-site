@@ -27,13 +27,13 @@ function yAt(value: number, max: number) {
   return B - (value / max) * (B - T);
 }
 
-function Gridlines({ max }: { max: number }) {
+function Gridlines({ max, top = T, bottom = B }: { max: number; top?: number; bottom?: number }) {
   return (
     <>
       {/* Vertical Y-axis label */}
       <text
         transform="rotate(-90)"
-        x={-((T + B) / 2)}
+        x={-((top + bottom) / 2)}
         y={14}
         textAnchor="middle"
         className="an-chart-axis-name"
@@ -41,7 +41,7 @@ function Gridlines({ max }: { max: number }) {
         ↑ Y-Axis: Count (Visitors / Conversions)
       </text>
       {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-        const y = B - fraction * (B - T);
+        const y = bottom - fraction * (bottom - top);
         return (
           <g key={fraction}>
             <line x1={L} y1={y} x2={R} y2={y} className="an-chart-gridline" />
@@ -55,7 +55,17 @@ function Gridlines({ max }: { max: number }) {
   );
 }
 
-function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: number) => number }) {
+function DateLabels({
+  data,
+  xFor,
+  labelY = 240,
+  axisY = 266,
+}: {
+  data: DailyTrafficPoint[];
+  xFor: (i: number) => number;
+  labelY?: number;
+  axisY?: number;
+}) {
   const isHourly = data.length === 24;
   return (
     <>
@@ -64,7 +74,7 @@ function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: numbe
           // Show every 3 hours: 12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM
           if (i % 3 !== 0) return null;
           return (
-            <text key={point.isoDate} x={xFor(i)} y={240} textAnchor="middle" className="an-chart-axis-label">
+            <text key={point.isoDate} x={xFor(i)} y={labelY} textAnchor="middle" className="an-chart-axis-label">
               {point.date}
             </text>
           );
@@ -73,12 +83,12 @@ function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: numbe
         if (!(i === 0 || i === data.length - 1 || i % interval === 0)) return null;
         if (i !== data.length - 1 && data.length - 1 - i < interval / 2 && i !== 0) return null;
         return (
-          <text key={point.isoDate} x={xFor(i)} y={240} textAnchor="middle" className="an-chart-axis-label">
+          <text key={point.isoDate} x={xFor(i)} y={labelY} textAnchor="middle" className="an-chart-axis-label">
             {point.date}
           </text>
         );
       })}
-      <text x={(L + R) / 2} y={266} textAnchor="middle" className="an-chart-axis-name">
+      <text x={(L + R) / 2} y={axisY} textAnchor="middle" className="an-chart-axis-name">
         → X-Axis: {isHourly ? 'Time of Day (Local Time)' : 'Timeline (Dates)'}
       </text>
     </>
@@ -217,8 +227,12 @@ export function StackedBars({ data }: { data: DailyTrafficPoint[] }) {
   const xFor = (i: number) => L + slot * i + slot / 2;
   const hovered = hover !== null ? data[hover] : null;
 
+  const H_BARS = 390;
+  const T_BARS = 20;
+  const B_BARS = 325;
+
   return (
-    <div className="an-chart-container">
+    <div className="an-chart-container an-chart-container-stacked">
       {hovered && (
         <div className="an-chart-tooltip">
           <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `${hovered.isoDate.slice(0, 10)} · ${hovered.date}` : hovered.date}</strong>
@@ -227,7 +241,7 @@ export function StackedBars({ data }: { data: DailyTrafficPoint[] }) {
           <span className="an-tip-row muted">Total: <strong>{hovered.paidVisitors + hovered.organicVisitors}</strong></span>
         </div>
       )}
-      <svg className="an-chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Paid versus organic visitors per day" onMouseLeave={() => setHover(null)}>
+      <svg className="an-chart-svg an-chart-svg-stacked" viewBox={`0 0 ${W} ${H_BARS}`} role="img" aria-label="Paid versus organic visitors per day" onMouseLeave={() => setHover(null)}>
         <defs>
           <linearGradient id="bar-paid" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#7cb2ff" />
@@ -238,21 +252,21 @@ export function StackedBars({ data }: { data: DailyTrafficPoint[] }) {
             <stop offset="100%" stopColor="#b8954d" />
           </linearGradient>
         </defs>
-        <Gridlines max={max} />
+        <Gridlines max={max} top={T_BARS} bottom={B_BARS} />
         {data.map((p, i) => {
           const x = xFor(i) - barWidth / 2;
-          const orgH = (p.organicVisitors / max) * (B - T);
-          const paidH = (p.paidVisitors / max) * (B - T);
+          const orgH = (p.organicVisitors / max) * (B_BARS - T_BARS);
+          const paidH = (p.paidVisitors / max) * (B_BARS - T_BARS);
           const dim = hover !== null && hover !== i;
           return (
             <g key={p.isoDate} opacity={dim ? 0.45 : 1} className="an-bar-group">
-              <rect x={x} y={B - orgH} width={barWidth} height={orgH} fill="url(#bar-org)" rx={barWidth > 6 ? 2 : 0} />
-              <rect x={x} y={B - orgH - paidH} width={barWidth} height={paidH} fill="url(#bar-paid)" rx={barWidth > 6 ? 2 : 0} />
-              <rect x={L + slot * i} y={T} width={slot} height={B - T} fill="transparent" onMouseEnter={() => setHover(i)} />
+              <rect x={x} y={B_BARS - orgH} width={barWidth} height={orgH} fill="url(#bar-org)" rx={barWidth > 6 ? 2 : 0} />
+              <rect x={x} y={B_BARS - orgH - paidH} width={barWidth} height={paidH} fill="url(#bar-paid)" rx={barWidth > 6 ? 2 : 0} />
+              <rect x={L + slot * i} y={T_BARS} width={slot} height={B_BARS - T_BARS} fill="transparent" onMouseEnter={() => setHover(i)} />
             </g>
           );
         })}
-        <DateLabels data={data} xFor={xFor} />
+        <DateLabels data={data} xFor={xFor} labelY={350} axisY={376} />
       </svg>
     </div>
   );
