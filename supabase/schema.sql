@@ -5,6 +5,7 @@ create table if not exists public.books    (id text primary key, data jsonb not 
 create table if not exists public.videos   (id text primary key, data jsonb not null, updated_at timestamptz default now());
 create table if not exists public.readers  (id text primary key, data jsonb not null, created_at timestamptz default now());
 create table if not exists public.settings (id text primary key, data jsonb not null, updated_at timestamptz default now());
+create table if not exists public.blogs    (id text primary key, data jsonb not null, updated_at timestamptz default now());
 
 -- First-party attribution and conversion analytics. Reader contact data is kept in
 -- the server-only JSON payload and is never exposed through the public anon key.
@@ -31,6 +32,7 @@ alter table public.books    enable row level security;
 alter table public.videos   enable row level security;
 alter table public.readers  enable row level security;
 alter table public.settings enable row level security;
+alter table public.blogs    enable row level security;
 alter table public.analytics_sessions enable row level security;
 alter table public.analytics_events enable row level security;
 

@@ -16,6 +16,7 @@ export default function Footer({ site }: { site: SiteSettings; hideSocial?: bool
           <Link href="/#videos">VIDEOS</Link>
           <Link href="/advance-readers">ADVANCE READERS</Link>
           <Link href="/author">ABOUT KEN</Link>
+          <Link href="/blog">BLOG</Link>
           <Link href="/#contact">CONTACT</Link>
         </nav>
       </div>

@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Book, CrmNotification, Reader, Review, SiteSettings, Video } from './types';
+import type { Book, CrmNotification, Reader, Review, SiteSettings, Video, BlogPost } from './types';
 import { seedBooks, seedSite, seedVideos } from './seed';
 
 /*
@@ -13,7 +13,7 @@ import { seedBooks, seedSite, seedVideos } from './seed';
  * Every table stores one JSON document per row, so adding a field never needs a migration.
  */
 
-type Table = 'books' | 'videos' | 'readers' | 'settings';
+type Table = 'books' | 'videos' | 'readers' | 'settings' | 'blogs';
 
 let sb: SupabaseClient | null = null;
 function supabase(): SupabaseClient | null {
@@ -35,7 +35,8 @@ const seeds: Record<Table, { id: string }[]> = {
   books: seedBooks,
   videos: seedVideos,
   readers: [],
-  settings: [{ id: 'site', ...seedSite }]
+  settings: [{ id: 'site', ...seedSite }],
+  blogs: []
 };
 
 async function readLocal<T>(table: Table): Promise<T[]> {
@@ -534,3 +535,99 @@ export async function getCrmNotifications(limit?: number): Promise<{ notificatio
     unreadCount
   };
 }
+
+/* --- Blog Posts --- */
+
+function sanitizeBlog(post: BlogPost): BlogPost {
+  return {
+    ...post,
+    id: post.id || `blog-${crypto.randomUUID().slice(0, 8)}`,
+    slug: (post.slug || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    title: (post.title || '').trim(),
+    excerpt: (post.excerpt || '').trim(),
+    content: (post.content || '').trim(),
+    coverImage: post.coverImage || null,
+    category: (post.category || 'Historical Fiction Insights').trim(),
+    tags: Array.isArray(post.tags) ? post.tags.map((t) => t.trim()).filter(Boolean) : [],
+    readTimeMinutes: Math.max(1, Math.round((post.content || '').split(/\s+/).length / 200)),
+    authorName: (post.authorName || 'Ken Merrell').trim(),
+    publishedAt: post.publishedAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isPublished: Boolean(post.isPublished),
+    featured: Boolean(post.featured),
+    views: typeof post.views === 'number' ? post.views : 0,
+    relatedBookSlug: post.relatedBookSlug || null,
+    metaTitle: post.metaTitle?.trim() || post.title,
+    metaDescription: post.metaDescription?.trim() || post.excerpt,
+    canonicalUrl: post.canonicalUrl?.trim() || undefined,
+    keyTakeaways: Array.isArray(post.keyTakeaways) ? post.keyTakeaways.filter(Boolean) : [],
+    faqItems: Array.isArray(post.faqItems) ? post.faqItems.filter((f) => f.question && f.answer) : [],
+  };
+}
+
+export async function getBlogs(): Promise<BlogPost[]> {
+  const rows = await all<BlogPost>('blogs');
+  return rows.map(sanitizeBlog).sort((a, b) => {
+    const tA = new Date(a.publishedAt || a.updatedAt).getTime();
+    const tB = new Date(b.publishedAt || b.updatedAt).getTime();
+    return tB - tA;
+  });
+}
+
+export async function getPublishedBlogs(): Promise<BlogPost[]> {
+  const allPosts = await getBlogs();
+  return allPosts.filter((b) => b.isPublished);
+}
+
+export async function getBlog(id: string): Promise<BlogPost | null> {
+  if (!id || id === 'new') return null;
+  const db = supabase();
+  if (db) {
+    try {
+      const { data, error } = await db.from('blogs').select('id, data').eq('id', id).maybeSingle();
+      if (!error && data?.data) {
+        return sanitizeBlog(data.data as BlogPost);
+      }
+    } catch {
+      /* fallback to scanning all */
+    }
+  }
+  const blogs = await getBlogs();
+  const b = blogs.find((x) => x.id === id) ?? null;
+  return b ? sanitizeBlog(b) : null;
+}
+
+export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
+  if (!slug) return null;
+  const db = supabase();
+  if (db) {
+    try {
+      const { data, error } = await db.from('blogs').select('id, data').filter('data->>slug', 'eq', slug).maybeSingle();
+      if (!error && data?.data) {
+        return sanitizeBlog(data.data as BlogPost);
+      }
+    } catch {
+      /* fallback to scanning all */
+    }
+  }
+  const blogs = await getBlogs();
+  const b = blogs.find((x) => x.slug === slug) ?? null;
+  return b ? sanitizeBlog(b) : null;
+}
+
+export async function saveBlog(post: BlogPost): Promise<void> {
+  const safe = sanitizeBlog(post);
+  return upsert('blogs', safe);
+}
+
+export async function deleteBlog(id: string): Promise<void> {
+  return remove('blogs', id);
+}
+
+export async function incrementBlogViews(id: string): Promise<void> {
+  const blog = await getBlog(id);
+  if (!blog) return;
+  blog.views = (blog.views || 0) + 1;
+  return upsert('blogs', blog);
+}
+

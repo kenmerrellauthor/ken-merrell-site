@@ -92,7 +92,8 @@ export default function Sidebar({
   };
 
   const items = [
-    { href: '/admin', k: 'books', label: 'Books', on: path === '/admin' || path.startsWith('/admin/books') },
+    { href: '/admin', k: 'books', label: 'Books', on: path === '/admin' || (path.startsWith('/admin/books') && !path.startsWith('/admin/blogs')) },
+    { href: '/admin/blogs', k: 'edit', label: 'Blog Posts', on: path.startsWith('/admin/blogs') },
     { href: '/admin/videos', k: 'video', label: 'Videos', on: path.startsWith('/admin/videos') },
     { href: '/admin/about', k: 'user', label: 'Author & bio', on: path.startsWith('/admin/about') },
     { href: '/admin/readers', k: 'readers', label: 'Advance readers', on: path.startsWith('/admin/readers'), badge },
