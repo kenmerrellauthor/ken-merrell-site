@@ -1524,3 +1524,50 @@ select.crm-in { appearance: auto; }
 .an-view-journey-btn:hover .an-btn-arrow {
   transform: translateX(3px);
 }
+
+/* ── Custom Popover Header & Native Date Picker Visibility ── */
+.an-custom-picker-wrap {
+  position: relative;
+  z-index: 50;
+}
+
+.an-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.an-time-toggle-btn {
+  background: transparent;
+  border: 1px solid rgba(201, 168, 96, 0.4);
+  color: #e5cb93;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.an-time-toggle-btn:hover {
+  background: rgba(201, 168, 96, 0.15);
+  border-color: #c9a860;
+  color: #fff;
+}
+
+/* Ensure native calendar / clock icon is clearly visible and clickable */
+.an-native-date-input::-webkit-calendar-picker-indicator {
+  position: relative !important;
+  opacity: 0.9 !important;
+  width: 22px !important;
+  height: 22px !important;
+  cursor: pointer !important;
+  filter: invert(0.8) sepia(0.5) hue-rotate(5deg);
+  margin-left: auto;
+}
+
+.an-native-date-input {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
