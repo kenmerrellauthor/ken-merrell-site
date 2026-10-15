@@ -46,10 +46,20 @@ function Gridlines({ max }: { max: number }) {
 }
 
 function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: number) => number }) {
-  const interval = Math.max(1, Math.ceil(data.length / 6));
+  const isHourly = data.length === 24;
   return (
     <>
       {data.map((point, i) => {
+        if (isHourly) {
+          // Show every 3 hours: 12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM
+          if (i % 3 !== 0) return null;
+          return (
+            <text key={point.isoDate} x={xFor(i)} y={250} textAnchor="middle" className="an-chart-axis-label">
+              {point.date}
+            </text>
+          );
+        }
+        const interval = Math.max(1, Math.ceil(data.length / 6));
         if (!(i === 0 || i === data.length - 1 || i % interval === 0)) return null;
         if (i !== data.length - 1 && data.length - 1 - i < interval / 2 && i !== 0) return null;
         return (
@@ -114,7 +124,7 @@ export function TrendChart({ data }: { data: DailyTrafficPoint[] }) {
       <div className="an-chart-container">
         {hovered && (
           <div className="an-chart-tooltip">
-            <strong className="an-tip-date">{hovered.date}</strong>
+            <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `Today at ${hovered.date}` : hovered.date}</strong>
             {TREND_SERIES.map((s) => (
               <span key={s.key} className="an-tip-row" style={{ opacity: active.includes(s.key) ? 1 : 0.45 }}>
                 <i style={{ background: s.color }} /> {s.label}: <strong>{hovered[s.key].toLocaleString()}</strong>
@@ -197,7 +207,7 @@ export function StackedBars({ data }: { data: DailyTrafficPoint[] }) {
     <div className="an-chart-container">
       {hovered && (
         <div className="an-chart-tooltip">
-          <strong className="an-tip-date">{hovered.date}</strong>
+          <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `Today at ${hovered.date}` : hovered.date}</strong>
           <span className="an-tip-row"><i style={{ background: '#5b9cf6' }} /> Paid: <strong>{hovered.paidVisitors}</strong></span>
           <span className="an-tip-row"><i style={{ background: '#c9a860' }} /> Organic: <strong>{hovered.organicVisitors}</strong></span>
           <span className="an-tip-row muted">Total: <strong>{hovered.paidVisitors + hovered.organicVisitors}</strong></span>
@@ -377,14 +387,25 @@ export function HBarList({ rows, color, emptyText, unit = '' }: { rows: HBarRow[
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export function Heatmap({ grid }: { grid: number[][] }) {
+export function Heatmap({ grid, onReset }: { grid: number[][]; onReset?: () => void }) {
   const max = Math.max(1, ...grid.flat());
   const total = grid.flat().reduce((a, b) => a + b, 0);
   let peak = { day: 0, hour: 0, value: 0 };
   grid.forEach((row, d) => row.forEach((v, h) => { if (v > peak.value) peak = { day: d, hour: h, value: v }; }));
   const hourLabel = (h: number) => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' : 'pm'}`;
 
-  if (!total) return <p className="an-empty">No visits in this period yet.</p>;
+  if (!total) {
+    return (
+      <div className="an-heat-empty-box">
+        <p className="an-empty">No visits recorded for this selected date.</p>
+        {onReset && (
+          <button type="button" className="an-heat-btn-reset" onClick={onReset}>
+            View all dates in page range
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="an-heat-wrap">
