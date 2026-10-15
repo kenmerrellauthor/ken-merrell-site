@@ -10,7 +10,7 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 const SESSIONS_FILE = path.join(DATA_DIR, 'analytics_sessions.json');
 const EVENTS_FILE = path.join(DATA_DIR, 'analytics_events.json');
 const AD_CLICK_SOURCES = new Set(['Meta', 'TikTok', 'Google', 'Microsoft Ads', 'LinkedIn', 'Pinterest', 'X', 'Reddit']);
-const PAID_MEDIA = new Set(['paid', 'paid_ad', 'paid_social', 'paid_search', 'cpc', 'ppc', 'display', 'sponsored']);
+const PAID_MEDIA = new Set(['paid', 'paid_ad', 'paid_social', 'paid_search', 'cpc', 'ppc', 'display', 'sponsored', 'ad', 'ads', 'paidsocial', 'paidad']);
 
 let supabaseClient: SupabaseClient | null = null;
 function database(): SupabaseClient | null {
@@ -94,9 +94,14 @@ async function snapshot(): Promise<AnalyticsSnapshot> {
   return { sessions, events };
 }
 
-function isPaid(session: AnalyticsSession) {
-  const medium = session.medium.toLowerCase().replace(/[\s-]+/g, '_');
-  return PAID_MEDIA.has(medium) || medium.startsWith('paid_') || medium.endsWith('_paid');
+function isPaid(session: AnalyticsSession): boolean {
+  if (session.adClickId || session.adClickSource) return true;
+  const src = (session.source || '').toLowerCase().trim();
+  if (src === 'meta' || src === 'meta_ads' || src === 'facebook_ads' || src === 'instagram_ads') return true;
+  const medium = (session.medium || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  if (PAID_MEDIA.has(medium) || medium.startsWith('paid_') || medium.endsWith('_paid')) return true;
+  return ['paid', 'cpc', 'ppc', 'display', 'sponsored', 'ad', 'ads', 'promoted', 'boosted', 'paidsocial', 'paidad'].includes(medium)
+    || medium.includes('paid') || medium.includes('cpc') || medium.includes('ppc');
 }
 
 function buildDailyTraffic(sessions: AnalyticsSession[], events: AnalyticsEvent[], days = 120): DailyTrafficPoint[] {
@@ -282,7 +287,13 @@ export async function recordIncomingEvent(payload: IncomingEvent): Promise<{ ses
     };
   } else {
     session.updatedAt = now;
-    if (adClickId) { session.adClickId = adClickId; session.adClickSource = adClickSource; }
+    if (adClickId) {
+      session.adClickId = adClickId;
+      session.adClickSource = adClickSource;
+      if (!isPaid(session)) {
+        session.medium = adClickSource === 'Google' || adClickSource === 'Microsoft Ads' ? 'paid_search' : 'paid_social';
+      }
+    }
     session.durationSeconds = Math.max(1, Math.round((Date.now() - new Date(session.createdAt).getTime()) / 1000));
     if (payload.eventType === 'pageview') session.pageCount = (session.pageCount || 1) + 1;
   }

@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
-import { RangeTabs, cleanLocation, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
+import { RangeTabs, cleanLocation, isPaidMedium, isPaidSession, resolvePlatformName, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
 
 /** Number of visitors shown per "page" in the journey feed. */
 const FEED_PAGE_SIZE = 30;
@@ -165,7 +165,9 @@ export default function AdTrackingClient({
     if (timeRange === 'custom' && (customEnd || customStart)) {
       return parseDateBoundary(customEnd || customStart, true);
     }
-    return Date.now();
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return end.getTime();
   }, [timeRange, customStart, customEnd]);
 
   // All sessions & events strictly within the active date/time window
@@ -189,8 +191,8 @@ export default function AdTrackingClient({
       all: windowSessions.length,
       amazon: windowSessions.filter((s) => s.exitOutcome === 'amazon_click').length,
       arc: windowSessions.filter((s) => s.exitOutcome === 'arc_signup').length,
-      paid: windowSessions.filter((s) => isPaidMedium(s.medium)).length,
-      organic: windowSessions.filter((s) => !isPaidMedium(s.medium)).length,
+      paid: windowSessions.filter((s) => isPaidSession(s)).length,
+      organic: windowSessions.filter((s) => !isPaidSession(s)).length,
     };
   }, [windowSessions]);
 
@@ -199,8 +201,8 @@ export default function AdTrackingClient({
     return windowSessions.filter((s) => {
       if (visitorFilter === 'amazon' && s.exitOutcome !== 'amazon_click') return false;
       if (visitorFilter === 'arc' && s.exitOutcome !== 'arc_signup') return false;
-      if (visitorFilter === 'paid' && !isPaidMedium(s.medium)) return false;
-      if (visitorFilter === 'organic' && isPaidMedium(s.medium)) return false;
+      if (visitorFilter === 'paid' && !isPaidSession(s)) return false;
+      if (visitorFilter === 'organic' && isPaidSession(s)) return false;
 
       if (visitorSearch.trim()) {
         const q = visitorSearch.toLowerCase();
@@ -246,7 +248,7 @@ export default function AdTrackingClient({
 
     for (const s of windowSessions) {
       const key = `${s.campaign || '(direct)'}\u0000${s.source}`;
-      const isPaid = isPaidMedium(s.medium);
+      const isPaid = isPaidSession(s);
       const g = groups.get(key) ?? {
         campaign: s.campaign || '(direct)',
         source: s.source,
@@ -292,27 +294,69 @@ export default function AdTrackingClient({
   }, [selectedVisitor, initialEvents]);
 
   const socialPlatformRows = useMemo(() => {
-    const platformNames: Record<string, string> = {
-      instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', youtube: 'YouTube',
-      pinterest: 'Pinterest', linkedin: 'LinkedIn', x: 'X', twitter: 'X', threads: 'Threads',
-      reddit: 'Reddit', snapchat: 'Snapchat',
-    };
-    const totals = new Map<string, { name: string; paidVisitors: number; campaigns: Set<string>; amazonClicks: number }>();
+    const sessionAmazonMap = new Map<string, number>();
+    for (const e of windowEvents) {
+      if (e.eventType === 'amazon_click') {
+        sessionAmazonMap.set(e.sessionId, (sessionAmazonMap.get(e.sessionId) ?? 0) + 1);
+      }
+    }
+
+    const totals = new Map<string, {
+      name: string;
+      paidVisitors: number;
+      campaigns: Set<string>;
+      amazonClicks: number;
+    }>();
 
     windowSessions.forEach((session) => {
-      const platform = platformNames[session.source.trim().toLowerCase()];
-      if (!platform) return;
-      const isPaid = isPaidMedium(session.medium);
+      const isPaid = isPaidSession(session);
       if (!isPaid) return;
-      const row = totals.get(platform) || { name: platform, paidVisitors: 0, campaigns: new Set<string>(), amazonClicks: 0 };
+
+      const platform = resolvePlatformName(session.source, session.adClickSource, session.referrer);
+      if (!platform) return;
+
+      const row = totals.get(platform) || {
+        name: platform,
+        paidVisitors: 0,
+        campaigns: new Set<string>(),
+        amazonClicks: 0,
+      };
+
       row.paidVisitors += 1;
-      if (session.campaign && !['(direct)', 'social_referral'].includes(session.campaign)) row.campaigns.add(session.campaign);
-      if (session.exitOutcome === 'amazon_click') row.amazonClicks += 1;
+
+      if (session.campaign && !['(direct)', 'social_referral', '(organic)', '(not set)'].includes(session.campaign)) {
+        row.campaigns.add(session.campaign);
+      } else if (session.content && !session.content.includes('(direct)')) {
+        row.campaigns.add(session.content);
+      }
+
+      const amazonClicks = sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
+      row.amazonClicks += amazonClicks;
+
       totals.set(platform, row);
     });
 
+    // Fallback if windowSessions is empty but campaigns prop contains paid campaigns
+    if (totals.size === 0 && windowSessions.length === 0 && campaigns.length > 0) {
+      campaigns.filter((c) => c.isPaid).forEach((c) => {
+        const platform = resolvePlatformName(c.source);
+        const row = totals.get(platform) || {
+          name: platform,
+          paidVisitors: 0,
+          campaigns: new Set<string>(),
+          amazonClicks: 0,
+        };
+        row.paidVisitors += c.visitors;
+        if (c.campaign && !['(direct)', '(not set)'].includes(c.campaign)) {
+          row.campaigns.add(c.campaign);
+        }
+        row.amazonClicks += c.amazonClicks;
+        totals.set(platform, row);
+      });
+    }
+
     return [...totals.values()].sort((a, b) => b.paidVisitors - a.paidVisitors);
-  }, [windowSessions]);
+  }, [windowSessions, windowEvents, campaigns]);
 
   const campaignLeads = useMemo(() => windowSessions
     .filter((session) => session.exitOutcome === 'arc_signup' && Boolean(session.readerEmail?.trim()))
@@ -320,13 +364,13 @@ export default function AdTrackingClient({
   [windowSessions]);
 
   const leadCounts = useMemo(() => campaignLeads.reduce((counts, session) => {
-    const isPaid = isPaidMedium(session.medium);
+    const isPaid = isPaidSession(session);
     counts[isPaid ? 'paid' : 'marketing'] += 1;
     return counts;
   }, { all: campaignLeads.length, paid: 0, marketing: 0 }), [campaignLeads]);
 
   const filteredCampaignLeads = useMemo(() => campaignLeads.filter((session) => {
-    const isPaid = isPaidMedium(session.medium);
+    const isPaid = isPaidSession(session);
     if (leadFilter === 'paid' && !isPaid) return false;
     if (leadFilter === 'marketing' && isPaid) return false;
     const query = leadSearch.trim().toLowerCase();
@@ -495,7 +539,7 @@ export default function AdTrackingClient({
                   <tr key={row.name}>
                     <td><span className="an-social-platform-dot" />{row.name}</td>
                     <td>{row.paidVisitors.toLocaleString()}</td>
-                    <td>{row.campaigns.size ? [...row.campaigns].join(', ') : 'Tagged source'}</td>
+                    <td>{row.campaigns.size ? [...row.campaigns].join(', ') : 'Direct ad link'}</td>
                     <td>{row.amazonClicks.toLocaleString()}</td>
                   </tr>
                 ))}
@@ -615,7 +659,7 @@ export default function AdTrackingClient({
 
         <div className="an-leads-list" aria-live="polite">
           {filteredCampaignLeads.length ? filteredCampaignLeads.map((lead) => {
-            const isPaid = isPaidMedium(lead.medium);
+            const isPaid = isPaidSession(lead);
             const signupDate = lead.updatedAt || lead.createdAt;
             const initials = (lead.readerName || lead.readerEmail || 'Reader')
               .split(/\s+/)
@@ -747,7 +791,7 @@ export default function AdTrackingClient({
                 const date = new Date(v.createdAt);
                 const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const isPaid = isPaidMedium(v.medium);
+                const isPaid = isPaidSession(v);
 
                 return (
                   <tr
