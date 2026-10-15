@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
-import { RangeTabs, cleanLocation, isPaidMedium, isPaidSession, resolvePlatformName, resolveCampaignName, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
+import { RangeTabs, cleanLocation, isPaidMedium, isPaidSession, resolvePlatformName, resolveCampaignName, resolveDestination, type DestinationInfo, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
 
 /** Number of visitors shown per "page" in the journey feed. */
 const FEED_PAGE_SIZE = 30;
@@ -367,9 +367,12 @@ export default function AdTrackingClient({
 
   const socialPlatformGroups = useMemo(() => {
     const sessionAmazonMap = new Map<string, number>();
+    const sessionVideoMap = new Map<string, number>();
     for (const e of socialWindowEvents) {
       if (e.eventType === 'amazon_click') {
         sessionAmazonMap.set(e.sessionId, (sessionAmazonMap.get(e.sessionId) ?? 0) + 1);
+      } else if (e.eventType === 'video_play') {
+        sessionVideoMap.set(e.sessionId, (sessionVideoMap.get(e.sessionId) ?? 0) + 1);
       }
     }
 
@@ -378,11 +381,14 @@ export default function AdTrackingClient({
       totalVisitors: number;
       totalAmazonClicks: number;
       totalArcSignups: number;
+      totalVideoPlays: number;
       campMap: Map<string, {
         name: string;
+        destination: DestinationInfo;
         visitors: number;
         amazonClicks: number;
         arcSignups: number;
+        videoPlays: number;
       }>;
     }>();
 
@@ -405,6 +411,7 @@ export default function AdTrackingClient({
           totalVisitors: 0,
           totalAmazonClicks: 0,
           totalArcSignups: 0,
+          totalVideoPlays: 0,
           campMap: new Map(),
         };
         platformMap.set(platform, pData);
@@ -412,24 +419,29 @@ export default function AdTrackingClient({
 
       const amazonClicks = sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
       const arcSignup = session.exitOutcome === 'arc_signup' ? 1 : 0;
+      const videoPlay = sessionVideoMap.get(session.id) || (session.exitOutcome === 'video_play' ? 1 : 0);
 
       pData.totalVisitors += 1;
       pData.totalAmazonClicks += amazonClicks;
       pData.totalArcSignups += arcSignup;
+      pData.totalVideoPlays += videoPlay;
 
       let cData = pData.campMap.get(campaignName);
       if (!cData) {
         cData = {
           name: campaignName,
+          destination: resolveDestination(session.landingPage, session.content, session.outcomeDetail),
           visitors: 0,
           amazonClicks: 0,
           arcSignups: 0,
+          videoPlays: 0,
         };
         pData.campMap.set(campaignName, cData);
       }
       cData.visitors += 1;
       cData.amazonClicks += amazonClicks;
       cData.arcSignups += arcSignup;
+      cData.videoPlays += videoPlay;
     });
 
     // Fallback if socialWindowSessions is empty and no custom date is selected, but campaigns prop contains paid campaigns
@@ -446,6 +458,7 @@ export default function AdTrackingClient({
             totalVisitors: 0,
             totalAmazonClicks: 0,
             totalArcSignups: 0,
+            totalVideoPlays: 0,
             campMap: new Map(),
           };
           platformMap.set(platform, pData);
@@ -454,20 +467,24 @@ export default function AdTrackingClient({
         pData.totalVisitors += c.visitors;
         pData.totalAmazonClicks += c.amazonClicks;
         pData.totalArcSignups += c.arcSignups;
+        pData.totalVideoPlays += c.videoPlays;
 
         let cData = pData.campMap.get(campaignName);
         if (!cData) {
           cData = {
             name: campaignName,
+            destination: resolveDestination(undefined, c.campaign),
             visitors: 0,
             amazonClicks: 0,
             arcSignups: 0,
+            videoPlays: 0,
           };
           pData.campMap.set(campaignName, cData);
         }
         cData.visitors += c.visitors;
         cData.amazonClicks += c.amazonClicks;
         cData.arcSignups += c.arcSignups;
+        cData.videoPlays += c.videoPlays;
       });
     }
 
@@ -477,6 +494,7 @@ export default function AdTrackingClient({
         totalVisitors: p.totalVisitors,
         totalAmazonClicks: p.totalAmazonClicks,
         totalArcSignups: p.totalArcSignups,
+        totalVideoPlays: p.totalVideoPlays,
         campaigns: [...p.campMap.values()]
           .map((c) => ({
             ...c,
@@ -727,12 +745,12 @@ export default function AdTrackingClient({
             <table className="an-social-table">
               <thead>
                 <tr>
-                  <th style={{ width: '18%' }}>Platform</th>
-                  <th style={{ width: '38%' }}>Campaign (Select from dropdown)</th>
-                  <th style={{ textAlign: 'right', width: '11%' }}>Paid visitors</th>
-                  <th style={{ textAlign: 'right', width: '11%' }}>Amazon clicks</th>
-                  <th style={{ textAlign: 'right', width: '11%' }}>ARC signups</th>
-                  <th style={{ textAlign: 'right', width: '11%' }}>Conv. rate</th>
+                  <th style={{ width: '15%' }}>Platform</th>
+                  <th style={{ width: '31%' }}>Campaign (Select to Inspect)</th>
+                  <th style={{ width: '24%' }}>Target (Book / Video / Page)</th>
+                  <th style={{ textAlign: 'right', width: '10%' }}>Paid visitors</th>
+                  <th style={{ textAlign: 'right', width: '10%' }}>Amazon clicks</th>
+                  <th style={{ textAlign: 'right', width: '10%' }}>Conv. rate</th>
                 </tr>
               </thead>
               <tbody>
@@ -742,6 +760,7 @@ export default function AdTrackingClient({
                   const activeVisitors = activeCampaign ? activeCampaign.visitors : p.totalVisitors;
                   const activeAmazon = activeCampaign ? activeCampaign.amazonClicks : p.totalAmazonClicks;
                   const activeArc = activeCampaign ? activeCampaign.arcSignups : p.totalArcSignups;
+                  const activeVideo = activeCampaign ? activeCampaign.videoPlays : p.totalVideoPlays;
                   const activeConv = activeVisitors
                     ? Number((((activeAmazon + activeArc) / activeVisitors) * 100).toFixed(1))
                     : 0;
@@ -775,7 +794,6 @@ export default function AdTrackingClient({
                                 cursor: 'pointer',
                                 outline: 'none',
                                 width: '100%',
-                                maxWidth: 380,
                               }}
                               aria-label={`Select campaign for ${p.platform}`}
                             >
@@ -784,17 +802,17 @@ export default function AdTrackingClient({
                               </option>
                               {p.campaigns.map((c) => (
                                 <option key={c.name} value={c.name}>
-                                  🎯 {c.name}
+                                  {c.destination.icon} {c.name} → {c.destination.badge}: {c.destination.label} ({c.visitors} visits)
                                 </option>
                               ))}
                             </select>
                             {selected !== 'all' ? (
                               <span style={{ fontSize: 11.5, color: '#c9a860' }}>
-                                Selected: <strong>{selected}</strong> ({activeVisitors.toLocaleString()} visits)
+                                Inspecting single campaign: <strong>{selected}</strong>
                               </span>
                             ) : (
                               <span style={{ fontSize: 11.5, color: '#8c7e6c' }}>
-                                Showing combined total. Choose any campaign in the dropdown to inspect its exact data.
+                                Combined total of {p.campaigns.length} campaigns. Select from dropdown to isolate.
                               </span>
                             )}
                           </div>
@@ -806,14 +824,50 @@ export default function AdTrackingClient({
                           <span style={{ color: '#8c7e6c' }}>Direct ad link</span>
                         )}
                       </td>
+                      <td>
+                        {activeCampaign ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 14 }}>{activeCampaign.destination.icon}</span>
+                              <span
+                                style={{
+                                  background: activeCampaign.destination.type === 'book' ? 'rgba(91, 156, 246, 0.15)' : activeCampaign.destination.type === 'video' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(201, 168, 96, 0.15)',
+                                  color: activeCampaign.destination.type === 'book' ? '#93c5fd' : activeCampaign.destination.type === 'video' ? '#c4b5fd' : '#fcd34d',
+                                  padding: '2px 7px',
+                                  borderRadius: 4,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {activeCampaign.destination.badge}
+                              </span>
+                              <strong style={{ fontSize: 12.5, color: '#f7f2e8' }}>{activeCampaign.destination.label}</strong>
+                            </div>
+                            <span style={{ fontSize: 11, color: '#8c7e6c' }}>
+                              Directs to: <a href={activeCampaign.destination.path} target="_blank" rel="noopener noreferrer" style={{ color: '#c9a860', textDecoration: 'underline' }}>{activeCampaign.destination.path}</a>
+                            </span>
+                            {activeVideo > 0 && (
+                              <span style={{ fontSize: 11, color: '#a78bfa' }}>
+                                🎬 {activeVideo} book trailer views
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <span style={{ fontSize: 12, color: '#d5c7b3' }}>
+                              {p.campaigns.map((c) => `${c.destination.icon} ${c.destination.label}`).filter((v, idx, arr) => arr.indexOf(v) === idx).join(' · ')}
+                            </span>
+                            <span style={{ fontSize: 11, color: '#8c7e6c' }}>
+                              Multiple destinations. Choose a campaign in the dropdown to inspect its exact book or page.
+                            </span>
+                          </div>
+                        )}
+                      </td>
                       <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
                         <strong style={{ fontSize: 15, color: '#f7f2e8' }}>{activeVisitors.toLocaleString()}</strong>
                       </td>
                       <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums', fontSize: 14 }}>
                         {activeAmazon.toLocaleString()}
-                      </td>
-                      <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums', fontSize: 14 }}>
-                        {activeArc.toLocaleString()}
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <span className="an-badge success">
