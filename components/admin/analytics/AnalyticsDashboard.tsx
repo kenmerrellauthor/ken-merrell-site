@@ -479,7 +479,7 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
         <div className="an-card-head">
           <div>
             <h2 id="trend-title" className="an-card-title"><Ic k="chart" s={22} /> Traffic &amp; conversion trend</h2>
-            <p className="an-card-sub">{timeRange === 'today' ? 'Hourly breakdown for today' : `Daily totals for ${rangeLabel.toLowerCase()}`}. Turn series on or off to compare them.</p>
+            <p className="an-card-sub">{isSingleDay ? `Hourly breakdown for ${rangeLabel.toLowerCase()}` : `Daily totals for ${rangeLabel.toLowerCase()}`}. Y-axis shows count of visitors/actions; X-axis shows the timeline. Turn series on or off to compare.</p>
           </div>
         </div>
         <TrendChart data={chartTraffic} />

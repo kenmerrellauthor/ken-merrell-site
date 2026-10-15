@@ -1174,6 +1174,27 @@ select.crm-in { appearance: auto; }
 }
 .an-toggle.on i { background: var(--toggle-color); box-shadow: 0 0 8px var(--toggle-color); }
 .an-toggle-note { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-size: 11px; color: #8c7e6c; }
+.an-axis-guide-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(201, 168, 96, 0.08);
+  border: 1px solid rgba(201, 168, 96, 0.22);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #dfd4c4;
+}
+.an-axis-guide-pill strong { color: #c9a860; font-weight: 700; }
+.an-axis-guide-pill .an-axis-dot { color: rgba(201, 168, 96, 0.4); margin: 0 2px; }
+.an-chart-axis-name {
+  fill: #c9a860;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
 
 .an-chart-guide { stroke: rgba(239, 231, 214, 0.25); stroke-width: 1; stroke-dasharray: 2 4; }
 .an-series .an-chart-line { filter: none; }
