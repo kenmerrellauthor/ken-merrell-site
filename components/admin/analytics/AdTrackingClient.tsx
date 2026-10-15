@@ -645,11 +645,6 @@ export default function AdTrackingClient({
                       <span className="an-badge gold" style={{ fontFamily: 'monospace', fontWeight: 700 }}>
                         #{v.id}
                       </span>
-                      {v.adClickId && (
-                        <span className="an-ad-click-id" title={`${v.adClickSource || 'Ad'} click ID: ${v.adClickId}`}>
-                          {v.adClickSource || 'Ad'} · {v.adClickId}
-                        </span>
-                      )}
                     </td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

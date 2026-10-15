@@ -1042,7 +1042,7 @@ select.crm-in { appearance: auto; }
 .an-ad-click-id { display: block; max-width: 210px; margin-top: 5px; color: #a99b83; font: 10px/1.35 monospace; overflow-wrap: anywhere; }
 .an-ad-click-detail { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; font-size: 13px; }
 .an-ad-click-detail > span:first-child { flex: 0 0 auto; color: #8c7e6c; }
-.an-ad-click-detail code { max-width: 72%; color: #d6c394; font: 11px/1.5 monospace; text-align: right; overflow-wrap: anywhere; }
+.an-ad-click-detail code { max-width: 72%; color: #e5cb93; font: 12px/1.5 monospace; text-align: left; overflow-wrap: anywhere; word-break: break-all; background: rgba(201, 168, 96, 0.08); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(201, 168, 96, 0.25); }
 .an-ad-click-detail > span:last-child { color: #b5a895; text-align: right; }
 @media (max-width: 600px) {
   .an-social-heading { flex-direction: column; }
