@@ -135,7 +135,105 @@ export function resolveCampaignName(
   return c;
 }
 
+export type DestinationInfo = {
+  type: 'book' | 'video' | 'page';
+  label: string;
+  badge: string;
+  path: string;
+  icon: string;
+};
 
+export function resolveDestination(
+  landingPage?: string,
+  content?: string,
+  outcomeDetail?: string
+): DestinationInfo {
+  const p = (landingPage || '').toLowerCase().trim();
+  const c = (content || '').toLowerCase().trim();
+  const o = (outcomeDetail || '').toLowerCase().trim();
+
+  // 1. Check for specific books
+  if (p.includes('petticoats-and-ash')) {
+    return {
+      type: 'book',
+      label: 'Petticoats and Ash',
+      badge: 'Book Page',
+      path: '/books/petticoats-and-ash',
+      icon: '📖',
+    };
+  }
+  if (p.includes('traitors-death')) {
+    return {
+      type: 'book',
+      label: "Petticoats & A Traitor's Death",
+      badge: 'Book Page',
+      path: '/books/petticoats-and-a-traitors-death',
+      icon: '📖',
+    };
+  }
+  if (p.includes('craven-dawn')) {
+    return {
+      type: 'book',
+      label: 'Of Craven Dawn',
+      badge: 'Book Page',
+      path: '/books/of-craven-dawn',
+      icon: '📖',
+    };
+  }
+  if (p.includes('/books/')) {
+    const slug = p.split('/books/')[1]?.split('?')[0]?.replace(/\/$/, '') || 'book';
+    const cleanTitle = slug.replace(/[_-]+/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    return {
+      type: 'book',
+      label: cleanTitle,
+      badge: 'Book Page',
+      path: p.split('?')[0],
+      icon: '📖',
+    };
+  }
+
+  // 2. Check for trailer / video
+  if (p.includes('video') || p.includes('trailer') || c.includes('trailer') || c.includes('video') || o.includes('trailer') || o.includes('video')) {
+    return {
+      type: 'video',
+      label: 'Cinematic Book Trailer',
+      badge: 'Video Trailer',
+      path: p || '/#trailer',
+      icon: '🎬',
+    };
+  }
+
+  // 3. Advance Readers Page
+  if (p.includes('advance-readers')) {
+    return {
+      type: 'page',
+      label: 'Advance Readers Club',
+      badge: 'ARC Signup Page',
+      path: '/advance-readers',
+      icon: '📜',
+    };
+  }
+
+  // 4. Author Bio Page
+  if (p.includes('author')) {
+    return {
+      type: 'page',
+      label: 'Author Biography',
+      badge: 'Author Profile',
+      path: '/author',
+      icon: '👤',
+    };
+  }
+
+  // 5. Storefront Home
+  return {
+    type: 'page',
+    label: 'Main Storefront',
+    badge: 'Home Storefront',
+    path: '/',
+    icon: '🏛️',
+  };
+}
 
 export function parseDateBoundary(dateStr?: string, isEndOfDay: boolean = false): number {
   if (!dateStr) return isEndOfDay ? Date.now() : 0;
