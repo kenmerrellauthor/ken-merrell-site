@@ -97,7 +97,6 @@ export function resolveCampaignName(
   session?: { landingPage?: string; content?: string; outcomeDetail?: string }
 ): string {
   const c = (campaign || '').trim();
-  if (!c) return '(direct)';
 
   if (KNOWN_CAMPAIGN_NAMES[c]) {
     return KNOWN_CAMPAIGN_NAMES[c];
@@ -110,13 +109,27 @@ export function resolveCampaignName(
       return session.content.replace(/[_-]+/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
     }
     const path = session?.landingPage || '';
-    if (path.includes('petticoats-and-ash')) return 'Petticoats and Ash Ad';
-    if (path.includes('traitors-death')) return "Traitor's Death Ad";
-    if (path.includes('craven-dawn')) return 'Of Craven Dawn Ad';
-    if (path.includes('advance-readers')) return 'Advance Readers Ad';
-    if (path.includes('author')) return 'Author Profile Ad';
-    if (path === '/' || path === '') return 'Storefront Ad';
+    if (path.includes('petticoats-and-ash')) return 'Petticoats and Ash (Meta Campaign)';
+    if (path.includes('traitors-death')) return "Traitor's Death (Meta Campaign)";
+    if (path.includes('craven-dawn')) return 'Of Craven Dawn (Meta Campaign)';
+    if (path.includes('advance-readers')) return 'Advance Readers (Meta Campaign)';
+    if (path.includes('author')) return 'Author Profile (Meta Campaign)';
+    if (path === '/' || path === '') return 'Storefront (Meta Campaign)';
     return `Meta Campaign (${c.slice(-6)})`;
+  }
+
+  if (!c || ['(direct)', '(not set)', 'social_referral'].includes(c)) {
+    if (session?.content && !session.content.includes('(direct)')) {
+      return session.content.replace(/[_-]+/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    }
+    const path = session?.landingPage || '';
+    if (path.includes('petticoats-and-ash')) return 'Petticoats and Ash (Meta Campaign)';
+    if (path.includes('traitors-death')) return "Traitor's Death (Meta Campaign)";
+    if (path.includes('craven-dawn')) return 'Of Craven Dawn (Meta Campaign)';
+    if (path.includes('advance-readers')) return 'Advance Readers (Meta Campaign)';
+    if (path.includes('author')) return 'Author Profile (Meta Campaign)';
+    if (path === '/' || path === '') return 'Storefront Discovery';
+    return c || 'Direct ad link';
   }
 
   return c;

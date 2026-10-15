@@ -119,47 +119,60 @@ export default function Tracker() {
       }
     }
 
-    const hasNewCampaign = Boolean(utmSource || utmCampaign || utmMedium || adClickId);
+    const hasNewCampaign = Boolean(utmSource || utmCampaign || utmMedium || utmContent || adClickId);
 
     // Get or initialize session ID
     let sessionId = '';
     try {
-      const prevSource = sessionStorage.getItem('km_utm_source') || '';
-      const prevCampaign = sessionStorage.getItem('km_utm_campaign') || '';
-      sessionId = sessionStorage.getItem('km_session_id') || '';
-
-      // Starting a new session if arriving with campaign parameters or if no session yet
-      if (!sessionId || (hasNewCampaign && (utmCampaign !== prevCampaign || utmSource !== prevSource))) {
+      if (hasNewCampaign) {
+        // Arriving from an ad or campaign link: start a brand-new session and clear previous campaign context
         sessionId = createVisitorId();
         sessionStorage.setItem('km_session_id', sessionId);
-      }
-    } catch {
-      sessionId = createVisitorId();
-    }
+        sessionStorage.removeItem('km_utm_source');
+        sessionStorage.removeItem('km_utm_medium');
+        sessionStorage.removeItem('km_utm_campaign');
+        sessionStorage.removeItem('km_utm_content');
+        sessionStorage.removeItem('km_ad_click_id');
+        sessionStorage.removeItem('km_ad_click_source');
 
-    // Cache UTM parameters for the session
-    try {
-      if (utmSource) sessionStorage.setItem('km_utm_source', utmSource);
-      else utmSource = sessionStorage.getItem('km_utm_source') || '';
+        // If ad click ID is present (e.g. Meta fbclid) but UTM tags are missing, auto-populate campaign and source
+        if (adClickId) {
+          if (!utmSource) utmSource = adClickSource === 'Meta' ? 'instagram_ad' : `${adClickSource.toLowerCase()}_ad`;
+          if (!utmMedium) utmMedium = 'paid_social';
+          if (!utmCampaign) {
+            if (pathname.includes('advance-readers')) utmCampaign = 'Advance Readers (Meta Campaign)';
+            else if (pathname.includes('petticoats-and-ash')) utmCampaign = 'Petticoats and Ash (Meta Campaign)';
+            else if (pathname.includes('traitors-death')) utmCampaign = "Traitor's Death (Meta Campaign)";
+            else if (pathname.includes('craven-dawn')) utmCampaign = 'Of Craven Dawn (Meta Campaign)';
+            else if (pathname.includes('author')) utmCampaign = 'Author Profile (Meta Campaign)';
+            else utmCampaign = 'Meta Social Ad';
+          }
+        }
 
-      if (utmMedium) sessionStorage.setItem('km_utm_medium', utmMedium);
-      else utmMedium = sessionStorage.getItem('km_utm_medium') || '';
-
-      if (utmCampaign) sessionStorage.setItem('km_utm_campaign', utmCampaign);
-      else utmCampaign = sessionStorage.getItem('km_utm_campaign') || '';
-
-      if (utmContent) sessionStorage.setItem('km_utm_content', utmContent);
-      else utmContent = sessionStorage.getItem('km_utm_content') || '';
-
-      if (adClickId) {
-        sessionStorage.setItem('km_ad_click_id', adClickId);
-        sessionStorage.setItem('km_ad_click_source', adClickSource);
+        if (utmSource) sessionStorage.setItem('km_utm_source', utmSource);
+        if (utmMedium) sessionStorage.setItem('km_utm_medium', utmMedium);
+        if (utmCampaign) sessionStorage.setItem('km_utm_campaign', utmCampaign);
+        if (utmContent) sessionStorage.setItem('km_utm_content', utmContent);
+        if (adClickId) {
+          sessionStorage.setItem('km_ad_click_id', adClickId);
+          sessionStorage.setItem('km_ad_click_source', adClickSource);
+        }
       } else {
+        // Internal navigation on site: maintain existing session and cached campaign attribution
+        sessionId = sessionStorage.getItem('km_session_id') || '';
+        if (!sessionId) {
+          sessionId = createVisitorId();
+          sessionStorage.setItem('km_session_id', sessionId);
+        }
+        utmSource = sessionStorage.getItem('km_utm_source') || '';
+        utmMedium = sessionStorage.getItem('km_utm_medium') || '';
+        utmCampaign = sessionStorage.getItem('km_utm_campaign') || '';
+        utmContent = sessionStorage.getItem('km_utm_content') || '';
         adClickId = sessionStorage.getItem('km_ad_click_id') || '';
         adClickSource = sessionStorage.getItem('km_ad_click_source') || '';
       }
     } catch {
-      /* ignore storage block */
+      sessionId = createVisitorId();
     }
 
     const currentFull = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');

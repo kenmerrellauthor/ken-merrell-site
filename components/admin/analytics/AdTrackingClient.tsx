@@ -373,10 +373,11 @@ export default function AdTrackingClient({
     }
 
     const totals = new Map<string, {
-      name: string;
+      platform: string;
+      campaign: string;
       paidVisitors: number;
-      campaigns: Set<string>;
       amazonClicks: number;
+      arcSignups: number;
     }>();
 
     socialWindowSessions.forEach((session) => {
@@ -386,49 +387,56 @@ export default function AdTrackingClient({
       const platform = resolvePlatformName(session.source, session.adClickSource, session.referrer);
       if (!platform) return;
 
-      const row = totals.get(platform) || {
-        name: platform,
+      const cleanCamp = resolveCampaignName(session.campaign, session);
+      const campaignName = cleanCamp && !['(direct)', 'social_referral', '(organic)', '(not set)'].includes(cleanCamp)
+        ? cleanCamp
+        : (session.content && !session.content.includes('(direct)') ? session.content : 'Direct ad link');
+
+      const key = `${platform}\u0000${campaignName}`;
+      const row = totals.get(key) || {
+        platform,
+        campaign: campaignName,
         paidVisitors: 0,
-        campaigns: new Set<string>(),
         amazonClicks: 0,
+        arcSignups: 0,
       };
 
       row.paidVisitors += 1;
-
-      const cleanCamp = resolveCampaignName(session.campaign, session);
-      if (cleanCamp && !['(direct)', 'social_referral', '(organic)', '(not set)'].includes(cleanCamp)) {
-        row.campaigns.add(cleanCamp);
-      } else if (session.content && !session.content.includes('(direct)')) {
-        row.campaigns.add(session.content);
+      row.amazonClicks += sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
+      if (session.exitOutcome === 'arc_signup') {
+        row.arcSignups += 1;
       }
 
-      const amazonClicks = sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
-      row.amazonClicks += amazonClicks;
-
-      totals.set(platform, row);
+      totals.set(key, row);
     });
 
     // Fallback if socialWindowSessions is empty and no custom date is selected, but campaigns prop contains paid campaigns
     if (!socialStartDate && totals.size === 0 && socialWindowSessions.length === 0 && campaigns.length > 0) {
       campaigns.filter((c) => c.isPaid).forEach((c) => {
         const platform = resolvePlatformName(c.source);
-        const row = totals.get(platform) || {
-          name: platform,
+        const cleanCamp = resolveCampaignName(c.campaign);
+        const campaignName = cleanCamp && !['(direct)', '(not set)'].includes(cleanCamp) ? cleanCamp : 'Direct ad link';
+        const key = `${platform}\u0000${campaignName}`;
+        const row = totals.get(key) || {
+          platform,
+          campaign: campaignName,
           paidVisitors: 0,
-          campaigns: new Set<string>(),
           amazonClicks: 0,
+          arcSignups: 0,
         };
         row.paidVisitors += c.visitors;
-        const cleanCamp = resolveCampaignName(c.campaign);
-        if (cleanCamp && !['(direct)', '(not set)'].includes(cleanCamp)) {
-          row.campaigns.add(cleanCamp);
-        }
         row.amazonClicks += c.amazonClicks;
-        totals.set(platform, row);
+        row.arcSignups += c.arcSignups;
+        totals.set(key, row);
       });
     }
 
-    return [...totals.values()].sort((a, b) => b.paidVisitors - a.paidVisitors);
+    return [...totals.values()]
+      .map((row) => ({
+        ...row,
+        conversionRate: row.paidVisitors ? Number((((row.amazonClicks + row.arcSignups) / row.paidVisitors) * 100).toFixed(1)) : 0,
+      }))
+      .sort((a, b) => b.paidVisitors - a.paidVisitors);
   }, [socialWindowSessions, socialWindowEvents, campaigns, socialStartDate]);
 
   const campaignLeads = useMemo(() => windowSessions
@@ -666,15 +674,39 @@ export default function AdTrackingClient({
           <div className="an-social-table-wrap">
             <table className="an-social-table">
               <thead>
-                <tr><th>Platform</th><th>Paid visitors</th><th>Campaigns</th><th>Amazon clicks</th></tr>
+                <tr>
+                  <th>Platform</th>
+                  <th>Campaign</th>
+                  <th style={{ textAlign: 'right' }}>Paid visitors</th>
+                  <th style={{ textAlign: 'right' }}>Amazon clicks</th>
+                  <th style={{ textAlign: 'right' }}>ARC signups</th>
+                  <th style={{ textAlign: 'right' }}>Conv. rate</th>
+                </tr>
               </thead>
               <tbody>
                 {socialPlatformRows.map((row) => (
-                  <tr key={row.name}>
-                    <td><span className="an-social-platform-dot" />{row.name}</td>
-                    <td>{row.paidVisitors.toLocaleString()}</td>
-                    <td>{row.campaigns.size ? [...row.campaigns].join(', ') : 'Direct ad link'}</td>
-                    <td>{row.amazonClicks.toLocaleString()}</td>
+                  <tr key={`${row.platform}-${row.campaign}`}>
+                    <td>
+                      <span className="an-social-platform-dot" />
+                      <strong>{row.platform}</strong>
+                    </td>
+                    <td>
+                      <span style={{ color: '#f7f2e8', fontWeight: 600 }}>{row.campaign}</span>
+                    </td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                      {row.paidVisitors.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                      {row.amazonClicks.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                      {row.arcSignups.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span className="an-badge success">
+                        {row.conversionRate}%
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
