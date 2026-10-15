@@ -131,10 +131,6 @@ export function TrendChart({ data }: { data: DailyTrafficPoint[] }) {
             <i aria-hidden="true" /> {s.label}
           </button>
         ))}
-        <span className="an-axis-guide-pill" title="Graph axis definitions">
-          <strong>Y-Axis:</strong> Count <span className="an-axis-dot">·</span> <strong>X-Axis:</strong> {data.length === 24 ? 'Hourly (Today)' : 'Dates'}
-        </span>
-        <span className="an-toggle-note"><i className="an-legend-promo" /> Campaign launch</span>
       </div>
 
       <div className="an-chart-container">
