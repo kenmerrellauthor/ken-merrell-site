@@ -42,13 +42,6 @@ export default function AdTrackingClient({
   };
 
   const router = useRouter();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    router.refresh();
-    setTimeout(() => setIsRefreshing(false), 900);
-  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -477,38 +470,13 @@ export default function AdTrackingClient({
           <p>Build tracking links, compare campaigns, and follow every visitor’s journey through the site.</p>
         </div>
 
-        <div className="crm-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div className="crm-actions">
           <RangeTabs
             value={timeRange}
             onChange={handleRangeChange}
             customStart={customStart}
             customEnd={customEnd}
           />
-          <button
-            type="button"
-            className="crm-btn sec"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title="Refresh analytics data right now"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '8px 14px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(201,168,96,0.3)',
-              borderRadius: 6,
-              color: '#f7f2e8',
-            }}
-          >
-            <span style={{ display: 'inline-block', transition: 'transform 0.4s ease', transform: isRefreshing ? 'rotate(360deg)' : 'none' }}>
-              🔄
-            </span>
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
-          </button>
         </div>
       </div>
 
