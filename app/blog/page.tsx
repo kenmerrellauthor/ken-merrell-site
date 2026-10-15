@@ -3,8 +3,9 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Eyebrow } from '@/components/Bits';
-import { getPublishedBlogs, getSite } from '@/lib/store';
+import { getPublishedBlogs, getSite, getBooks } from '@/lib/store';
 import BlogArchiveClient from '@/components/blog/BlogArchiveClient';
+import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 
 export const revalidate = 60;
 
@@ -31,9 +32,11 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const [site, posts] = await Promise.all([getSite(), getPublishedBlogs()]);
+  const [site, posts, books] = await Promise.all([getSite(), getPublishedBlogs(), getBooks()]);
   const featuredPost = posts.find((p) => p.featured) || posts[0];
   const otherPosts = featuredPost ? posts.filter((p) => p.id !== featuredPost.id) : posts;
+  const leftBook = books[0] || null;
+  const rightBook = books[1] || books[0] || null;
 
   return (
     <>
@@ -231,18 +234,24 @@ export default async function BlogIndexPage() {
           </section>
         )}
 
-        {/* Main Archive Grid */}
+        {/* Main Archive Grid flanked by Left & Right Ad Rails */}
         <main
           style={{
-            paddingLeft: 'var(--pad)',
-            paddingRight: 'var(--pad)',
+            paddingLeft: 'max(20px, env(safe-area-inset-left))',
+            paddingRight: 'max(20px, env(safe-area-inset-right))',
             paddingTop: 40,
             paddingBottom: 100,
-            maxWidth: 1200,
+            maxWidth: 1540,
             margin: '0 auto',
           }}
         >
-          <BlogArchiveClient posts={posts} />
+          <div className="blog-archive-layout">
+            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" />
+            <div className="blog-archive-main">
+              <BlogArchiveClient posts={posts} />
+            </div>
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" />
+          </div>
         </main>
 
         <Footer site={site} />

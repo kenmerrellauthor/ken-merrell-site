@@ -7,6 +7,7 @@ import { Eyebrow, Cover } from '@/components/Bits';
 import { getBlogBySlug, getBooks, getPublishedBlogs, getSite, incrementBlogViews } from '@/lib/store';
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
+import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 
 export const revalidate = 60;
 
@@ -74,6 +75,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   const relatedBook = post.relatedBookSlug
     ? books.find((b) => b.slug === post.relatedBookSlug)
     : null;
+
+  const leftBook = books[0] || null;
+  const rightBook = books.find((b) => b.slug !== leftBook?.slug && b.slug !== relatedBook?.slug) || books[1] || books[0] || null;
 
   const rawBase =
     (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
@@ -181,21 +185,19 @@ export default async function BlogPostPage({ params }: PageProps) {
           style={{
             paddingTop: 140,
             paddingBottom: 100,
-            paddingLeft: 'var(--pad)',
-            paddingRight: 'var(--pad)',
+            paddingLeft: 'max(20px, env(safe-area-inset-left))',
+            paddingRight: 'max(20px, env(safe-area-inset-right))',
             position: 'relative',
           }}
         >
           <div className="km-grain abs" style={{ opacity: 0.35 }} />
 
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 2,
-              maxWidth: 820,
-              margin: '0 auto',
-            }}
-          >
+          <div className="blog-reader-layout">
+            {/* Left Sidebar Ad Space */}
+            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" />
+
+            {/* Central Article Column */}
+            <div className="blog-reader-main">
             {/* Breadcrumb Navigation */}
             <nav
               aria-label="Breadcrumb"
@@ -538,6 +540,10 @@ export default async function BlogPostPage({ params }: PageProps) {
                 ← Back to All Articles
               </Link>
             </div>
+            </div>
+
+            {/* Right Sidebar Ad Space */}
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" />
           </div>
         </article>
 
