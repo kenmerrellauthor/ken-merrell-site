@@ -5,10 +5,10 @@ import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 /* Shared SVG chart geometry (matches the original dashboard chart). */
 const W = 680;
 const H = 280;
-const L = 52;
-const R = 656;
-const T = 28;
-const B = 214;
+const L = 60;
+const R = 660;
+const T = 20;
+const B = 220;
 
 /** Round a max value up to a "nice" axis ceiling (1, 2, 5 × 10ⁿ). */
 function niceMax(value: number) {
@@ -30,7 +30,14 @@ function yAt(value: number, max: number) {
 function Gridlines({ max }: { max: number }) {
   return (
     <>
-      <text x={L - 10} y={15} textAnchor="start" className="an-chart-axis-name">
+      {/* Vertical Y-axis label */}
+      <text
+        transform="rotate(-90)"
+        x={-((T + B) / 2)}
+        y={14}
+        textAnchor="middle"
+        className="an-chart-axis-name"
+      >
         ↑ Y-Axis: Count (Visitors / Conversions)
       </text>
       {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
@@ -38,7 +45,7 @@ function Gridlines({ max }: { max: number }) {
         return (
           <g key={fraction}>
             <line x1={L} y1={y} x2={R} y2={y} className="an-chart-gridline" />
-            <text x={L - 12} y={y + 4} textAnchor="end" className="an-chart-axis-label">
+            <text x={L - 10} y={y + 4} textAnchor="end" className="an-chart-axis-label">
               {Math.round(max * fraction).toLocaleString()}
             </text>
           </g>
