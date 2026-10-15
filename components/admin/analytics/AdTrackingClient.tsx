@@ -132,38 +132,71 @@ export default function AdTrackingClient({
 
   // Date window shared by visitor feed, paid-social table, and reader signups list
   const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
-  const visibleTraffic = useMemo(() => {
-    if (timeRange === 'custom' && customStart) {
-      const startDay = customStart.slice(0, 10);
-      const endDay = (customEnd || customStart).slice(0, 10);
-      const filtered = dailyTraffic.filter((p) => p.isoDate >= startDay && p.isoDate <= endDay);
-      if (filtered.length > 0) return filtered;
-    }
-    return dailyTraffic.slice(-rangeDays);
-  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
-
   const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
 
   const leadWindowStart = useMemo(() => {
     if (timeRange === 'custom' && customStart) {
       return parseDateBoundary(customStart, false);
     }
-    return windowStartOf(visibleTraffic);
-  }, [timeRange, customStart, visibleTraffic]);
+    if (timeRange === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.getTime();
+    }
+    if (timeRange === '7d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 7 * 86400000;
+    }
+    if (timeRange === '30d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 30 * 86400000;
+    }
+    if (timeRange === '90d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 90 * 86400000;
+    }
+    return 0;
+  }, [timeRange, customStart]);
 
   const leadWindowEnd = useMemo(() => {
-    if (timeRange === 'custom' && customStart) {
+    if (timeRange === 'custom' && (customEnd || customStart)) {
       return parseDateBoundary(customEnd || customStart, true);
     }
     return Date.now();
   }, [timeRange, customStart, customEnd]);
 
-  // Filtered visitor list (respects date range, filters, and search)
-  const filteredVisitors = useMemo(() => {
+  // All sessions & events strictly within the active date/time window
+  const windowSessions = useMemo(() => {
     return initialSessions.filter((s) => {
       const createdAt = new Date(s.createdAt).getTime();
-      if (createdAt < leadWindowStart || createdAt > leadWindowEnd) return false;
+      return createdAt >= leadWindowStart && createdAt <= leadWindowEnd;
+    });
+  }, [initialSessions, leadWindowStart, leadWindowEnd]);
 
+  const windowEvents = useMemo(() => {
+    return initialEvents.filter((e) => {
+      const t = new Date(e.timestamp).getTime();
+      return t >= leadWindowStart && t <= leadWindowEnd;
+    });
+  }, [initialEvents, leadWindowStart, leadWindowEnd]);
+
+  // Visitor filter tab counts (strictly within the active date range)
+  const visitorCounts = useMemo(() => {
+    return {
+      all: windowSessions.length,
+      amazon: windowSessions.filter((s) => s.exitOutcome === 'amazon_click').length,
+      arc: windowSessions.filter((s) => s.exitOutcome === 'arc_signup').length,
+      paid: windowSessions.filter((s) => isPaidMedium(s.medium)).length,
+      organic: windowSessions.filter((s) => !isPaidMedium(s.medium)).length,
+    };
+  }, [windowSessions]);
+
+  // Filtered visitor list (respects date range, action tabs, and search)
+  const filteredVisitors = useMemo(() => {
+    return windowSessions.filter((s) => {
       if (visitorFilter === 'amazon' && s.exitOutcome !== 'amazon_click') return false;
       if (visitorFilter === 'arc' && s.exitOutcome !== 'arc_signup') return false;
       if (visitorFilter === 'paid' && !isPaidMedium(s.medium)) return false;
@@ -185,7 +218,65 @@ export default function AdTrackingClient({
 
       return true;
     });
-  }, [initialSessions, leadWindowStart, leadWindowEnd, visitorFilter, visitorSearch]);
+  }, [windowSessions, visitorFilter, visitorSearch]);
+
+  // Dynamic campaign breakdown filtered to current window
+  const filteredCampaigns = useMemo<CampaignSummary[]>(() => {
+    const bySession = new Map<string, { amazon: number; arc: number; video: number }>();
+    for (const e of windowEvents) {
+      if (e.eventType !== 'amazon_click' && e.eventType !== 'arc_signup' && e.eventType !== 'video_play') continue;
+      const row = bySession.get(e.sessionId) ?? { amazon: 0, arc: 0, video: 0 };
+      if (e.eventType === 'amazon_click') row.amazon += 1;
+      else if (e.eventType === 'arc_signup') row.arc += 1;
+      else if (e.eventType === 'video_play') row.video += 1;
+      bySession.set(e.sessionId, row);
+    }
+
+    const groups = new Map<string, {
+      campaign: string;
+      source: string;
+      medium: string;
+      isPaid: boolean;
+      visitors: number;
+      amazonClicks: number;
+      arcSignups: number;
+      videoPlays: number;
+      notes: string;
+    }>();
+
+    for (const s of windowSessions) {
+      const key = `${s.campaign || '(direct)'}\u0000${s.source}`;
+      const isPaid = isPaidMedium(s.medium);
+      const g = groups.get(key) ?? {
+        campaign: s.campaign || '(direct)',
+        source: s.source,
+        medium: s.medium || '',
+        isPaid,
+        visitors: 0,
+        amazonClicks: 0,
+        arcSignups: 0,
+        videoPlays: 0,
+        notes: isPaid ? 'Paid campaign tracking link' : 'Organic and direct traffic',
+      };
+      g.visitors += 1;
+      const conv = bySession.get(s.id);
+      if (conv) {
+        g.amazonClicks += conv.amazon;
+        g.arcSignups += conv.arc;
+        g.videoPlays += conv.video;
+      }
+      groups.set(key, g);
+    }
+
+    if (groups.size === 0 && windowSessions.length === 0 && campaigns.length > 0 && timeRange === '90d') {
+      return campaigns;
+    }
+
+    return [...groups.values()].map((g): CampaignSummary => ({
+      ...g,
+      conversionRate: g.visitors ? Number((((g.amazonClicks + g.arcSignups) / g.visitors) * 100).toFixed(1)) : 0,
+    })).sort((a, b) => b.visitors - a.visitors);
+  }, [windowSessions, windowEvents, campaigns, timeRange]);
 
   // Reset pagination when filter or date range changes
   useEffect(() => {
@@ -208,9 +299,7 @@ export default function AdTrackingClient({
     };
     const totals = new Map<string, { name: string; paidVisitors: number; campaigns: Set<string>; amazonClicks: number }>();
 
-    initialSessions.forEach((session) => {
-      const createdAt = new Date(session.createdAt).getTime();
-      if (createdAt < leadWindowStart || createdAt > leadWindowEnd) return;
+    windowSessions.forEach((session) => {
       const platform = platformNames[session.source.trim().toLowerCase()];
       if (!platform) return;
       const isPaid = isPaidMedium(session.medium);
@@ -223,16 +312,12 @@ export default function AdTrackingClient({
     });
 
     return [...totals.values()].sort((a, b) => b.paidVisitors - a.paidVisitors);
-  }, [initialSessions, leadWindowStart, leadWindowEnd]);
+  }, [windowSessions]);
 
-  const campaignLeads = useMemo(() => initialSessions
+  const campaignLeads = useMemo(() => windowSessions
     .filter((session) => session.exitOutcome === 'arc_signup' && Boolean(session.readerEmail?.trim()))
-    .filter((session) => {
-      const t = new Date(session.updatedAt || session.createdAt).getTime();
-      return t >= leadWindowStart && t <= leadWindowEnd;
-    })
     .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()),
-  [initialSessions, leadWindowStart, leadWindowEnd]);
+  [windowSessions]);
 
   const leadCounts = useMemo(() => campaignLeads.reduce((counts, session) => {
     const isPaid = isPaidMedium(session.medium);
@@ -450,8 +535,8 @@ export default function AdTrackingClient({
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((c) => (
-                <tr key={c.campaign}>
+              {filteredCampaigns.length ? filteredCampaigns.map((c) => (
+                <tr key={`${c.campaign}-${c.source}`}>
                   <td>
                     <strong style={{ color: '#f7f2e8', fontSize: 15 }}>{c.campaign}</strong>
                   </td>
@@ -478,7 +563,13 @@ export default function AdTrackingClient({
                     {c.notes}
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px 16px', color: '#9c9285', fontSize: 14 }}>
+                    No campaign visits recorded for {rangeLabel.toLowerCase()}.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -587,35 +678,35 @@ export default function AdTrackingClient({
               className={visitorFilter === 'all' ? 'on' : ''}
               onClick={() => setVisitorFilter('all')}
             >
-              All Visitors ({initialSessions.length})
+              All Visitors ({visitorCounts.all})
             </button>
             <button
               type="button"
               className={visitorFilter === 'amazon' ? 'on' : ''}
               onClick={() => setVisitorFilter('amazon')}
             >
-              Clicked Amazon
+              Clicked Amazon ({visitorCounts.amazon})
             </button>
             <button
               type="button"
               className={visitorFilter === 'arc' ? 'on' : ''}
               onClick={() => setVisitorFilter('arc')}
             >
-              ARC Signups
+              ARC Signups ({visitorCounts.arc})
             </button>
             <button
               type="button"
               className={visitorFilter === 'paid' ? 'on' : ''}
               onClick={() => setVisitorFilter('paid')}
             >
-              Paid Ads
+              Paid Ads ({visitorCounts.paid})
             </button>
             <button
               type="button"
               className={visitorFilter === 'organic' ? 'on' : ''}
               onClick={() => setVisitorFilter('organic')}
             >
-              Organic
+              Organic ({visitorCounts.organic})
             </button>
           </div>
         </div>
