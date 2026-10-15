@@ -1,25 +1,21 @@
-import { getBooks } from '@/lib/store';
 import { getAnalyticsDashboardData } from '@/lib/analytics';
-import AnalyticsClient from '@/components/admin/AnalyticsClient';
+import AnalyticsDashboard from '@/components/admin/analytics/AnalyticsDashboard';
 
 export const metadata = {
-  title: 'Ad Tracking & Analytics · Ken Merrell Admin',
+  title: 'Analytics · Ken Merrell Admin',
 };
 
 export const revalidate = 0;
 
 export default async function AnalyticsPage() {
-  const [books, analytics] = await Promise.all([getBooks(), getAnalyticsDashboardData()]);
+  const analytics = await getAnalyticsDashboardData();
 
   return (
-    <AnalyticsClient
+    <AnalyticsDashboard
       initialKpis={analytics.kpis}
       dailyTraffic={analytics.dailyTraffic}
-      campaigns={analytics.campaigns}
-      topPages={analytics.topPages}
-      initialSessions={analytics.sessions}
-      initialEvents={analytics.events}
-      books={books}
+      sessions={analytics.sessions}
+      events={analytics.events}
     />
   );
 }
