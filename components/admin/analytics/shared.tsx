@@ -87,6 +87,42 @@ export function resolvePlatformName(source?: string, adClickSource?: string, ref
   return 'Paid Ad';
 }
 
+export const KNOWN_CAMPAIGN_NAMES: Record<string, string> = {
+  '52604891523595': 'Petticoats and Ash (Meta Campaign)',
+  '52605816104995': 'Advance Readers (Meta Campaign)',
+};
+
+export function resolveCampaignName(
+  campaign?: string,
+  session?: { landingPage?: string; content?: string; outcomeDetail?: string }
+): string {
+  const c = (campaign || '').trim();
+  if (!c) return '(direct)';
+
+  if (KNOWN_CAMPAIGN_NAMES[c]) {
+    return KNOWN_CAMPAIGN_NAMES[c];
+  }
+
+  const isNumeric = /^\d{6,}$/.test(c);
+
+  if (isNumeric) {
+    if (session?.content && !/^\d+$/.test(session.content)) {
+      return session.content.replace(/[_-]+/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    }
+    const path = session?.landingPage || '';
+    if (path.includes('petticoats-and-ash')) return 'Petticoats and Ash Ad';
+    if (path.includes('traitors-death')) return "Traitor's Death Ad";
+    if (path.includes('craven-dawn')) return 'Of Craven Dawn Ad';
+    if (path.includes('advance-readers')) return 'Advance Readers Ad';
+    if (path.includes('author')) return 'Author Profile Ad';
+    if (path === '/' || path === '') return 'Storefront Ad';
+    return `Meta Campaign (${c.slice(-6)})`;
+  }
+
+  return c;
+}
+
+
 
 export function parseDateBoundary(dateStr?: string, isEndOfDay: boolean = false): number {
   if (!dateStr) return isEndOfDay ? Date.now() : 0;
