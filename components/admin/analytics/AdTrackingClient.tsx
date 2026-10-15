@@ -69,6 +69,7 @@ export default function AdTrackingClient({
   // Paid Social Traffic Section Custom Date State
   const [socialStartDate, setSocialStartDate] = useState<string>('');
   const [socialEndDate, setSocialEndDate] = useState<string>('');
+  const [selectedCampaignByPlatform, setSelectedCampaignByPlatform] = useState<Record<string, string>>({});
 
   // Reset the feed back to the first 30 whenever the filter or search changes.
   useEffect(() => {
@@ -364,7 +365,7 @@ export default function AdTrackingClient({
     }
   };
 
-  const socialPlatformRows = useMemo(() => {
+  const socialPlatformGroups = useMemo(() => {
     const sessionAmazonMap = new Map<string, number>();
     for (const e of socialWindowEvents) {
       if (e.eventType === 'amazon_click') {
@@ -372,12 +373,17 @@ export default function AdTrackingClient({
       }
     }
 
-    const totals = new Map<string, {
+    const platformMap = new Map<string, {
       platform: string;
-      campaign: string;
-      paidVisitors: number;
-      amazonClicks: number;
-      arcSignups: number;
+      totalVisitors: number;
+      totalAmazonClicks: number;
+      totalArcSignups: number;
+      campMap: Map<string, {
+        name: string;
+        visitors: number;
+        amazonClicks: number;
+        arcSignups: number;
+      }>;
     }>();
 
     socialWindowSessions.forEach((session) => {
@@ -392,52 +398,98 @@ export default function AdTrackingClient({
         ? cleanCamp
         : (session.content && !session.content.includes('(direct)') ? session.content : 'Direct ad link');
 
-      const key = `${platform}\u0000${campaignName}`;
-      const row = totals.get(key) || {
-        platform,
-        campaign: campaignName,
-        paidVisitors: 0,
-        amazonClicks: 0,
-        arcSignups: 0,
-      };
-
-      row.paidVisitors += 1;
-      row.amazonClicks += sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
-      if (session.exitOutcome === 'arc_signup') {
-        row.arcSignups += 1;
+      let pData = platformMap.get(platform);
+      if (!pData) {
+        pData = {
+          platform,
+          totalVisitors: 0,
+          totalAmazonClicks: 0,
+          totalArcSignups: 0,
+          campMap: new Map(),
+        };
+        platformMap.set(platform, pData);
       }
 
-      totals.set(key, row);
+      const amazonClicks = sessionAmazonMap.get(session.id) || (session.exitOutcome === 'amazon_click' ? 1 : 0);
+      const arcSignup = session.exitOutcome === 'arc_signup' ? 1 : 0;
+
+      pData.totalVisitors += 1;
+      pData.totalAmazonClicks += amazonClicks;
+      pData.totalArcSignups += arcSignup;
+
+      let cData = pData.campMap.get(campaignName);
+      if (!cData) {
+        cData = {
+          name: campaignName,
+          visitors: 0,
+          amazonClicks: 0,
+          arcSignups: 0,
+        };
+        pData.campMap.set(campaignName, cData);
+      }
+      cData.visitors += 1;
+      cData.amazonClicks += amazonClicks;
+      cData.arcSignups += arcSignup;
     });
 
     // Fallback if socialWindowSessions is empty and no custom date is selected, but campaigns prop contains paid campaigns
-    if (!socialStartDate && totals.size === 0 && socialWindowSessions.length === 0 && campaigns.length > 0) {
+    if (!socialStartDate && platformMap.size === 0 && socialWindowSessions.length === 0 && campaigns.length > 0) {
       campaigns.filter((c) => c.isPaid).forEach((c) => {
         const platform = resolvePlatformName(c.source);
         const cleanCamp = resolveCampaignName(c.campaign);
         const campaignName = cleanCamp && !['(direct)', '(not set)'].includes(cleanCamp) ? cleanCamp : 'Direct ad link';
-        const key = `${platform}\u0000${campaignName}`;
-        const row = totals.get(key) || {
-          platform,
-          campaign: campaignName,
-          paidVisitors: 0,
-          amazonClicks: 0,
-          arcSignups: 0,
-        };
-        row.paidVisitors += c.visitors;
-        row.amazonClicks += c.amazonClicks;
-        row.arcSignups += c.arcSignups;
-        totals.set(key, row);
+
+        let pData = platformMap.get(platform);
+        if (!pData) {
+          pData = {
+            platform,
+            totalVisitors: 0,
+            totalAmazonClicks: 0,
+            totalArcSignups: 0,
+            campMap: new Map(),
+          };
+          platformMap.set(platform, pData);
+        }
+
+        pData.totalVisitors += c.visitors;
+        pData.totalAmazonClicks += c.amazonClicks;
+        pData.totalArcSignups += c.arcSignups;
+
+        let cData = pData.campMap.get(campaignName);
+        if (!cData) {
+          cData = {
+            name: campaignName,
+            visitors: 0,
+            amazonClicks: 0,
+            arcSignups: 0,
+          };
+          pData.campMap.set(campaignName, cData);
+        }
+        cData.visitors += c.visitors;
+        cData.amazonClicks += c.amazonClicks;
+        cData.arcSignups += c.arcSignups;
       });
     }
 
-    return [...totals.values()]
-      .map((row) => ({
-        ...row,
-        conversionRate: row.paidVisitors ? Number((((row.amazonClicks + row.arcSignups) / row.paidVisitors) * 100).toFixed(1)) : 0,
+    return [...platformMap.values()]
+      .map((p) => ({
+        platform: p.platform,
+        totalVisitors: p.totalVisitors,
+        totalAmazonClicks: p.totalAmazonClicks,
+        totalArcSignups: p.totalArcSignups,
+        campaigns: [...p.campMap.values()]
+          .map((c) => ({
+            ...c,
+            conversionRate: c.visitors ? Number((((c.amazonClicks + c.arcSignups) / c.visitors) * 100).toFixed(1)) : 0,
+          }))
+          .sort((a, b) => b.visitors - a.visitors),
       }))
-      .sort((a, b) => b.paidVisitors - a.paidVisitors);
+      .sort((a, b) => b.totalVisitors - a.totalVisitors);
   }, [socialWindowSessions, socialWindowEvents, campaigns, socialStartDate]);
+
+  const totalPaidSocialVisits = useMemo(() => {
+    return socialPlatformGroups.reduce((sum, p) => sum + p.totalVisitors, 0);
+  }, [socialPlatformGroups]);
 
   const campaignLeads = useMemo(() => windowSessions
     .filter((session) => session.exitOutcome === 'arc_signup' && Boolean(session.readerEmail?.trim()))
@@ -665,50 +717,112 @@ export default function AdTrackingClient({
             ) : null}
 
             <span className="an-social-total">
-              {socialPlatformRows.reduce((sum, row) => sum + row.paidVisitors, 0).toLocaleString()} paid visits
+              {totalPaidSocialVisits.toLocaleString()} paid visits
             </span>
           </div>
         </div>
 
-        {socialPlatformRows.length ? (
+        {socialPlatformGroups.length ? (
           <div className="an-social-table-wrap">
             <table className="an-social-table">
               <thead>
                 <tr>
-                  <th>Platform</th>
-                  <th>Campaign</th>
-                  <th style={{ textAlign: 'right' }}>Paid visitors</th>
-                  <th style={{ textAlign: 'right' }}>Amazon clicks</th>
-                  <th style={{ textAlign: 'right' }}>ARC signups</th>
-                  <th style={{ textAlign: 'right' }}>Conv. rate</th>
+                  <th style={{ width: '18%' }}>Platform</th>
+                  <th style={{ width: '38%' }}>Campaign (Select from dropdown)</th>
+                  <th style={{ textAlign: 'right', width: '11%' }}>Paid visitors</th>
+                  <th style={{ textAlign: 'right', width: '11%' }}>Amazon clicks</th>
+                  <th style={{ textAlign: 'right', width: '11%' }}>ARC signups</th>
+                  <th style={{ textAlign: 'right', width: '11%' }}>Conv. rate</th>
                 </tr>
               </thead>
               <tbody>
-                {socialPlatformRows.map((row) => (
-                  <tr key={`${row.platform}-${row.campaign}`}>
-                    <td>
-                      <span className="an-social-platform-dot" />
-                      <strong>{row.platform}</strong>
-                    </td>
-                    <td>
-                      <span style={{ color: '#f7f2e8', fontWeight: 600 }}>{row.campaign}</span>
-                    </td>
-                    <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                      {row.paidVisitors.toLocaleString()}
-                    </td>
-                    <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                      {row.amazonClicks.toLocaleString()}
-                    </td>
-                    <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                      {row.arcSignups.toLocaleString()}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <span className="an-badge success">
-                        {row.conversionRate}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {socialPlatformGroups.map((p) => {
+                  const selected = selectedCampaignByPlatform[p.platform] || 'all';
+                  const activeCampaign = selected !== 'all' ? p.campaigns.find((c) => c.name === selected) : null;
+                  const activeVisitors = activeCampaign ? activeCampaign.visitors : p.totalVisitors;
+                  const activeAmazon = activeCampaign ? activeCampaign.amazonClicks : p.totalAmazonClicks;
+                  const activeArc = activeCampaign ? activeCampaign.arcSignups : p.totalArcSignups;
+                  const activeConv = activeVisitors
+                    ? Number((((activeAmazon + activeArc) / activeVisitors) * 100).toFixed(1))
+                    : 0;
+
+                  return (
+                    <tr key={p.platform}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span className="an-social-platform-dot" />
+                          <strong style={{ fontSize: 14 }}>{p.platform}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        {p.campaigns.length > 1 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                            <select
+                              value={selected}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSelectedCampaignByPlatform((prev) => ({ ...prev, [p.platform]: val }));
+                              }}
+                              className="an-social-select"
+                              style={{
+                                background: '#1c1712',
+                                color: '#f7f2e8',
+                                border: '1px solid rgba(201, 168, 96, 0.4)',
+                                borderRadius: 6,
+                                padding: '6px 10px',
+                                fontSize: 13,
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                outline: 'none',
+                                width: '100%',
+                                maxWidth: 380,
+                              }}
+                              aria-label={`Select campaign for ${p.platform}`}
+                            >
+                              <option value="all">
+                                📊 All Campaigns ({p.campaigns.length}) · Total
+                              </option>
+                              {p.campaigns.map((c) => (
+                                <option key={c.name} value={c.name}>
+                                  🎯 {c.name}
+                                </option>
+                              ))}
+                            </select>
+                            {selected !== 'all' ? (
+                              <span style={{ fontSize: 11.5, color: '#c9a860' }}>
+                                Selected: <strong>{selected}</strong> ({activeVisitors.toLocaleString()} visits)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 11.5, color: '#8c7e6c' }}>
+                                Showing combined total. Choose any campaign in the dropdown to inspect its exact data.
+                              </span>
+                            )}
+                          </div>
+                        ) : p.campaigns.length === 1 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#f7f2e8', fontWeight: 600 }}>{p.campaigns[0].name}</span>
+                          </div>
+                        ) : (
+                          <span style={{ color: '#8c7e6c' }}>Direct ad link</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                        <strong style={{ fontSize: 15, color: '#f7f2e8' }}>{activeVisitors.toLocaleString()}</strong>
+                      </td>
+                      <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums', fontSize: 14 }}>
+                        {activeAmazon.toLocaleString()}
+                      </td>
+                      <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums', fontSize: 14 }}>
+                        {activeArc.toLocaleString()}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className="an-badge success">
+                          {activeConv}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
