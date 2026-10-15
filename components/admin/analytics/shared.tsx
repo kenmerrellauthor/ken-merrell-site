@@ -99,18 +99,23 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
   const [openPicker, setOpenPicker] = useState(false);
   const [localStart, setLocalStart] = useState(customStart || '');
   const [localEnd, setLocalEnd] = useState(customEnd || '');
+  const [useTime, setUseTime] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   // Close custom popover on outside click
   useEffect(() => {
     if (!openPicker) return;
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = (e: Event) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         setOpenPicker(false);
       }
     };
-    window.addEventListener('mousedown', handleClick);
-    return () => window.removeEventListener('mousedown', handleClick);
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
   }, [openPicker]);
 
   const applyCustom = () => {
@@ -139,45 +144,70 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
         ))}
       </div>
 
-      <div className="an-custom-picker-wrap" ref={popoverRef} style={{ position: 'relative' }}>
+      <div className="an-custom-picker-wrap" ref={popoverRef}>
         <button
           type="button"
           id="custom-date-btn"
           className={`crm-btn ${value === 'custom' ? 'pri' : ''}`}
-          onClick={() => setOpenPicker((p) => !p)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpenPicker((prev) => !prev);
+          }}
           title="Select a custom date range"
         >
           <Ic k="calendar" s={16} />
           <span>
             {value === 'custom' && customStart && customEnd
               ? `${customStart} → ${customEnd}`
-              : 'Custom Date'}
+              : 'Custom Date & Time'}
           </span>
         </button>
 
         {openPicker && (
-          <div className="an-custom-popover">
-            <div className="an-popover-title">Choose date range</div>
+          <div
+            className="an-custom-popover"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="an-popover-head">
+              <span className="an-popover-title">Choose date &amp; time</span>
+              <button
+                type="button"
+                className="an-time-toggle-btn"
+                onClick={() => setUseTime((t) => !t)}
+              >
+                {useTime ? 'Date only' : '+ Add time'}
+              </button>
+            </div>
+
             <div className="an-popover-fields">
               <label>
-                <span>From</span>
+                <span>Start {useTime ? 'date & time' : 'date'}</span>
                 <input
-                  type="date"
-                  className="crm-in"
+                  type={useTime ? 'datetime-local' : 'date'}
+                  className="crm-in an-native-date-input"
                   value={localStart}
                   onChange={(e) => setLocalStart(e.target.value)}
+                  onClick={(e) => {
+                    // Try to show native picker if supported
+                    try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch { /* ignore */ }
+                  }}
                 />
               </label>
               <label>
-                <span>To</span>
+                <span>End {useTime ? 'date & time' : 'date'}</span>
                 <input
-                  type="date"
-                  className="crm-in"
+                  type={useTime ? 'datetime-local' : 'date'}
+                  className="crm-in an-native-date-input"
                   value={localEnd}
                   onChange={(e) => setLocalEnd(e.target.value)}
+                  onClick={(e) => {
+                    try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch { /* ignore */ }
+                  }}
                 />
               </label>
             </div>
+
             <div className="an-popover-actions">
               <button
                 type="button"
