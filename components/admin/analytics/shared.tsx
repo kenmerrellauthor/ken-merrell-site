@@ -41,11 +41,20 @@ export function isPaidMedium(medium: string) {
 
 export function parseDateBoundary(dateStr?: string, isEndOfDay: boolean = false): number {
   if (!dateStr) return isEndOfDay ? Date.now() : 0;
-  if (dateStr.includes('T')) {
-    const t = new Date(dateStr).getTime();
-    if (!isNaN(t)) return t;
+  const s = dateStr.trim();
+  if (s.includes('T')) {
+    const [datePart, timePart] = s.split('T');
+    const [y, m, d] = datePart.split('-').map(Number);
+    const timeParts = (timePart || '').split(':').map(Number);
+    const hour = Number.isFinite(timeParts[0]) ? timeParts[0] : 0;
+    const minute = Number.isFinite(timeParts[1]) ? timeParts[1] : 0;
+    const second = isEndOfDay ? 59 : (Number.isFinite(timeParts[2]) ? timeParts[2] : 0);
+    const ms = isEndOfDay ? 999 : 0;
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      return new Date(y, m - 1, d, hour, minute, second, ms).getTime();
+    }
   }
-  const clean = dateStr.slice(0, 10);
+  const clean = s.slice(0, 10);
   const parts = clean.split('-').map(Number);
   if (parts.length === 3 && !parts.some(isNaN)) {
     const [y, m, d] = parts;
@@ -76,6 +85,12 @@ export function rangeDaysOf(range: TimeRange, customStart?: string, customEnd?: 
 export function rangeLabelOf(range: TimeRange, customStart?: string, customEnd?: string): string {
   if (range === 'today') return 'Today';
   if (range === 'custom' && customStart) {
+    const hasTime = customStart.includes('T') || customEnd?.includes('T');
+    if (hasTime) {
+      const s = customStart.replace('T', ' ');
+      const e = (customEnd || customStart).replace('T', ' ');
+      return s === e ? s : `${s} – ${e}`;
+    }
     const s = customStart.slice(0, 10);
     const e = (customEnd || customStart).slice(0, 10);
     return s === e ? s : `${s} – ${e}`;
@@ -116,17 +131,27 @@ interface RangeTabsProps {
   customEnd?: string;
 }
 
+function formatForDateInput(val: string, withTime: boolean): string {
+  if (!val) return '';
+  if (withTime) {
+    if (val.includes('T')) return val.slice(0, 16);
+    return `${val.slice(0, 10)}T00:00`;
+  }
+  return val.slice(0, 10);
+}
+
 export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabsProps) {
   const [openPicker, setOpenPicker] = useState(false);
-  const [localStart, setLocalStart] = useState(customStart || '');
-  const [localEnd, setLocalEnd] = useState(customEnd || '');
   const [useTime, setUseTime] = useState(Boolean(customStart?.includes('T') || customEnd?.includes('T')));
+  const [localStart, setLocalStart] = useState(formatForDateInput(customStart || '', useTime));
+  const [localEnd, setLocalEnd] = useState(formatForDateInput(customEnd || '', useTime));
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (customStart) setLocalStart(customStart);
-    if (customEnd) setLocalEnd(customEnd);
-    if (customStart?.includes('T') || customEnd?.includes('T')) setUseTime(true);
+    const hasTime = Boolean(customStart?.includes('T') || customEnd?.includes('T'));
+    setUseTime(hasTime);
+    if (customStart) setLocalStart(formatForDateInput(customStart, hasTime));
+    if (customEnd) setLocalEnd(formatForDateInput(customEnd, hasTime));
   }, [customStart, customEnd]);
 
   // Close custom popover on outside click
@@ -148,29 +173,23 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
   const toggleUseTime = () => {
     setUseTime((prev) => {
       const next = !prev;
-      if (next) {
-        if (localStart && !localStart.includes('T')) setLocalStart(`${localStart}T00:00`);
-        if (localEnd && !localEnd.includes('T')) setLocalEnd(`${localEnd}T23:59`);
-      } else {
-        if (localStart?.includes('T')) setLocalStart(localStart.slice(0, 10));
-        if (localEnd?.includes('T')) setLocalEnd(localEnd.slice(0, 10));
-      }
+      setLocalStart((cur) => formatForDateInput(cur, next));
+      setLocalEnd((cur) => formatForDateInput(cur, next));
       return next;
     });
   };
 
-  const setPreset = (days: number, offsetDays = 0) => {
+  const applyPreset = (days: number, offsetDays = 0) => {
     const end = new Date(Date.now() - offsetDays * 86400000);
     const start = new Date(end.getTime() - (days - 1) * 86400000);
     const sStr = start.toISOString().slice(0, 10);
     const eStr = end.toISOString().slice(0, 10);
-    if (useTime) {
-      setLocalStart(`${sStr}T00:00`);
-      setLocalEnd(`${eStr}T23:59`);
-    } else {
-      setLocalStart(sStr);
-      setLocalEnd(eStr);
-    }
+    const s = useTime ? `${sStr}T00:00` : sStr;
+    const e = useTime ? `${eStr}T23:59` : eStr;
+    setLocalStart(s);
+    setLocalEnd(e);
+    onChange('custom', s, e);
+    setOpenPicker(false);
   };
 
   const applyCustom = () => {
@@ -178,8 +197,8 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
     const endVal = localEnd || localStart;
     if (!startVal) return;
 
-    let s = startVal;
-    let e = endVal;
+    let s = formatForDateInput(startVal, useTime);
+    let e = formatForDateInput(endVal, useTime);
     if (s > e) {
       const temp = s;
       s = e;
@@ -245,11 +264,11 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
             </div>
 
             {/* Quick date presets */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
-              <button type="button" className="crm-sm" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => setPreset(1, 0)}>Today</button>
-              <button type="button" className="crm-sm" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => setPreset(1, 1)}>Yesterday</button>
-              <button type="button" className="crm-sm" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => setPreset(7, 0)}>7 Days</button>
-              <button type="button" className="crm-sm" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => setPreset(30, 0)}>30 Days</button>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(1, 0)}>Today</button>
+              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(1, 1)}>Yesterday</button>
+              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(7, 0)}>7 Days</button>
+              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(30, 0)}>30 Days</button>
             </div>
 
             <div className="an-popover-fields">

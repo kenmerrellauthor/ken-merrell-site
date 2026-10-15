@@ -44,25 +44,35 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
   const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
   const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
 
-  const visibleTraffic = useMemo(() => {
-    if (timeRange === 'custom' && customStart) {
-      const startDay = customStart.slice(0, 10);
-      const endDay = (customEnd || customStart).slice(0, 10);
-      const filtered = dailyTraffic.filter((p) => p.isoDate >= startDay && p.isoDate <= endDay);
-      if (filtered.length > 0) return filtered;
-    }
-    return dailyTraffic.slice(-rangeDays);
-  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
-
   const windowStart = useMemo(() => {
     if (timeRange === 'custom' && customStart) {
       return parseDateBoundary(customStart, false);
     }
-    return windowStartOf(visibleTraffic);
-  }, [timeRange, customStart, visibleTraffic]);
+    if (timeRange === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.getTime();
+    }
+    if (timeRange === '7d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 7 * 86400000;
+    }
+    if (timeRange === '30d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 30 * 86400000;
+    }
+    if (timeRange === '90d') {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return end.getTime() - 90 * 86400000;
+    }
+    return 0;
+  }, [timeRange, customStart]);
 
   const windowEnd = useMemo(() => {
-    if (timeRange === 'custom' && customStart) {
+    if (timeRange === 'custom' && (customEnd || customStart)) {
       return parseDateBoundary(customEnd || customStart, true);
     }
     return Date.now();
@@ -70,6 +80,78 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
 
   const rangeSessions = useMemo(() => sessionsInWindow(sessions, windowStart, windowEnd), [sessions, windowStart, windowEnd]);
   const rangeEvents = useMemo(() => eventsInWindow(events, windowStart, windowEnd), [events, windowStart, windowEnd]);
+
+  const visibleTraffic = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      let startDay = customStart.slice(0, 10);
+      let endDay = (customEnd || customStart).slice(0, 10);
+      if (startDay > endDay) {
+        const tmp = startDay;
+        startDay = endDay;
+        endDay = tmp;
+      }
+
+      const points: DailyTrafficPoint[] = [];
+      const cur = new Date(`${startDay}T00:00:00`);
+      const end = new Date(`${endDay}T00:00:00`);
+
+      let count = 0;
+      while (cur <= end && count < 366) {
+        const y = cur.getFullYear();
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        const d = String(cur.getDate()).padStart(2, '0');
+        const iso = `${y}-${m}-${d}`;
+        const dayLabel = cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        const existing = dailyTraffic.find((p) => p.isoDate === iso);
+
+        const daySessions = rangeSessions.filter((s) => {
+          const sd = new Date(s.createdAt);
+          const sy = sd.getFullYear();
+          const sm = String(sd.getMonth() + 1).padStart(2, '0');
+          const sdate = String(sd.getDate()).padStart(2, '0');
+          return `${sy}-${sm}-${sdate}` === iso;
+        });
+
+        const dayEvents = rangeEvents.filter((e) => {
+          const ed = new Date(e.timestamp);
+          const ey = ed.getFullYear();
+          const em = String(ed.getMonth() + 1).padStart(2, '0');
+          const edate = String(ed.getDate()).padStart(2, '0');
+          return `${ey}-${em}-${edate}` === iso;
+        });
+
+        const paid = daySessions.filter((s) => isPaidMedium(s.medium)).length;
+        const org = Math.max(0, daySessions.length - paid);
+        const amz = dayEvents.filter((e) => e.eventType === 'amazon_click').length;
+        const arc = dayEvents.filter((e) => e.eventType === 'arc_signup').length;
+
+        const visitors = daySessions.length > 0 ? daySessions.length : (existing?.visitors ?? 0);
+        const paidVisitors = daySessions.length > 0 ? paid : (existing?.paidVisitors ?? 0);
+        const organicVisitors = daySessions.length > 0 ? org : (existing?.organicVisitors ?? 0);
+        const amazonClicks = dayEvents.length > 0 ? amz : (existing?.amazonClicks ?? 0);
+        const arcSignups = dayEvents.length > 0 ? arc : (existing?.arcSignups ?? 0);
+
+        points.push({
+          date: dayLabel,
+          isoDate: iso,
+          visitors,
+          paidVisitors,
+          organicVisitors,
+          amazonClicks,
+          arcSignups,
+          adNote: existing?.adNote,
+        });
+
+        cur.setDate(cur.getDate() + 1);
+        count++;
+      }
+
+      return points;
+    }
+
+    return dailyTraffic.slice(-rangeDays);
+  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd, rangeSessions, rangeEvents]);
 
   const handleRangeChange = (range: TimeRange, start?: string, end?: string) => {
     setTimeRange(range);
@@ -126,10 +208,10 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
       }
     }
 
-    // Fallback if rangeSessions has fewer sessions than visibleTraffic[0].visitors (e.g. mock seed)
+    // Only fallback to distribution weights if this is 'today' without recorded individual sessions but with aggregate traffic
     const totalHourlyVisitors = hours.reduce((acc, x) => acc + x.visitors, 0);
     const targetVisitors = visibleTraffic[0]?.visitors ?? 0;
-    if (targetVisitors > 0 && totalHourlyVisitors === 0) {
+    if (timeRange === 'today' && targetVisitors > 0 && totalHourlyVisitors === 0) {
       const weights = [1, 0, 0, 0, 0, 1, 2, 4, 6, 8, 9, 10, 12, 11, 10, 9, 8, 9, 11, 12, 10, 8, 5, 2];
       const weightSum = weights.reduce((a, b) => a + b, 0);
       const targetPaid = visibleTraffic[0]?.paidVisitors ?? 0;
@@ -161,21 +243,13 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
       amazonClicks: h.amazonClicks,
       arcSignups: h.arcSignups,
     }));
-  }, [timeRange, visibleTraffic, rangeSessions, rangeEvents]);
+  }, [isSingleDay, timeRange, visibleTraffic, rangeSessions, rangeEvents]);
 
   const chartTraffic = isSingleDay && hourlyTraffic.length ? hourlyTraffic : visibleTraffic;
 
   /* ── Totals for KPI cards ── */
   const totals = useMemo(() => {
-    const fromTraffic = visibleTraffic.reduce((t, p) => ({
-      visitors: t.visitors + p.visitors,
-      paidVisitors: t.paidVisitors + p.paidVisitors,
-      organicVisitors: t.organicVisitors + p.organicVisitors,
-      amazonClicks: t.amazonClicks + p.amazonClicks,
-      arcSignups: t.arcSignups + p.arcSignups,
-    }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 });
-
-    if (fromTraffic.visitors === 0 && rangeSessions.length > 0) {
+    if (rangeSessions.length > 0 || rangeEvents.length > 0) {
       const paid = rangeSessions.filter((s) => isPaidMedium(s.medium)).length;
       const amz = rangeEvents.filter((e) => e.eventType === 'amazon_click').length;
       const arc = rangeEvents.filter((e) => e.eventType === 'arc_signup').length;
@@ -187,7 +261,13 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
         arcSignups: arc,
       };
     }
-    return fromTraffic;
+    return visibleTraffic.reduce((t, p) => ({
+      visitors: t.visitors + p.visitors,
+      paidVisitors: t.paidVisitors + p.paidVisitors,
+      organicVisitors: t.organicVisitors + p.organicVisitors,
+      amazonClicks: t.amazonClicks + p.amazonClicks,
+      arcSignups: t.arcSignups + p.arcSignups,
+    }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 });
   }, [visibleTraffic, rangeSessions, rangeEvents]);
 
   /* Previous period of the same length, for trend deltas. */
@@ -306,8 +386,8 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
 
   const heatSessions = useMemo(() => {
     if (!heatDate) return rangeSessions;
-    const startMs = new Date(`${heatDate}T00:00:00`).getTime();
-    const endMs = new Date(`${heatDate}T23:59:59.999`).getTime();
+    const startMs = parseDateBoundary(heatDate, false);
+    const endMs = parseDateBoundary(heatDate, true);
     return sessions.filter((s) => {
       const t = new Date(s.createdAt).getTime();
       return t >= startMs && t <= endMs;

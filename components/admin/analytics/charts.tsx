@@ -124,7 +124,9 @@ export function TrendChart({ data }: { data: DailyTrafficPoint[] }) {
       <div className="an-chart-container">
         {hovered && (
           <div className="an-chart-tooltip">
-            <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `Today at ${hovered.date}` : hovered.date}</strong>
+            <strong className="an-tip-date">
+              {hovered.isoDate.includes('T') ? `${hovered.isoDate.slice(0, 10)} · ${hovered.date}` : hovered.date}
+            </strong>
             {TREND_SERIES.map((s) => (
               <span key={s.key} className="an-tip-row" style={{ opacity: active.includes(s.key) ? 1 : 0.45 }}>
                 <i style={{ background: s.color }} /> {s.label}: <strong>{hovered[s.key].toLocaleString()}</strong>
