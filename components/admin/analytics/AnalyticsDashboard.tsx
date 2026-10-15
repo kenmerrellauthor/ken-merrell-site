@@ -37,14 +37,44 @@ function countBy<T>(items: T[], keyOf: (item: T) => string) {
 
 export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions, events }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
   const [geoMode, setGeoMode] = useState<'country' | 'city'>('country');
 
-  const rangeDays = rangeDaysOf(timeRange);
-  const rangeLabel = rangeLabelOf(timeRange);
-  const visibleTraffic = useMemo(() => dailyTraffic.slice(-rangeDays), [dailyTraffic, rangeDays]);
-  const windowStart = windowStartOf(visibleTraffic);
-  const rangeSessions = useMemo(() => sessionsInWindow(sessions, windowStart), [sessions, windowStart]);
-  const rangeEvents = useMemo(() => eventsInWindow(events, windowStart), [events, windowStart]);
+  const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
+  const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
+
+  const visibleTraffic = useMemo(() => {
+    if (timeRange === 'custom' && customStart && customEnd) {
+      return dailyTraffic.filter((p) => p.isoDate >= customStart && p.isoDate <= customEnd);
+    }
+    return dailyTraffic.slice(-rangeDays);
+  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
+
+  const windowStart = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      return new Date(`${customStart}T00:00:00.000Z`).getTime();
+    }
+    return windowStartOf(visibleTraffic);
+  }, [timeRange, customStart, visibleTraffic]);
+
+  const windowEnd = useMemo(() => {
+    if (timeRange === 'custom' && customEnd) {
+      return new Date(`${customEnd}T23:59:59.999Z`).getTime();
+    }
+    return Date.now();
+  }, [timeRange, customEnd]);
+
+  const rangeSessions = useMemo(() => sessionsInWindow(sessions, windowStart, windowEnd), [sessions, windowStart, windowEnd]);
+  const rangeEvents = useMemo(() => eventsInWindow(events, windowStart, windowEnd), [events, windowStart, windowEnd]);
+
+  const handleRangeChange = (range: TimeRange, start?: string, end?: string) => {
+    setTimeRange(range);
+    if (start && end) {
+      setCustomStart(start);
+      setCustomEnd(end);
+    }
+  };
 
   /* ── Totals for KPI cards ── */
   const totals = useMemo(() => visibleTraffic.reduce((t, p) => ({
@@ -179,10 +209,12 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
           <p>Charts and trends showing how readers find your books, what they do, and when they visit.</p>
         </div>
         <div className="crm-actions">
-          <RangeTabs value={timeRange} onChange={setTimeRange} />
-          <button type="button" id="analytics-refresh" className="crm-btn" onClick={() => window.location.reload()} title="Refresh live metrics">
-            <Ic k="chart" s={16} /> Refresh
-          </button>
+          <RangeTabs
+            value={timeRange}
+            onChange={handleRangeChange}
+            customStart={customStart}
+            customEnd={customEnd}
+          />
         </div>
       </div>
 
