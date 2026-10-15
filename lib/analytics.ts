@@ -7,19 +7,19 @@ import type { AnalyticsEvent, AnalyticsKPIs, AnalyticsSession, CampaignSummary }
 import { generateSeedAnalytics, type DailyTrafficPoint } from './seedAnalytics';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
+const TMP_DATA_DIR = path.join('/tmp', 'data');
 const SESSIONS_FILE = path.join(DATA_DIR, 'analytics_sessions.json');
 const EVENTS_FILE = path.join(DATA_DIR, 'analytics_events.json');
+const TMP_SESSIONS_FILE = path.join(TMP_DATA_DIR, 'analytics_sessions.json');
+const TMP_EVENTS_FILE = path.join(TMP_DATA_DIR, 'analytics_events.json');
 const AD_CLICK_SOURCES = new Set(['Meta', 'TikTok', 'Google', 'Microsoft Ads', 'LinkedIn', 'Pinterest', 'X', 'Reddit']);
 const PAID_MEDIA = new Set(['paid', 'paid_ad', 'paid_social', 'paid_search', 'cpc', 'ppc', 'display', 'sponsored', 'ad', 'ads', 'paidsocial', 'paidad']);
 
 let supabaseClient: SupabaseClient | null = null;
 function database(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim();
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY)?.trim();
   if (!url || !key) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Production analytics requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
-    }
     return null;
   }
   if (!supabaseClient) supabaseClient = createClient(url, key, { auth: { persistSession: false } });
@@ -50,6 +50,20 @@ function referralAttribution(referrer?: string): { source: string; medium: strin
 
 type AnalyticsSnapshot = { sessions: AnalyticsSession[]; events: AnalyticsEvent[] };
 async function localSnapshot(): Promise<AnalyticsSnapshot> {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.VERCEL_ENV === 'production';
+  if (isProd) {
+    // In production, NEVER return fake seed analytics!
+    try {
+      const [sessions, events] = await Promise.all([
+        fs.readFile(TMP_SESSIONS_FILE, 'utf8').catch(() => fs.readFile(SESSIONS_FILE, 'utf8')).then((d) => JSON.parse(d) as AnalyticsSession[]),
+        fs.readFile(TMP_EVENTS_FILE, 'utf8').catch(() => fs.readFile(EVENTS_FILE, 'utf8')).then((d) => JSON.parse(d) as AnalyticsEvent[]),
+      ]);
+      return { sessions: sessions || [], events: events || [] };
+    } catch {
+      return { sessions: [], events: [] };
+    }
+  }
+
   await fs.mkdir(DATA_DIR, { recursive: true }).catch(() => undefined);
   const seed = generateSeedAnalytics();
   const read = async <T,>(file: string, fallback: T): Promise<T> => {
@@ -81,17 +95,26 @@ async function readRows<T>(db: SupabaseClient, table: 'analytics_sessions' | 'an
 }
 
 async function snapshot(): Promise<AnalyticsSnapshot> {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   const db = database();
   if (!db) return localSnapshot();
   const sinceDate = new Date();
   sinceDate.setUTCHours(0, 0, 0, 0);
   sinceDate.setUTCDate(sinceDate.getUTCDate() - 119);
   const since = sinceDate.toISOString();
-  const [sessions, events] = await Promise.all([
-    readRows<AnalyticsSession>(db, 'analytics_sessions', since),
-    readRows<AnalyticsEvent>(db, 'analytics_events', since),
-  ]);
-  return { sessions, events };
+  try {
+    const [sessions, events] = await Promise.all([
+      readRows<AnalyticsSession>(db, 'analytics_sessions', since),
+      readRows<AnalyticsEvent>(db, 'analytics_events', since),
+    ]);
+    return { sessions, events };
+  } catch (err) {
+    if (isProd) {
+      console.warn('Production analytics read error, returning empty dataset instead of sample data:', err);
+      return { sessions: [], events: [] };
+    }
+    return localSnapshot();
+  }
 }
 
 function isPaid(session: AnalyticsSession): boolean {
@@ -342,6 +365,13 @@ export async function recordIncomingEvent(payload: IncomingEvent): Promise<{ ses
     sessions.unshift(session);
     local!.events.push(event);
     try {
+      await fs.mkdir(TMP_DATA_DIR, { recursive: true });
+      await Promise.all([
+        fs.writeFile(TMP_SESSIONS_FILE, JSON.stringify(sessions.slice(0, 500), null, 2)),
+        fs.writeFile(TMP_EVENTS_FILE, JSON.stringify(local!.events.slice(-1000), null, 2)),
+      ]);
+    } catch { /* ignore /tmp write error */ }
+    try {
       await Promise.all([
         fs.writeFile(SESSIONS_FILE, JSON.stringify(sessions.slice(0, 500), null, 2)),
         fs.writeFile(EVENTS_FILE, JSON.stringify(local!.events.slice(-1000), null, 2)),
@@ -382,6 +412,13 @@ export async function bridgeReaderIdentity(sessionId: string, reader: { name: st
     if (eventWrite.error) throw new Error(`Could not save reader conversion event: ${eventWrite.error.message}`);
   } else {
     local!.events.push(event);
+    try {
+      await fs.mkdir(TMP_DATA_DIR, { recursive: true });
+      await Promise.all([
+        fs.writeFile(TMP_SESSIONS_FILE, JSON.stringify(local!.sessions, null, 2)),
+        fs.writeFile(TMP_EVENTS_FILE, JSON.stringify(local!.events, null, 2)),
+      ]);
+    } catch { /* ignore /tmp write error */ }
     await Promise.all([
       fs.writeFile(SESSIONS_FILE, JSON.stringify(local!.sessions, null, 2)).catch(() => undefined),
       fs.writeFile(EVENTS_FILE, JSON.stringify(local!.events, null, 2)).catch(() => undefined),
