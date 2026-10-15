@@ -667,7 +667,7 @@ export default function AdTrackingClient({
               <Ic k="user" s={22} /> Live Individual Visitor Journey Feed
             </h2>
             <p className="an-card-sub">
-              Click any visitor row to open their step-by-step clickstream timeline and inspect their journey
+              Showing visits from <strong>{rangeLabel}</strong>. Click any visitor row to open their step-by-step clickstream timeline and inspect their journey.
             </p>
           </div>
 
@@ -724,7 +724,7 @@ export default function AdTrackingClient({
           </div>
           <span className="an-feed-count" aria-live="polite">
             Showing <strong>{shownVisitors.length.toLocaleString()}</strong> of{' '}
-            <strong>{filteredVisitors.length.toLocaleString()}</strong> visitors
+            <strong>{filteredVisitors.length.toLocaleString()}</strong> visitors in {rangeLabel.toLowerCase()}
           </span>
         </div>
 

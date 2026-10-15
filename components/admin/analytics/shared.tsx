@@ -179,19 +179,6 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
     });
   };
 
-  const applyPreset = (days: number, offsetDays = 0) => {
-    const end = new Date(Date.now() - offsetDays * 86400000);
-    const start = new Date(end.getTime() - (days - 1) * 86400000);
-    const sStr = start.toISOString().slice(0, 10);
-    const eStr = end.toISOString().slice(0, 10);
-    const s = useTime ? `${sStr}T00:00` : sStr;
-    const e = useTime ? `${eStr}T23:59` : eStr;
-    setLocalStart(s);
-    setLocalEnd(e);
-    onChange('custom', s, e);
-    setOpenPicker(false);
-  };
-
   const applyCustom = () => {
     const startVal = localStart || localEnd;
     const endVal = localEnd || localStart;
@@ -261,14 +248,6 @@ export function RangeTabs({ value, onChange, customStart, customEnd }: RangeTabs
               >
                 {useTime ? 'Date only' : '+ Add time'}
               </button>
-            </div>
-
-            {/* Quick date presets */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(1, 0)}>Today</button>
-              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(1, 1)}>Yesterday</button>
-              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(7, 0)}>7 Days</button>
-              <button type="button" className="crm-sm" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => applyPreset(30, 0)}>30 Days</button>
             </div>
 
             <div className="an-popover-fields">

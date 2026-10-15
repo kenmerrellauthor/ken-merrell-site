@@ -4,11 +4,11 @@ import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 
 /* Shared SVG chart geometry (matches the original dashboard chart). */
 const W = 680;
-const H = 270;
+const H = 280;
 const L = 52;
 const R = 656;
-const T = 24;
-const B = 218;
+const T = 28;
+const B = 214;
 
 /** Round a max value up to a "nice" axis ceiling (1, 2, 5 × 10ⁿ). */
 function niceMax(value: number) {
@@ -30,6 +30,9 @@ function yAt(value: number, max: number) {
 function Gridlines({ max }: { max: number }) {
   return (
     <>
+      <text x={L - 10} y={15} textAnchor="start" className="an-chart-axis-name">
+        ↑ Y-Axis: Count (Visitors / Conversions)
+      </text>
       {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
         const y = B - fraction * (B - T);
         return (
@@ -54,7 +57,7 @@ function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: numbe
           // Show every 3 hours: 12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM
           if (i % 3 !== 0) return null;
           return (
-            <text key={point.isoDate} x={xFor(i)} y={250} textAnchor="middle" className="an-chart-axis-label">
+            <text key={point.isoDate} x={xFor(i)} y={240} textAnchor="middle" className="an-chart-axis-label">
               {point.date}
             </text>
           );
@@ -63,11 +66,14 @@ function DateLabels({ data, xFor }: { data: DailyTrafficPoint[]; xFor: (i: numbe
         if (!(i === 0 || i === data.length - 1 || i % interval === 0)) return null;
         if (i !== data.length - 1 && data.length - 1 - i < interval / 2 && i !== 0) return null;
         return (
-          <text key={point.isoDate} x={xFor(i)} y={250} textAnchor="middle" className="an-chart-axis-label">
+          <text key={point.isoDate} x={xFor(i)} y={240} textAnchor="middle" className="an-chart-axis-label">
             {point.date}
           </text>
         );
       })}
+      <text x={(L + R) / 2} y={266} textAnchor="middle" className="an-chart-axis-name">
+        → X-Axis: {isHourly ? 'Time of Day (Local Time)' : 'Timeline (Dates)'}
+      </text>
     </>
   );
 }
@@ -118,6 +124,9 @@ export function TrendChart({ data }: { data: DailyTrafficPoint[] }) {
             <i aria-hidden="true" /> {s.label}
           </button>
         ))}
+        <span className="an-axis-guide-pill" title="Graph axis definitions">
+          <strong>Y-Axis:</strong> Count <span className="an-axis-dot">·</span> <strong>X-Axis:</strong> {data.length === 24 ? 'Hourly (Today)' : 'Dates'}
+        </span>
         <span className="an-toggle-note"><i className="an-legend-promo" /> Campaign launch</span>
       </div>
 
@@ -209,7 +218,7 @@ export function StackedBars({ data }: { data: DailyTrafficPoint[] }) {
     <div className="an-chart-container">
       {hovered && (
         <div className="an-chart-tooltip">
-          <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `Today at ${hovered.date}` : hovered.date}</strong>
+          <strong className="an-tip-date">{hovered.isoDate.includes('T') ? `${hovered.isoDate.slice(0, 10)} · ${hovered.date}` : hovered.date}</strong>
           <span className="an-tip-row"><i style={{ background: '#5b9cf6' }} /> Paid: <strong>{hovered.paidVisitors}</strong></span>
           <span className="an-tip-row"><i style={{ background: '#c9a860' }} /> Organic: <strong>{hovered.organicVisitors}</strong></span>
           <span className="an-tip-row muted">Total: <strong>{hovered.paidVisitors + hovered.organicVisitors}</strong></span>
