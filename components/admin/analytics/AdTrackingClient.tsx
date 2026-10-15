@@ -1,38 +1,29 @@
 'use client';
-import { useState, useMemo } from 'react';
-import type { Book, AnalyticsKPIs, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
+import { useState, useMemo, useEffect } from 'react';
+import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
-import { Ic } from './AdIcons';
+import { Ic } from '../AdIcons';
+import { RangeTabs, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, type TimeRange } from './shared';
 
-function isPaidMedium(medium: string) {
-  const normalized = medium.toLowerCase().replace(/[\s-]+/g, '_');
-  return ['paid', 'cpc', 'ppc', 'display', 'sponsored'].includes(normalized)
-    || normalized.startsWith('paid_') || normalized.endsWith('_paid');
-}
+/** Number of visitors shown per "page" in the journey feed. */
+const FEED_PAGE_SIZE = 30;
 
-interface AnalyticsClientProps {
-  initialKpis: AnalyticsKPIs;
+interface AdTrackingClientProps {
   dailyTraffic: DailyTrafficPoint[];
   campaigns: CampaignSummary[];
-  topPages: Array<{ page: string; visits: number; percentage: number }>;
   initialSessions: AnalyticsSession[];
   initialEvents: AnalyticsEvent[];
   books: Book[];
 }
 
-export default function AnalyticsClient({
-  initialKpis,
+export default function AdTrackingClient({
   dailyTraffic,
   campaigns,
-  topPages,
   initialSessions,
   initialEvents,
   books,
-}: AnalyticsClientProps) {
-  // Filters & State
-  const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | '120d'>('30d');
-  const [metricTab, setMetricTab] = useState<'visitors' | 'amazon' | 'arc'>('visitors');
-  const [hoveredPoint, setHoveredPoint] = useState<DailyTrafficPoint | null>(null);
+}: AdTrackingClientProps) {
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
   // Link Generator State
   const [selectedBookSlug, setSelectedBookSlug] = useState<string>(books[0]?.slug || 'petticoats-and-ash');
@@ -46,8 +37,14 @@ export default function AnalyticsClient({
   const [visitorFilter, setVisitorFilter] = useState<'all' | 'amazon' | 'arc' | 'paid' | 'organic'>('all');
   const [visitorSearch, setVisitorSearch] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<AnalyticsSession | null>(null);
+  const [visibleCount, setVisibleCount] = useState(FEED_PAGE_SIZE);
   const [leadFilter, setLeadFilter] = useState<'all' | 'paid' | 'marketing'>('all');
   const [leadSearch, setLeadSearch] = useState('');
+
+  // Reset the feed back to the first 30 whenever the filter or search changes.
+  useEffect(() => {
+    setVisibleCount(FEED_PAGE_SIZE);
+  }, [visitorFilter, visitorSearch]);
 
   // Generate dynamic tracking link
   const generatedLink = useMemo(() => {
@@ -152,25 +149,11 @@ export default function AnalyticsClient({
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [selectedVisitor, initialEvents]);
 
-  // Chart calculations (30 Days)
-  const rangeDays = timeRange === 'today' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 120;
+  // Date window shared by the paid-social table and the reader signups list
+  const rangeDays = rangeDaysOf(timeRange);
   const visibleTraffic = useMemo(() => dailyTraffic.slice(-rangeDays), [dailyTraffic, rangeDays]);
-  const rangeTotals = useMemo(() => visibleTraffic.reduce((totals, point) => ({
-    visitors: totals.visitors + point.visitors,
-    paidVisitors: totals.paidVisitors + point.paidVisitors,
-    organicVisitors: totals.organicVisitors + point.organicVisitors,
-    amazonClicks: totals.amazonClicks + point.amazonClicks,
-    arcSignups: totals.arcSignups + point.arcSignups,
-  }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 }), [visibleTraffic]);
-  const paidPercentage = rangeTotals.visitors ? Math.round((rangeTotals.paidVisitors / rangeTotals.visitors) * 100) : 0;
-  const organicPercentage = 100 - paidPercentage;
-  const amazonIntentRate = rangeTotals.visitors
-    ? Math.round((rangeTotals.amazonClicks / rangeTotals.visitors) * 1000) / 10
-    : 0;
-  const rangeLabel = timeRange === 'today' ? 'Today' : `Last ${rangeDays} days`;
-  const leadWindowStart = visibleTraffic[0]
-    ? new Date(`${visibleTraffic[0].isoDate}T00:00:00.000Z`).getTime()
-    : 0;
+  const rangeLabel = rangeLabelOf(timeRange);
+  const leadWindowStart = windowStartOf(visibleTraffic);
 
   const socialPlatformRows = useMemo(() => {
     const platformNames: Record<string, string> = {
@@ -220,45 +203,9 @@ export default function AnalyticsClient({
       .some((value) => value?.toLowerCase().includes(query));
   }), [campaignLeads, leadFilter, leadSearch]);
 
-  const maxMetricVal = useMemo(() => {
-    return Math.max(
-      ...visibleTraffic.map((d) => {
-        if (metricTab === 'visitors') return d.visitors;
-        if (metricTab === 'amazon') return d.amazonClicks;
-        return d.arcSignups;
-      }),
-      10
-    );
-  }, [visibleTraffic, metricTab]);
-
-  const chartPoints = useMemo(() => {
-    const left = 52;
-    const right = 656;
-    const top = 24;
-    const bottom = 218;
-    const denominator = Math.max(visibleTraffic.length - 1, 1);
-
-    return visibleTraffic.map((point, index) => {
-      const value = metricTab === 'visitors'
-        ? point.visitors
-        : metricTab === 'amazon'
-          ? point.amazonClicks
-          : point.arcSignups;
-
-      return {
-        point,
-        value,
-        x: left + (index / denominator) * (right - left),
-        y: bottom - (value / maxMetricVal) * (bottom - top),
-      };
-    });
-  }, [visibleTraffic, maxMetricVal, metricTab]);
-
-  const chartColor = metricTab === 'visitors' ? '#d7b66f' : metricTab === 'amazon' ? '#79c9a2' : '#86aaff';
-  const chartAreaPath = chartPoints.length
-    ? `M ${chartPoints[0].x} 218 ${chartPoints.map(({ x, y }) => `L ${x} ${y}`).join(' ')} L ${chartPoints[chartPoints.length - 1].x} 218 Z`
-    : '';
-  const chartLinePath = chartPoints.map(({ x, y }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+  // Paginated slice of the visitor feed (30 at a time)
+  const shownVisitors = useMemo(() => filteredVisitors.slice(0, visibleCount), [filteredVisitors, visibleCount]);
+  const hasMoreVisitors = visibleCount < filteredVisitors.length;
 
   return (
     <div className="an-container">
@@ -268,477 +215,24 @@ export default function AnalyticsClient({
           <div className="crumb">
             <span>Ken Merrell Platform</span>
             <span>/</span>
-            <span>Performance</span>
+            <span>Advertising</span>
           </div>
-          <h1>Ad Tracking & Analytics</h1>
-          <p>See which campaigns bring readers to your books and who joins your advance reader team.</p>
+          <h1>Ad Tracking</h1>
+          <p>Build tracking links, compare campaigns, and follow every visitor’s journey through the site.</p>
         </div>
 
         <div className="crm-actions">
-          <div className="crm-tabs" aria-label="Analytics date range">
-            <button
-              type="button"
-              className={timeRange === 'today' ? 'on' : ''}
-              onClick={() => setTimeRange('today')}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              className={timeRange === '7d' ? 'on' : ''}
-              onClick={() => setTimeRange('7d')}
-            >
-              Last 7 Days
-            </button>
-            <button
-              type="button"
-              className={timeRange === '30d' ? 'on' : ''}
-              onClick={() => setTimeRange('30d')}
-            >
-              Last 30 Days
-            </button>
-            <button
-              type="button"
-              className={timeRange === '120d' ? 'on' : ''}
-              onClick={() => setTimeRange('120d')}
-            >
-              Last 120 Days
-            </button>
-          </div>
-
+          <RangeTabs value={timeRange} onChange={setTimeRange} />
           <button
             type="button"
+            id="tracking-refresh"
             className="crm-btn"
             onClick={() => window.location.reload()}
-            title="Refresh Live Metrics"
+            title="Refresh live tracking data"
           >
-            <Ic k="chart" s={16} /> Refresh Metrics
+            <Ic k="chart" s={16} /> Refresh
           </button>
         </div>
-      </div>
-
-      {/* ── Screen Output 1: Executive KPI Cards ── */}
-      <div className="an-kpis">
-        {/* Card 1: Today's Viewers */}
-        <div className="an-kpi-card" style={{ '--card-accent': '#c9a860' } as React.CSSProperties}>
-          <div className="an-kpi-head">
-            <span className="an-kpi-lbl">{timeRange === 'today' ? 'Today’s Viewers' : `${rangeDays}-Day Visitors`}</span>
-            <span className="an-kpi-icon"><Ic k="user" s={20} /></span>
-          </div>
-          <div className="an-kpi-val">{rangeTotals.visitors.toLocaleString()}</div>
-          <div className="an-kpi-foot">
-            {timeRange === 'today' ? (
-              <>
-                <span className="an-badge-delta pos">+{initialKpis.visitorsDeltaPct}%</span>
-                <span>vs. yesterday ({initialKpis.yesterdayVisitors})</span>
-              </>
-            ) : (
-              <>
-                <span className="an-badge-delta neutral">{rangeLabel}</span>
-                <span>total visitors</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Card 2: Paid visitors in the selected range */}
-        <div className="an-kpi-card" style={{ '--card-accent': '#3b82f6' } as React.CSSProperties}>
-          <div className="an-kpi-head">
-            <span className="an-kpi-lbl">Paid Ad Visitors</span>
-            <span className="an-kpi-icon"><Ic k="target" s={20} /></span>
-          </div>
-          <div className="an-kpi-val">{rangeTotals.paidVisitors.toLocaleString()}</div>
-          <div className="an-kpi-foot">
-            <span className="an-badge-delta info">{paidPercentage}% of traffic</span>
-            <span>campaign visitors</span>
-          </div>
-        </div>
-
-        {/* Card 3: Amazon Outbound Clicks */}
-        <div className="an-kpi-card" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
-          <div className="an-kpi-head">
-            <span className="an-kpi-lbl">Amazon Clicks</span>
-            <span className="an-kpi-icon"><Ic k="ext" s={20} /></span>
-          </div>
-          <div className="an-kpi-val">{rangeTotals.amazonClicks.toLocaleString()}</div>
-          <div className="an-kpi-foot">
-            <span className="an-badge-delta pos">
-              {amazonIntentRate}% Intent Rate
-            </span>
-            <span>outbound buyers</span>
-          </div>
-        </div>
-
-        {/* Card 4: New ARC Signups */}
-        <div className="an-kpi-card" style={{ '--card-accent': '#f59e0b' } as React.CSSProperties}>
-          <div className="an-kpi-head">
-            <span className="an-kpi-lbl">New ARC Signups</span>
-            <span className="an-kpi-icon"><Ic k="readers" s={20} /></span>
-          </div>
-          <div className="an-kpi-val">{rangeTotals.arcSignups.toLocaleString()}</div>
-          <div className="an-kpi-foot">
-            <span className="an-badge-delta neutral">
-              Direct Readers Joined
-            </span>
-            <span>in selected period</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Paid vs. Organic Traffic Split Pill Bar ── */}
-      <div className="an-split-box">
-        <div className="an-split-head">
-          <div className="an-split-title">
-            <Ic k="funnel" s={16} /> TRAFFIC ATTRIBUTION · {rangeLabel.toUpperCase()}
-          </div>
-          <div className="an-split-stats">
-            <div className="an-split-stat">
-              <span className="an-split-dot paid" />
-              <span>
-                <strong>Paid Ad Traffic:</strong> {paidPercentage}% ({rangeTotals.paidVisitors} visitors)
-              </span>
-            </div>
-            <div className="an-split-stat">
-              <span className="an-split-dot org" />
-              <span>
-                <strong>Organic Traffic:</strong> {organicPercentage}% ({rangeTotals.organicVisitors} visitors)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="an-progress-bar" title={`Paid: ${paidPercentage}% | Organic: ${organicPercentage}%`}>
-          <div className="an-progress-paid" style={{ width: `${paidPercentage}%` }} />
-          <div className="an-progress-org" style={{ width: `${organicPercentage}%` }} />
-        </div>
-      </div>
-
-      <section className="an-card an-social-card" aria-labelledby="social-sources-title">
-        <div className="an-social-heading">
-          <div>
-            <h2 id="social-sources-title" className="an-card-title"><Ic k="globe" s={21} /> Paid social traffic</h2>
-            <p className="an-card-sub">Paid visits by platform and campaign, with outbound Amazon clicks for {rangeLabel.toLowerCase()}.</p>
-          </div>
-          <span className="an-social-total">{socialPlatformRows.reduce((sum, row) => sum + row.paidVisitors, 0).toLocaleString()} paid visits</span>
-        </div>
-        {socialPlatformRows.length ? (
-          <div className="an-social-table-wrap">
-            <table className="an-social-table">
-              <thead>
-                <tr><th>Platform</th><th>Paid visitors</th><th>Campaigns</th><th>Amazon clicks</th></tr>
-              </thead>
-              <tbody>
-                {socialPlatformRows.map((row) => (
-                  <tr key={row.name}>
-                    <td><span className="an-social-platform-dot" />{row.name}</td>
-                    <td>{row.paidVisitors.toLocaleString()}</td>
-                    <td>{row.campaigns.size ? [...row.campaigns].join(', ') : 'Tagged source'}</td>
-                    <td>{row.amazonClicks.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="an-social-empty">No paid social visits in this period yet. Use tagged ad links to see paid traffic by platform and campaign.</p>
-        )}
-        <p className="an-social-note">Only paid social visits are included here. Campaign names come from the ad link’s UTM tags.</p>
-      </section>
-
-      {/* ── Screen Output 2: 30-Day Interactive Chart & Secondary Distribution ── */}
-      <div className="an-grid2">
-        {/* Interactive 30-Day Area / Bar Chart */}
-        <div className="an-card">
-          <div className="an-card-head">
-            <div>
-              <h2 className="an-card-title">
-                <Ic k="chart" s={22} /> {timeRange === 'today' ? 'Today' : `${rangeDays}-Day`} Traffic Trend & Promo Spikes
-              </h2>
-            <p className="an-card-sub">Explore the daily trend and spot the campaigns behind each lift.</p>
-            </div>
-
-            {/* Metric Switcher */}
-            <div className="crm-tabs" aria-label="Traffic metric">
-              <button
-                type="button"
-                className={metricTab === 'visitors' ? 'on' : ''}
-                onClick={() => setMetricTab('visitors')}
-              >
-                Visitors
-              </button>
-              <button
-                type="button"
-                className={metricTab === 'amazon' ? 'on' : ''}
-                onClick={() => setMetricTab('amazon')}
-              >
-                Amazon Clicks
-              </button>
-              <button
-                type="button"
-                className={metricTab === 'arc' ? 'on' : ''}
-                onClick={() => setMetricTab('arc')}
-              >
-                ARC Signups
-              </button>
-            </div>
-          </div>
-
-          <div className="an-chart-container">
-            {/* Hover Tooltip display */}
-            {hoveredPoint && (
-              <div className="an-chart-tooltip">
-                <strong style={{ color: '#f7f2e8', fontSize: 13 }}>{hoveredPoint.date}</strong>
-                <span style={{ color: '#93c5fd', fontSize: 12 }}>
-                  Visitors: <strong>{hoveredPoint.visitors}</strong> ({hoveredPoint.paidVisitors} paid / {hoveredPoint.organicVisitors} org)
-                </span>
-                <span style={{ color: '#86efac', fontSize: 12 }}>
-                  Amazon Clicks: <strong>{hoveredPoint.amazonClicks}</strong>
-                </span>
-                <span style={{ color: '#e8c48c', fontSize: 12 }}>
-                  ARC Signups: <strong>{hoveredPoint.arcSignups}</strong>
-                </span>
-                {hoveredPoint.adNote && (
-                  <span style={{ color: '#f59e0b', fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
-                    ★ {hoveredPoint.adNote}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <div className="an-chart-legend" aria-hidden="true">
-              <span><i className="an-legend-line" style={{ background: chartColor }} />
-                {metricTab === 'visitors' ? 'Visitors' : metricTab === 'amazon' ? 'Amazon clicks' : 'ARC signups'}
-              </span>
-              <span><i className="an-legend-promo" /> Campaign launch</span>
-            </div>
-
-            {/* Daily trend chart */}
-            <svg
-              className="an-chart-svg"
-              viewBox="0 0 680 270"
-              role="img"
-              aria-label={`${rangeDays}-day ${metricTab} trend`}
-              onMouseLeave={() => setHoveredPoint(null)}
-            >
-              <defs>
-                <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={chartColor} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={chartColor} stopOpacity="0.015" />
-                </linearGradient>
-              </defs>
-              {[0, 0.5, 1].map((fraction) => {
-                const y = 218 - fraction * 194;
-                return (
-                  <g key={fraction}>
-                    <line x1="52" y1={y} x2="656" y2={y} className="an-chart-gridline" />
-                    <text x="40" y={y + 4} textAnchor="end" className="an-chart-axis-label">
-                      {Math.round(maxMetricVal * fraction)}
-                    </text>
-                  </g>
-                );
-              })}
-              <path d={chartAreaPath} fill="url(#trendArea)" />
-              <path d={chartLinePath} fill="none" stroke={chartColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="an-chart-line" />
-              {chartPoints.map(({ point, value, x, y }, index) => {
-                const isPromo = !!point.adNote;
-                const labelInterval = Math.max(1, Math.ceil(chartPoints.length / 4));
-                const showDate = index === 0 || index === chartPoints.length - 1 || index % labelInterval === 0;
-                return (
-                  <g key={point.isoDate} onMouseEnter={() => setHoveredPoint(point)}>
-                    {isPromo && <circle cx={x} cy={y} r="8" className="an-chart-promo-ring" />}
-                    <circle cx={x} cy={y} r={hoveredPoint?.isoDate === point.isoDate ? 6 : isPromo ? 4.5 : 3} fill={isPromo ? '#86aaff' : chartColor} className="an-chart-point" />
-                    <circle cx={x} cy={y} r="11" fill="transparent" />
-                    {showDate && (
-                      <text x={x} y="250" textAnchor="middle" className="an-chart-axis-label">{point.date}</text>
-                    )}
-                    <title>{`${point.date}: ${value}${point.adNote ? ` — ${point.adNote}` : ''}`}</title>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </div>
-
-        {/* Top Visited Pages & Device Distribution */}
-        <div className="an-card">
-          <div>
-            <h2 className="an-card-title">
-              <Ic k="globe" s={20} /> Top Book Pages
-            </h2>
-            <p className="an-card-sub">Most visited sections across all campaigns</p>
-          </div>
-
-          <div className="an-dist-list">
-            {topPages.map((p, index) => (
-              <div key={p.page} className="an-dist-item">
-                <div className="an-dist-row">
-                  <span className="an-dist-rank">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="an-dist-name">{p.page}</span>
-                  <span className="an-dist-val">{p.percentage}% ({p.visits.toLocaleString()})</span>
-                </div>
-                <div className="an-dist-track">
-                  <div className="an-dist-fill" style={{ width: `${p.percentage}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(239,231,214,0.08)', paddingTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span style={{ color: '#9c8e7b' }}>Device Type Breakdown:</span>
-              <span style={{ color: '#ded3c1' }}>Mobile: <strong>72%</strong> | Desktop: <strong>28%</strong></span>
-            </div>
-            <div className="an-progress-bar">
-              <div className="an-progress-paid" style={{ width: '72%' }} title="72% Mobile" />
-              <div className="an-progress-org" style={{ width: '28%' }} title="28% Desktop" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Readers who joined from tracked marketing links */}
-      <section className="an-card an-leads-card" aria-labelledby="campaign-leads-title">
-        <div className="an-leads-heading">
-          <div>
-            <h2 id="campaign-leads-title" className="an-card-title">
-              <Ic k="readers" s={21} /> Reader signups from your links
-            </h2>
-            <p className="an-card-sub">
-              Emails people entered on the Advance Reader form, paired with the campaign that brought them here.
-            </p>
-          </div>
-          <a className="crm-sm" href="/admin/readers">Open reader list</a>
-        </div>
-
-        <div className="an-leads-toolbar">
-          <div className="an-leads-filters" role="group" aria-label="Filter reader signups by source">
-            <button type="button" className={leadFilter === 'all' ? 'on' : ''} onClick={() => setLeadFilter('all')}>
-              Everyone <span>{leadCounts.all}</span>
-            </button>
-            <button type="button" className={leadFilter === 'paid' ? 'on' : ''} onClick={() => setLeadFilter('paid')}>
-              Paid ads <span>{leadCounts.paid}</span>
-            </button>
-            <button type="button" className={leadFilter === 'marketing' ? 'on' : ''} onClick={() => setLeadFilter('marketing')}>
-              Organic & email <span>{leadCounts.marketing}</span>
-            </button>
-          </div>
-          <label className="an-leads-search">
-            <Ic k="mail" s={15} />
-            <input
-              aria-label="Search reader signups"
-              placeholder="Find a reader or campaign"
-              value={leadSearch}
-              onChange={(event) => setLeadSearch(event.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="an-leads-list" aria-live="polite">
-          {filteredCampaignLeads.length ? filteredCampaignLeads.map((lead) => {
-            const isPaid = isPaidMedium(lead.medium);
-            const signupDate = lead.updatedAt || lead.createdAt;
-            const initials = (lead.readerName || lead.readerEmail || 'Reader')
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((part) => part[0])
-              .join('')
-              .toUpperCase();
-
-            return (
-              <article className="an-lead-row" key={lead.id}>
-                <div className="an-lead-person">
-                  <span className="an-lead-avatar" aria-hidden="true">{initials}</span>
-                  <div className="an-lead-identity">
-                    <strong>{lead.readerName || 'New reader'}</strong>
-                    <a href={`mailto:${lead.readerEmail}`}>{lead.readerEmail}</a>
-                  </div>
-                </div>
-                <div className="an-lead-attribution">
-                  <span className={`an-lead-source ${isPaid ? 'paid' : 'marketing'}`}>
-                    {isPaid ? 'Paid ad' : 'Marketing'} <span aria-hidden="true">·</span> {lead.source}
-                  </span>
-                  <span className="an-lead-campaign">{lead.campaign}</span>
-                </div>
-                <time className="an-lead-date" dateTime={signupDate}>
-                  {new Date(signupDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </time>
-              </article>
-            );
-          }) : (
-            <div className="an-leads-empty">
-              <span className="an-lead-empty-mark"><Ic k="readers" s={19} /></span>
-              <div>
-                <strong>{campaignLeads.length ? 'No signups match that search.' : 'No attributed signups yet.'}</strong>
-                <p>{campaignLeads.length
-                  ? 'Try another name, email address, or campaign.'
-                  : 'When someone submits the form after arriving from a tracked link, their email and source will appear here.'}</p>
-              </div>
-            </div>
-          )}
-        </div>
-        <p className="an-leads-foot">Showing form submissions from {rangeLabel.toLowerCase()}. A campaign is shown when the signup is linked to a tracked visit.</p>
-      </section>
-
-      {/* ── Screen Output 3: Advertising Campaign Leaderboard ── */}
-      <div className="an-card">
-        <div className="an-card-head">
-          <div>
-            <h2 className="an-card-title">
-              <Ic k="target" s={22} /> Advertising & Organic Campaign Leaderboard
-            </h2>
-            <p className="an-card-sub">
-              Comparative attribution showing which campaigns generated real Amazon purchases and ARC readers
-            </p>
-          </div>
-        </div>
-
-        <div className="an-table-wrap">
-          <table className="an-table">
-            <thead>
-              <tr>
-                <th>Campaign Name</th>
-                <th>Channel & Type</th>
-                <th style={{ textAlign: 'right' }}>Visitors</th>
-                <th style={{ textAlign: 'right' }}>Amazon Clicks</th>
-                <th style={{ textAlign: 'right' }}>ARC Signups</th>
-                <th style={{ textAlign: 'right' }}>Conv. Rate</th>
-                <th>Performance Insight</th>
-              </tr>
-            </thead>
-            <tbody>
-              {campaigns.map((c) => (
-                <tr key={c.campaign}>
-                  <td>
-                    <strong style={{ color: '#f7f2e8', fontSize: 15 }}>{c.campaign}</strong>
-                  </td>
-                  <td>
-                    <span className={`an-badge ${c.isPaid ? 'paid' : 'org'}`}>
-                      {c.source} ({c.isPaid ? 'Paid Trail' : 'Organic Free'})
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                    {c.visitors.toLocaleString()}
-                  </td>
-                  <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                    {c.amazonClicks}
-                  </td>
-                  <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums' }}>
-                    {c.arcSignups}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <span className="an-badge success">
-                      {c.conversionRate}%
-                    </span>
-                  </td>
-                  <td style={{ color: '#b5a895', fontSize: 13 }}>
-                    {c.notes}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
       </div>
 
       {/* ── Screen Output 4: 1-Click Campaign Link Generator ── */}
@@ -854,6 +348,183 @@ export default function AnalyticsClient({
         </div>
       </div>
 
+      <section className="an-card an-social-card" aria-labelledby="social-sources-title">
+        <div className="an-social-heading">
+          <div>
+            <h2 id="social-sources-title" className="an-card-title"><Ic k="globe" s={21} /> Paid social traffic</h2>
+            <p className="an-card-sub">Paid visits by platform and campaign, with outbound Amazon clicks for {rangeLabel.toLowerCase()}.</p>
+          </div>
+          <span className="an-social-total">{socialPlatformRows.reduce((sum, row) => sum + row.paidVisitors, 0).toLocaleString()} paid visits</span>
+        </div>
+        {socialPlatformRows.length ? (
+          <div className="an-social-table-wrap">
+            <table className="an-social-table">
+              <thead>
+                <tr><th>Platform</th><th>Paid visitors</th><th>Campaigns</th><th>Amazon clicks</th></tr>
+              </thead>
+              <tbody>
+                {socialPlatformRows.map((row) => (
+                  <tr key={row.name}>
+                    <td><span className="an-social-platform-dot" />{row.name}</td>
+                    <td>{row.paidVisitors.toLocaleString()}</td>
+                    <td>{row.campaigns.size ? [...row.campaigns].join(', ') : 'Tagged source'}</td>
+                    <td>{row.amazonClicks.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="an-social-empty">No paid social visits in this period yet. Use tagged ad links to see paid traffic by platform and campaign.</p>
+        )}
+        <p className="an-social-note">Only paid social visits are included here. Campaign names come from the ad link’s UTM tags.</p>
+      </section>
+
+      {/* ── Screen Output 3: Advertising Campaign Leaderboard ── */}
+      <div className="an-card">
+        <div className="an-card-head">
+          <div>
+            <h2 className="an-card-title">
+              <Ic k="target" s={22} /> Advertising & Organic Campaign Leaderboard
+            </h2>
+            <p className="an-card-sub">
+              Comparative attribution showing which campaigns generated real Amazon purchases and ARC readers
+            </p>
+          </div>
+        </div>
+
+        <div className="an-table-wrap">
+          <table className="an-table">
+            <thead>
+              <tr>
+                <th>Campaign Name</th>
+                <th>Channel & Type</th>
+                <th style={{ textAlign: 'right' }}>Visitors</th>
+                <th style={{ textAlign: 'right' }}>Amazon Clicks</th>
+                <th style={{ textAlign: 'right' }}>ARC Signups</th>
+                <th style={{ textAlign: 'right' }}>Conv. Rate</th>
+                <th>Performance Insight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((c) => (
+                <tr key={c.campaign}>
+                  <td>
+                    <strong style={{ color: '#f7f2e8', fontSize: 15 }}>{c.campaign}</strong>
+                  </td>
+                  <td>
+                    <span className={`an-badge ${c.isPaid ? 'paid' : 'org'}`}>
+                      {c.source} ({c.isPaid ? 'Paid Trail' : 'Organic Free'})
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right', fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                    {c.visitors.toLocaleString()}
+                  </td>
+                  <td style={{ textAlign: 'right', color: '#86efac', fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                    {c.amazonClicks}
+                  </td>
+                  <td style={{ textAlign: 'right', color: '#e8c48c', fontWeight: 600, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+                    {c.arcSignups}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <span className="an-badge success">
+                      {c.conversionRate}%
+                    </span>
+                  </td>
+                  <td style={{ color: '#b5a895', fontSize: 13 }}>
+                    {c.notes}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      {/* Readers who joined from tracked marketing links */}
+      <section className="an-card an-leads-card" aria-labelledby="campaign-leads-title">
+        <div className="an-leads-heading">
+          <div>
+            <h2 id="campaign-leads-title" className="an-card-title">
+              <Ic k="readers" s={21} /> Reader signups from your links
+            </h2>
+            <p className="an-card-sub">
+              Emails people entered on the Advance Reader form, paired with the campaign that brought them here.
+            </p>
+          </div>
+          <a className="crm-sm" href="/admin/readers">Open reader list</a>
+        </div>
+
+        <div className="an-leads-toolbar">
+          <div className="an-leads-filters" role="group" aria-label="Filter reader signups by source">
+            <button type="button" className={leadFilter === 'all' ? 'on' : ''} onClick={() => setLeadFilter('all')}>
+              Everyone <span>{leadCounts.all}</span>
+            </button>
+            <button type="button" className={leadFilter === 'paid' ? 'on' : ''} onClick={() => setLeadFilter('paid')}>
+              Paid ads <span>{leadCounts.paid}</span>
+            </button>
+            <button type="button" className={leadFilter === 'marketing' ? 'on' : ''} onClick={() => setLeadFilter('marketing')}>
+              Organic & email <span>{leadCounts.marketing}</span>
+            </button>
+          </div>
+          <label className="an-leads-search">
+            <Ic k="mail" s={15} />
+            <input
+              aria-label="Search reader signups"
+              placeholder="Find a reader or campaign"
+              value={leadSearch}
+              onChange={(event) => setLeadSearch(event.target.value)}
+            />
+          </label>
+        </div>
+
+        <div className="an-leads-list" aria-live="polite">
+          {filteredCampaignLeads.length ? filteredCampaignLeads.map((lead) => {
+            const isPaid = isPaidMedium(lead.medium);
+            const signupDate = lead.updatedAt || lead.createdAt;
+            const initials = (lead.readerName || lead.readerEmail || 'Reader')
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((part) => part[0])
+              .join('')
+              .toUpperCase();
+
+            return (
+              <article className="an-lead-row" key={lead.id}>
+                <div className="an-lead-person">
+                  <span className="an-lead-avatar" aria-hidden="true">{initials}</span>
+                  <div className="an-lead-identity">
+                    <strong>{lead.readerName || 'New reader'}</strong>
+                    <a href={`mailto:${lead.readerEmail}`}>{lead.readerEmail}</a>
+                  </div>
+                </div>
+                <div className="an-lead-attribution">
+                  <span className={`an-lead-source ${isPaid ? 'paid' : 'marketing'}`}>
+                    {isPaid ? 'Paid ad' : 'Marketing'} <span aria-hidden="true">·</span> {lead.source}
+                  </span>
+                  <span className="an-lead-campaign">{lead.campaign}</span>
+                </div>
+                <time className="an-lead-date" dateTime={signupDate}>
+                  {new Date(signupDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </time>
+              </article>
+            );
+          }) : (
+            <div className="an-leads-empty">
+              <span className="an-lead-empty-mark"><Ic k="readers" s={19} /></span>
+              <div>
+                <strong>{campaignLeads.length ? 'No signups match that search.' : 'No attributed signups yet.'}</strong>
+                <p>{campaignLeads.length
+                  ? 'Try another name, email address, or campaign.'
+                  : 'When someone submits the form after arriving from a tracked link, their email and source will appear here.'}</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <p className="an-leads-foot">Showing form submissions from {rangeLabel.toLowerCase()}. A campaign is shown when the signup is linked to a tracked visit.</p>
+      </section>
+
       {/* ── Screen Output 5: Live Visitor Journey Feed (Every Single User) ── */}
       <div className="an-card">
         <div className="an-card-head">
@@ -906,14 +577,21 @@ export default function AnalyticsClient({
           </div>
         </div>
 
-        {/* Search input */}
-        <div style={{ maxWidth: 400 }}>
-          <input
-            className="crm-in"
-            placeholder="Search by visitor ID, ad click ID, campaign, city..."
-            value={visitorSearch}
-            onChange={(e) => setVisitorSearch(e.target.value)}
-          />
+        {/* Search input + result counter */}
+        <div className="an-feed-toolbar">
+          <div style={{ maxWidth: 400, flex: '1 1 280px' }}>
+            <input
+              id="visitor-feed-search"
+              className="crm-in"
+              placeholder="Search by visitor ID, ad click ID, campaign, city..."
+              value={visitorSearch}
+              onChange={(e) => setVisitorSearch(e.target.value)}
+            />
+          </div>
+          <span className="an-feed-count" aria-live="polite">
+            Showing <strong>{shownVisitors.length.toLocaleString()}</strong> of{' '}
+            <strong>{filteredVisitors.length.toLocaleString()}</strong> visitors
+          </span>
         </div>
 
         {/* Visitor Feed Table */}
@@ -931,9 +609,10 @@ export default function AnalyticsClient({
               </tr>
             </thead>
             <tbody>
-              {filteredVisitors.map((v) => {
+              {shownVisitors.map((v) => {
                 const date = new Date(v.createdAt);
                 const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const isPaid = isPaidMedium(v.medium);
 
                 return (
@@ -942,7 +621,8 @@ export default function AnalyticsClient({
                     onClick={() => setSelectedVisitor(v)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <td style={{ color: '#9c8e7b', fontVariantNumeric: 'lining-nums' }}>
+                    <td style={{ color: '#9c8e7b', fontVariantNumeric: 'lining-nums', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'block', color: '#ded3c1', fontSize: 12 }}>{dateStr}</span>
                       {timeStr}
                     </td>
                     <td>
@@ -1011,9 +691,35 @@ export default function AnalyticsClient({
                   </tr>
                 );
               })}
+              {shownVisitors.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="an-feed-empty">
+                    {initialSessions.length
+                      ? 'No visitors match this filter or search.'
+                      : 'No visitors have been tracked yet.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Load the next 30 visitors */}
+        {hasMoreVisitors && (
+          <div className="an-feed-more">
+            <button
+              type="button"
+              id="visitor-feed-load-more"
+              className="crm-btn"
+              onClick={() => setVisibleCount((count) => count + FEED_PAGE_SIZE)}
+            >
+              Load more
+              <span className="an-feed-more-hint">
+                next {Math.min(FEED_PAGE_SIZE, filteredVisitors.length - visibleCount)} of {(filteredVisitors.length - visibleCount).toLocaleString()} remaining
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Screen Output 6: Slide-Out Individual Visitor Clickstream Timeline Drawer ── */}
