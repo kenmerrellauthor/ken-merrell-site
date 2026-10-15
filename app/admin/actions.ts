@@ -14,9 +14,10 @@ import {
 import {
   addReader, deleteBook, deleteReader, deleteReview, deleteVideo, getBook, getBooks, getSite, getVideos, newId,
   saveBook, saveBooks, saveBookOrder, saveSite, saveVideo, saveVideoOrder, updateReader, updateReview, uploadImage,
-  sanitizeBook, deleteBlog, getBlog, getBlogs, saveBlog
+  sanitizeBook, deleteBlog, getBlog, getBlogs, saveBlog,
+  addBlogComment, deleteBlogComment, replyBlogComment, toggleBlogCommentApproval
 } from '@/lib/store';
-import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType, BlogPost, BlogFAQItem } from '@/lib/types';
+import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType, BlogPost, BlogFAQItem, BlogComment } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 import { formatStylishTitle } from '@/components/Bits';
 
@@ -791,6 +792,7 @@ export async function saveBlogPostAction(_p: BlogAdminState, form: FormData): Pr
       canonicalUrl,
       keyTakeaways,
       faqItems,
+      comments: existing?.comments ?? [],
     };
 
     await saveBlog(post);
@@ -834,4 +836,99 @@ export async function deleteBlogPostAction(id: string): Promise<{ ok?: boolean; 
     return { error: e instanceof Error ? e.message : 'Could not delete blog post.' };
   }
 }
+
+/* ---------------- Blog Comments ---------------- */
+
+export async function submitBlogCommentAction(
+  _prev: { ok?: boolean; error?: string; comment?: BlogComment },
+  form: FormData
+): Promise<{ ok?: boolean; error?: string; comment?: BlogComment }> {
+  try {
+    const honeypot = String(form.get('website_hp') ?? '').trim();
+    if (honeypot) {
+      // Silent discard for bots
+      return { ok: true };
+    }
+
+    const blogIdOrSlug = str(form, 'blogIdOrSlug', 120);
+    const authorName = str(form, 'authorName', 80);
+    const authorEmail = str(form, 'authorEmail', 120);
+    const content = str(form, 'content', 3000);
+
+    if (!blogIdOrSlug) return { error: 'Blog post reference is missing.' };
+    if (!authorName || authorName.length < 2) return { error: 'Please enter your name.' };
+    if (!authorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(authorEmail)) {
+      return { error: 'Please enter a valid email address.' };
+    }
+    if (!content || content.length < 3) return { error: 'Please enter your comment.' };
+
+    const comment = await addBlogComment(blogIdOrSlug, {
+      authorName,
+      authorEmail,
+      content,
+    });
+
+    try {
+      revalidatePath('/blog', 'page');
+      revalidatePath(`/blog/${blogIdOrSlug}`, 'page');
+      revalidatePath('/admin/blogs', 'page');
+    } catch {
+      /* ignore */
+    }
+
+    return { ok: true, comment };
+  } catch (err: any) {
+    return { error: err?.message || 'Failed to submit comment. Please try again.' };
+  }
+}
+
+export async function deleteBlogCommentAction(blogId: string, commentId: string): Promise<{ ok?: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    await deleteBlogComment(blogId, commentId);
+    try {
+      revalidatePath('/blog', 'page');
+      revalidatePath(`/admin/blogs/${blogId}`, 'page');
+    } catch {
+      /* ignore */
+    }
+    return { ok: true };
+  } catch (err: any) {
+    return { error: err?.message || 'Failed to delete comment.' };
+  }
+}
+
+export async function replyBlogCommentAction(blogId: string, commentId: string, replyText: string): Promise<{ ok?: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    if (!replyText.trim()) return { error: 'Reply text cannot be empty.' };
+    await replyBlogComment(blogId, commentId, replyText);
+    try {
+      revalidatePath('/blog', 'page');
+      revalidatePath(`/admin/blogs/${blogId}`, 'page');
+    } catch {
+      /* ignore */
+    }
+    return { ok: true };
+  } catch (err: any) {
+    return { error: err?.message || 'Failed to save reply.' };
+  }
+}
+
+export async function toggleBlogCommentApprovalAction(blogId: string, commentId: string): Promise<{ ok?: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    await toggleBlogCommentApproval(blogId, commentId);
+    try {
+      revalidatePath('/blog', 'page');
+      revalidatePath(`/admin/blogs/${blogId}`, 'page');
+    } catch {
+      /* ignore */
+    }
+    return { ok: true };
+  } catch (err: any) {
+    return { error: err?.message || 'Failed to toggle comment approval.' };
+  }
+}
+
 

@@ -45,7 +45,7 @@ export default function NotificationsClient({
 
   const [items, setItems] = useState<CrmNotification[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-  const [filter, setFilter] = useState<'all' | 'reader' | 'review' | 'unread'>('all');
+  const [filter, setFilter] = useState<'all' | 'reader' | 'review' | 'comment' | 'unread'>('all');
   const [search, setSearch] = useState('');
   const [markedAll, setMarkedAll] = useState(false);
 
@@ -89,6 +89,7 @@ export default function NotificationsClient({
   const totalCount = items.length;
   const readerCount = items.filter(n => n.type === 'reader').length;
   const reviewCount = items.filter(n => n.type === 'review').length;
+  const commentCount = items.filter(n => n.type === 'comment').length;
   const unreadAlerts = items.filter(n => n.unread).length;
 
   // Filtered and searched list
@@ -97,6 +98,7 @@ export default function NotificationsClient({
       // Tab filter
       if (filter === 'reader' && item.type !== 'reader') return false;
       if (filter === 'review' && item.type !== 'review') return false;
+      if (filter === 'comment' && item.type !== 'comment') return false;
       if (filter === 'unread' && !item.unread) return false;
 
       // Text search
@@ -107,7 +109,8 @@ export default function NotificationsClient({
         const inDetail = item.detail ? item.detail.toLowerCase().includes(q) : false;
         const inEmail = item.metadata?.email ? item.metadata.email.toLowerCase().includes(q) : false;
         const inBook = item.metadata?.bookTitle ? item.metadata.bookTitle.toLowerCase().includes(q) : false;
-        if (!inTitle && !inSubtitle && !inDetail && !inEmail && !inBook) return false;
+        const inBlog = item.metadata?.blogTitle ? item.metadata.blogTitle.toLowerCase().includes(q) : false;
+        if (!inTitle && !inSubtitle && !inDetail && !inEmail && !inBook && !inBlog) return false;
       }
 
       return true;
@@ -199,6 +202,13 @@ export default function NotificationsClient({
             onClick={() => setFilter('review')}
           >
             Reviews ({reviewCount})
+          </button>
+          <button
+            type="button"
+            className={filter === 'comment' ? 'on' : ''}
+            onClick={() => setFilter('comment')}
+          >
+            Comments ({commentCount})
           </button>
           <button
             type="button"
@@ -302,9 +312,9 @@ export default function NotificationsClient({
                     width: 44,
                     height: 44,
                     borderRadius: '50%',
-                    background: n.type === 'reader' ? 'rgba(74,136,88,.15)' : 'rgba(201,168,96,.15)',
-                    border: `1px solid ${n.type === 'reader' ? 'rgba(74,136,88,.4)' : 'rgba(201,168,96,.4)'}`,
-                    color: n.type === 'reader' ? '#92c99f' : 'var(--gold)',
+                    background: n.type === 'reader' ? 'rgba(74,136,88,.15)' : n.type === 'comment' ? 'rgba(80,150,220,.15)' : 'rgba(201,168,96,.15)',
+                    border: `1px solid ${n.type === 'reader' ? 'rgba(74,136,88,.4)' : n.type === 'comment' ? 'rgba(80,150,220,.4)' : 'rgba(201,168,96,.4)'}`,
+                    color: n.type === 'reader' ? '#92c99f' : n.type === 'comment' ? '#9ecbf0' : 'var(--gold)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -316,6 +326,10 @@ export default function NotificationsClient({
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  ) : n.type === 'comment' ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                   ) : (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -337,7 +351,7 @@ export default function NotificationsClient({
                         </span>
                       )}
                       <span className={`pill ${n.type === 'reader' ? '' : 'off'}`} style={{ height: 20, fontSize: 10, padding: '0 8px', color: '#fff', background: 'rgba(255,255,255,0.1)' }}>
-                        {n.type === 'reader' ? 'ADVANCE READER' : 'BOOK REVIEW'}
+                        {n.type === 'reader' ? 'ADVANCE READER' : n.type === 'comment' ? 'BLOG COMMENT' : 'BOOK REVIEW'}
                       </span>
                     </div>
 
@@ -393,6 +407,14 @@ export default function NotificationsClient({
                           </a>
                         )}
                       </>
+                    ) : n.type === 'comment' ? (
+                      <Link
+                        href={n.metadata?.blogId ? `/admin/blogs/${n.metadata.blogId}#comments` : '/admin/blogs'}
+                        className="crm-sm"
+                        style={{ fontSize: 13, height: 34 }}
+                      >
+                        <Ic k="edit" s={14} /> Moderate &amp; Reply to Comment
+                      </Link>
                     ) : (
                       <Link
                         href={n.metadata?.bookId ? `/admin/books/${n.metadata.bookId}#reviews` : '/admin'}

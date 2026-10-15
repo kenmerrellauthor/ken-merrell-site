@@ -4,8 +4,8 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ic } from '@/components/admin/AdIcons';
-import type { BlogPost, Book, BlogFAQItem } from '@/lib/types';
-import { saveBlogPostAction } from '@/app/admin/actions';
+import type { BlogPost, Book, BlogFAQItem, BlogComment } from '@/lib/types';
+import { saveBlogPostAction, deleteBlogCommentAction, replyBlogCommentAction, toggleBlogCommentApprovalAction } from '@/app/admin/actions';
 import { Cover } from '@/components/Bits';
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 
@@ -58,6 +58,11 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
       ? initialBlog.faqItems
       : [{ question: '', answer: '' }]
   );
+
+  // Reader comments
+  const [comments, setComments] = useState<BlogComment[]>(initialBlog.comments || []);
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   // Editor body view toggle (Write vs Live Preview)
   const [bodyMode, setBodyMode] = useState<'write' | 'preview'>('write');
@@ -561,6 +566,174 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
               </div>
             </div>
           </section>
+
+          {/* Section: Reader Comments & Moderation */}
+          {!isNew && (
+            <section id="comments" className="crm-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ margin: 0 }}>Reader Comments ({comments.length})</h2>
+                  <p className="crm-note" style={{ marginTop: 2 }}>
+                    Reflections and questions submitted by readers on this article.
+                  </p>
+                </div>
+              </div>
+
+              {comments.length === 0 ? (
+                <div style={{ padding: '24px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 4, color: 'var(--muted)', fontSize: 13 }}>
+                  No reader comments on this article yet. Once posted by readers, they will appear here for moderation and replies.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      style={{
+                        padding: 16,
+                        background: '#120f0d',
+                        border: '1px solid rgba(239,231,214,0.08)',
+                        borderRadius: 6,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                        <div>
+                          <b style={{ color: 'var(--cream)', fontSize: 15 }}>{comment.authorName}</b>
+                          <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>
+                            {comment.authorEmail} · {new Date(comment.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const res = await toggleBlogCommentApprovalAction(initialBlog.id, comment.id);
+                              if (res.ok) {
+                                setComments((prev) =>
+                                  prev.map((c) => (c.id === comment.id ? { ...c, approved: !c.approved } : c))
+                                );
+                              }
+                            }}
+                            className={`crm-sm ${comment.approved ? '' : 'gold'}`}
+                            style={{ height: 30, fontSize: 11, padding: '0 10px' }}
+                          >
+                            {comment.approved ? 'Live (Hide)' : 'Hidden (Approve)'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm(`Delete comment from ${comment.authorName}?`)) return;
+                              const res = await deleteBlogCommentAction(initialBlog.id, comment.id);
+                              if (res.ok) {
+                                setComments((prev) => prev.filter((c) => c.id !== comment.id));
+                              }
+                            }}
+                            className="crm-sm danger icon"
+                            style={{ height: 30, width: 30 }}
+                            title="Delete comment"
+                          >
+                            <Ic k="trash" s={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p style={{ margin: 0, fontSize: 14, color: 'var(--cream-2)', lineHeight: 1.55, whiteSpace: 'pre-line' }}>
+                        {comment.content}
+                      </p>
+
+                      {/* Author Reply */}
+                      {comment.authorReply ? (
+                        <div style={{ padding: '10px 14px', background: 'rgba(201,168,96,0.08)', borderLeft: '3px solid var(--gold)', borderRadius: '0 4px 4px 0' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                              Ken Merrell&apos;s Reply:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyingId(comment.id);
+                                setReplyText(comment.authorReply || '');
+                              }}
+                              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}
+                            >
+                              Edit Reply
+                            </button>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 13, color: '#f0e6d6', fontStyle: 'italic' }}>
+                            &ldquo;{comment.authorReply}&rdquo;
+                          </p>
+                        </div>
+                      ) : replyingId !== comment.id ? (
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyingId(comment.id);
+                              setReplyText('');
+                            }}
+                            className="crm-sm"
+                            style={{ height: 28, fontSize: 11, padding: '0 10px' }}
+                          >
+                            Reply as Ken
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {/* Reply Editor */}
+                      {replyingId === comment.id && (
+                        <div style={{ marginTop: 8, padding: 12, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(201,168,96,0.3)', borderRadius: 4 }}>
+                          <label style={{ display: 'block', fontSize: 11, color: 'var(--gold)', marginBottom: 6, fontWeight: 700, letterSpacing: '.06em' }}>
+                            REPLY TO {comment.authorName.toUpperCase()}:
+                          </label>
+                          <textarea
+                            rows={3}
+                            className="crm-in"
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Write a response as Ken..."
+                            style={{ height: 'auto', minHeight: 70, marginBottom: 8 }}
+                          />
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!replyText.trim()) return;
+                                const res = await replyBlogCommentAction(initialBlog.id, comment.id, replyText);
+                                if (res.ok) {
+                                  setComments((prev) =>
+                                    prev.map((c) => (c.id === comment.id ? { ...c, authorReply: replyText, authorReplyAt: new Date().toISOString() } : c))
+                                  );
+                                  setReplyingId(null);
+                                  setReplyText('');
+                                }
+                              }}
+                              className="crm-sm pri"
+                              style={{ height: 30, fontSize: 11, padding: '0 12px' }}
+                            >
+                              Save Reply
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyingId(null);
+                                setReplyText('');
+                              }}
+                              className="crm-sm"
+                              style={{ height: 30, fontSize: 11 }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         {/* Right Sticky Sidebar */}

@@ -7,6 +7,7 @@ import { Eyebrow, Cover } from '@/components/Bits';
 import { getBlogBySlug, getBooks, getPublishedBlogs, getSite, incrementBlogViews } from '@/lib/store';
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
+import BlogComments from '@/components/BlogComments';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 
 export const revalidate = 60;
@@ -523,6 +524,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                 </div>
               </div>
             </section>
+
+            {/* Reader Comments & Reflections Section */}
+            <BlogComments
+              blogId={post.id}
+              blogSlug={post.slug}
+              initialComments={post.comments || []}
+            />
 
             {/* Back to Blog */}
             <div style={{ marginTop: 40, textAlign: 'center' }}>
