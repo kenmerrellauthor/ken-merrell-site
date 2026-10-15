@@ -4,7 +4,7 @@ import type { AnalyticsEvent, AnalyticsKPIs, AnalyticsSession } from '@/lib/type
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
 import {
-  RangeTabs, cleanCity, cleanLocation, eventsInWindow, isPaidMedium, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, type TimeRange,
+  RangeTabs, cleanCity, cleanLocation, eventsInWindow, isPaidMedium, rangeDaysOf, rangeLabelOf, sessionsInWindow, windowStartOf, parseDateBoundary, type TimeRange,
 } from './shared';
 import { Donut, Funnel, HBarList, Heatmap, StackedBars, TrendChart, type DonutSegment } from './charts';
 
@@ -45,40 +45,50 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
   const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
 
   const visibleTraffic = useMemo(() => {
-    if (timeRange === 'custom' && customStart && customEnd) {
-      return dailyTraffic.filter((p) => p.isoDate >= customStart && p.isoDate <= customEnd);
+    if (timeRange === 'custom' && customStart) {
+      const startDay = customStart.slice(0, 10);
+      const endDay = (customEnd || customStart).slice(0, 10);
+      const filtered = dailyTraffic.filter((p) => p.isoDate >= startDay && p.isoDate <= endDay);
+      if (filtered.length > 0) return filtered;
     }
     return dailyTraffic.slice(-rangeDays);
   }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
 
   const windowStart = useMemo(() => {
     if (timeRange === 'custom' && customStart) {
-      return new Date(`${customStart}T00:00:00.000Z`).getTime();
+      return parseDateBoundary(customStart, false);
     }
     return windowStartOf(visibleTraffic);
   }, [timeRange, customStart, visibleTraffic]);
 
   const windowEnd = useMemo(() => {
-    if (timeRange === 'custom' && customEnd) {
-      return new Date(`${customEnd}T23:59:59.999Z`).getTime();
+    if (timeRange === 'custom' && customStart) {
+      return parseDateBoundary(customEnd || customStart, true);
     }
     return Date.now();
-  }, [timeRange, customEnd]);
+  }, [timeRange, customStart, customEnd]);
 
   const rangeSessions = useMemo(() => sessionsInWindow(sessions, windowStart, windowEnd), [sessions, windowStart, windowEnd]);
   const rangeEvents = useMemo(() => eventsInWindow(events, windowStart, windowEnd), [events, windowStart, windowEnd]);
 
   const handleRangeChange = (range: TimeRange, start?: string, end?: string) => {
     setTimeRange(range);
-    if (start && end) {
-      setCustomStart(start);
-      setCustomEnd(end);
+    if (range === 'custom') {
+      const s = start || new Date().toISOString().slice(0, 10);
+      const e = end || s;
+      setCustomStart(s);
+      setCustomEnd(e);
+    } else {
+      setCustomStart('');
+      setCustomEnd('');
     }
   };
 
-  /* ── Hourly breakdown for Today ── */
+  const isSingleDay = timeRange === 'today' || (timeRange === 'custom' && rangeDays === 1) || visibleTraffic.length === 1;
+
+  /* ── Hourly breakdown for single day (today or single custom date) ── */
   const hourlyTraffic = useMemo<DailyTrafficPoint[]>(() => {
-    if (timeRange !== 'today' && visibleTraffic.length > 1) return [];
+    if (!isSingleDay) return [];
 
     const hours = Array.from({ length: 24 }, (_, h) => {
       const ampm = h < 12 ? 'AM' : 'PM';
@@ -153,16 +163,32 @@ export default function AnalyticsDashboard({ initialKpis, dailyTraffic, sessions
     }));
   }, [timeRange, visibleTraffic, rangeSessions, rangeEvents]);
 
-  const chartTraffic = (timeRange === 'today' || visibleTraffic.length === 1) && hourlyTraffic.length ? hourlyTraffic : visibleTraffic;
+  const chartTraffic = isSingleDay && hourlyTraffic.length ? hourlyTraffic : visibleTraffic;
 
   /* ── Totals for KPI cards ── */
-  const totals = useMemo(() => visibleTraffic.reduce((t, p) => ({
-    visitors: t.visitors + p.visitors,
-    paidVisitors: t.paidVisitors + p.paidVisitors,
-    organicVisitors: t.organicVisitors + p.organicVisitors,
-    amazonClicks: t.amazonClicks + p.amazonClicks,
-    arcSignups: t.arcSignups + p.arcSignups,
-  }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 }), [visibleTraffic]);
+  const totals = useMemo(() => {
+    const fromTraffic = visibleTraffic.reduce((t, p) => ({
+      visitors: t.visitors + p.visitors,
+      paidVisitors: t.paidVisitors + p.paidVisitors,
+      organicVisitors: t.organicVisitors + p.organicVisitors,
+      amazonClicks: t.amazonClicks + p.amazonClicks,
+      arcSignups: t.arcSignups + p.arcSignups,
+    }), { visitors: 0, paidVisitors: 0, organicVisitors: 0, amazonClicks: 0, arcSignups: 0 });
+
+    if (fromTraffic.visitors === 0 && rangeSessions.length > 0) {
+      const paid = rangeSessions.filter((s) => isPaidMedium(s.medium)).length;
+      const amz = rangeEvents.filter((e) => e.eventType === 'amazon_click').length;
+      const arc = rangeEvents.filter((e) => e.eventType === 'arc_signup').length;
+      return {
+        visitors: rangeSessions.length,
+        paidVisitors: paid,
+        organicVisitors: Math.max(0, rangeSessions.length - paid),
+        amazonClicks: amz,
+        arcSignups: arc,
+      };
+    }
+    return fromTraffic;
+  }, [visibleTraffic, rangeSessions, rangeEvents]);
 
   /* Previous period of the same length, for trend deltas. */
   const previousTotals = useMemo(() => {
