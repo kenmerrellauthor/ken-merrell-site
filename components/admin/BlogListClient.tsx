@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ic } from '@/components/admin/AdIcons';
 import type { BlogPost, Book } from '@/lib/types';
-import { deleteBlogPostAction } from '@/app/admin/actions';
+import { deleteBlogPostAction, saveBlogPostAction } from '@/app/admin/actions';
 
 interface Props {
   initialBlogs: BlogPost[];
   books: Book[];
 }
+
+const COLS = '64px minmax(0, 2fr) 140px 190px 100px 170px';
 
 export default function BlogListClient({ initialBlogs, books }: Props) {
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
   });
 
   const handleDelete = (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to permanently delete "${title}"?`)) {
       return;
     }
     setDeletingId(id);
@@ -54,6 +56,36 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
     });
   };
 
+  const handleTogglePublished = (post: BlogPost) => {
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set('id', post.id);
+      fd.set('title', post.title);
+      fd.set('slug', post.slug);
+      fd.set('excerpt', post.excerpt || '');
+      fd.set('content', post.content || '');
+      fd.set('category', post.category || 'Behind the Book');
+      fd.set('coverImageUrl', post.coverImage || '');
+      fd.set('authorName', post.authorName || 'Ken Merrell');
+      fd.set('tags', (post.tags || []).join(', '));
+      fd.set('readTimeMinutes', String(post.readTimeMinutes || 5));
+      fd.set('isPublished', String(!post.isPublished));
+      fd.set('featured', String(post.featured || false));
+      fd.set('publishedAt', post.publishedAt || new Date().toISOString());
+      fd.set('relatedBookSlug', post.relatedBookSlug || 'none');
+      fd.set('metaTitle', post.metaTitle || post.title);
+      fd.set('metaDescription', post.metaDescription || post.excerpt || '');
+      fd.set('keyTakeaways', JSON.stringify(post.keyTakeaways || []));
+      fd.set('faqItems', JSON.stringify(post.faqItems || []));
+
+      const res = await saveBlogPostAction({}, fd);
+      if (res.ok && res.post) {
+        setBlogs((prev) => prev.map((p) => (p.id === post.id ? res.post! : p)));
+        router.refresh();
+      }
+    });
+  };
+
   const getBookTitle = (slug?: string | null) => {
     if (!slug) return null;
     return books.find((bk) => bk.slug === slug)?.title || slug;
@@ -61,7 +93,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Filter and Search Bar */}
+      {/* ── Tabs & Filter Bar ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
         <nav className="crm-tabs" aria-label="Filter blog posts" style={{ margin: 0 }}>
           <button
@@ -69,7 +101,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
             onClick={() => setTab('all')}
             className={tab === 'all' ? 'on' : ''}
           >
-            All Posts ({blogs.length})
+            All posts ({blogs.length})
           </button>
           <button
             type="button"
@@ -92,16 +124,8 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="crm-select"
-              style={{
-                background: 'var(--panel)',
-                color: 'var(--cream)',
-                border: '1px solid var(--line)',
-                padding: '8px 12px',
-                borderRadius: 4,
-                fontSize: 13,
-                outline: 'none',
-              }}
+              className="crm-in"
+              style={{ width: 'auto', height: 40, padding: '0 12px', fontSize: 13 }}
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (
@@ -110,22 +134,17 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
             </select>
           )}
 
-          <div style={{ position: 'relative', minWidth: 240 }}>
+          <div style={{ position: 'relative', width: 260 }}>
             <input
               type="text"
-              placeholder="Search by title, tag, content..."
+              placeholder="Search articles..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="crm-input"
-              style={{
-                paddingLeft: 34,
-                fontSize: 13,
-                paddingTop: 8,
-                paddingBottom: 8,
-              }}
+              className="crm-in"
+              style={{ height: 40, paddingLeft: 34, fontSize: 13 }}
             />
             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}>
-              <Ic k="search" s={15} />
+              <Ic k="search" s={14} />
             </span>
             {search && (
               <button
@@ -136,11 +155,10 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   right: 8,
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: 'transparent',
+                  background: 'none',
                   border: 'none',
                   color: 'var(--muted)',
                   cursor: 'pointer',
-                  fontSize: 14,
                 }}
               >
                 ✕
@@ -150,36 +168,22 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
         </div>
       </div>
 
-      {/* Blog Posts List */}
-      <div className="crm-table" style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6, overflow: 'hidden' }}>
-        <div
-          className="crm-tr head"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '80px minmax(280px, 1fr) 140px 180px 110px 180px',
-            alignItems: 'center',
-            padding: '12px 18px',
-            background: 'rgba(255,255,255,0.02)',
-            borderBottom: '1px solid var(--line)',
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            color: 'var(--muted)',
-            fontWeight: 700,
-          }}
-        >
+      {/* ── Native CRM Table ── */}
+      <div className="crm-table">
+        <div className="crm-tr head" style={{ gridTemplateColumns: COLS }}>
           <span>COVER</span>
-          <span>ARTICLE TITLE & SUMMARY</span>
+          <span>ARTICLE</span>
           <span>CATEGORY</span>
-          <span>SEO & GEO ENHANCEMENTS</span>
-          <span>VIEWS</span>
+          <span>SEO &amp; GEO STATUS</span>
+          <span>STATUS</span>
           <span style={{ textAlign: 'right' }}>ACTIONS</span>
         </div>
 
         {filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--muted)' }}>
-            <p style={{ margin: 0, fontSize: 15 }}>No blog posts match your criteria.</p>
-            <p style={{ margin: '8px 0 0', fontSize: 13, opacity: 0.7 }}>
-              {search || categoryFilter !== 'all' ? 'Try adjusting your search filters or clearing the search box.' : 'Create your first article to start ranking on Google and AI search engines.'}
+            <p style={{ margin: 0, fontSize: 16, fontFamily: 'var(--serif-d)', color: 'var(--cream-2)' }}>No articles found.</p>
+            <p style={{ margin: '6px 0 0', fontSize: 13 }}>
+              {search || categoryFilter !== 'all' ? 'Try adjusting your filters.' : 'Click "+ NEW ARTICLE" above to write your first post.'}
             </p>
           </div>
         ) : (
@@ -192,171 +196,84 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
               <div
                 key={post.id}
                 className="crm-tr row"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '80px minmax(280px, 1fr) 140px 180px 110px 180px',
-                  alignItems: 'center',
-                  padding: '14px 18px',
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  gap: 12,
-                }}
+                style={{ gridTemplateColumns: COLS, minHeight: 96, padding: '16px 20px' }}
               >
-                {/* Cover Image Thumb */}
-                <div>
+                {/* Cover Thumbnail */}
+                <div style={{ width: 54, height: 76, borderRadius: 3, overflow: 'hidden', background: '#120f0d', boxShadow: '0 3px 10px rgba(0,0,0,.6)', position: 'relative' }}>
                   {post.coverImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={post.coverImage}
                       alt={post.title}
-                      style={{
-                        width: 64,
-                        height: 48,
-                        objectFit: 'cover',
-                        borderRadius: 4,
-                        border: '1px solid var(--line)',
-                      }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
-                    <div
-                      style={{
-                        width: 64,
-                        height: 48,
-                        borderRadius: 4,
-                        background: 'rgba(201,168,96,0.08)',
-                        border: '1px dashed rgba(201,168,96,0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--gold)',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      NO COVER
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', fontSize: 9, letterSpacing: '.1em', background: 'rgba(201,168,96,.08)', textAlign: 'center', padding: 4, fontFamily: 'var(--serif-c)' }}>
+                      KM POST
                     </div>
                   )}
                 </div>
 
-                {/* Title & Metadata */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+                {/* Article Info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <Link
                       href={`/admin/blogs/${post.id}`}
-                      style={{
-                        color: 'var(--cream)',
-                        fontWeight: 600,
-                        fontSize: 15,
-                        textDecoration: 'none',
-                        letterSpacing: '-0.01em',
-                      }}
+                      className="crm-title"
+                      style={{ fontSize: 18, color: 'var(--cream-2)' }}
                     >
                       {post.title}
                     </Link>
                     {post.featured && (
-                      <span
-                        style={{
-                          background: 'rgba(201,168,96,0.18)',
-                          color: '#e2b86a',
-                          border: '1px solid rgba(201,168,96,0.4)',
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: 3,
-                          letterSpacing: '0.06em',
-                        }}
-                      >
+                      <span className="pill gold" style={{ height: 22, fontSize: 10, padding: '0 8px' }}>
                         FEATURED
                       </span>
                     )}
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: '1px 6px',
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        background: post.isPublished ? 'rgba(74, 189, 134, 0.15)' : 'rgba(255, 170, 0, 0.12)',
-                        color: post.isPublished ? '#5cdb95' : '#ffb74d',
-                        border: `1px solid ${post.isPublished ? 'rgba(74, 189, 134, 0.3)' : 'rgba(255, 170, 0, 0.25)'}`,
-                      }}
-                    >
-                      {post.isPublished ? 'PUBLISHED' : 'DRAFT'}
-                    </span>
                   </div>
 
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 12,
-                      color: 'var(--muted)',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 1,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {post.excerpt || 'No excerpt written yet.'}
-                  </p>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#888' }}>
-                    <span>{post.readTimeMinutes} min read</span>
-                    <span>•</span>
-                    <span>{new Date(post.publishedAt || post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    <span>•</span>
-                    <span style={{ fontFamily: 'monospace', opacity: 0.8 }}>/blog/{post.slug}</span>
-                  </div>
+                  <span className="crm-meta">
+                    {post.readTimeMinutes} min read · {new Date(post.publishedAt || post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <span style={{ color: 'var(--muted)', opacity: 0.7 }}> · /blog/{post.slug}</span>
+                    {post.views !== undefined && post.views > 0 ? (
+                      <span style={{ color: 'var(--gold)' }}> · {post.views.toLocaleString()} readers</span>
+                    ) : null}
+                  </span>
                 </div>
 
-                {/* Category & Tags */}
+                {/* Category */}
                 <div>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      background: 'rgba(255,255,255,0.06)',
-                      padding: '3px 8px',
-                      borderRadius: 4,
-                      fontSize: 11,
-                      color: 'var(--cream)',
-                    }}
-                  >
+                  <span className="pill" style={{ height: 26, fontSize: 11, padding: '0 10px' }}>
                     {post.category || 'General'}
                   </span>
-                  {post.tags && post.tags.length > 0 && (
-                    <div style={{ marginTop: 4, fontSize: 11, color: 'var(--muted)' }}>
-                      #{post.tags.slice(0, 2).join(' #')}
-                      {post.tags.length > 2 ? ` +${post.tags.length - 2}` : ''}
-                    </div>
-                  )}
                 </div>
 
-                {/* SEO & GEO Enhancements */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {/* SEO & GEO status */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <span
-                      title="Generative Engine Optimization: Key Takeaways block for AI summaries"
+                      title="GEO Key Takeaways for ChatGPT, Perplexity & Claude"
                       style={{
                         fontSize: 10,
-                        padding: '2px 5px',
+                        padding: '2px 6px',
                         borderRadius: 3,
                         fontWeight: 600,
-                        background: hasTakeaways ? 'rgba(92, 219, 149, 0.12)' : 'rgba(255,255,255,0.04)',
-                        color: hasTakeaways ? '#5cdb95' : 'var(--muted)',
-                        border: `1px solid ${hasTakeaways ? 'rgba(92, 219, 149, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                        background: hasTakeaways ? 'rgba(109,191,120,.12)' : 'rgba(255,255,255,.04)',
+                        color: hasTakeaways ? '#6dbf78' : 'var(--muted)',
+                        border: `1px solid ${hasTakeaways ? 'rgba(109,191,120,.3)' : 'rgba(255,255,255,.08)'}`,
                       }}
                     >
-                      {hasTakeaways ? `✓ ${post.keyTakeaways!.length} GEO Takeaways` : 'No Takeaways'}
+                      {hasTakeaways ? `✓ ${post.keyTakeaways!.length} GEO Takeaways` : 'No takeaways'}
                     </span>
                     <span
-                      title="FAQPage Schema for Google Rich Snippets & ChatGPT direct answers"
+                      title="FAQPage Schema for Google Rich Snippets"
                       style={{
                         fontSize: 10,
-                        padding: '2px 5px',
+                        padding: '2px 6px',
                         borderRadius: 3,
                         fontWeight: 600,
-                        background: hasFaqs ? 'rgba(92, 219, 149, 0.12)' : 'rgba(255,255,255,0.04)',
-                        color: hasFaqs ? '#5cdb95' : 'var(--muted)',
-                        border: `1px solid ${hasFaqs ? 'rgba(92, 219, 149, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                        background: hasFaqs ? 'rgba(109,191,120,.12)' : 'rgba(255,255,255,.04)',
+                        color: hasFaqs ? '#6dbf78' : 'var(--muted)',
+                        border: `1px solid ${hasFaqs ? 'rgba(109,191,120,.3)' : 'rgba(255,255,255,.08)'}`,
                       }}
                     >
                       {hasFaqs ? `✓ ${post.faqItems!.length} FAQs` : 'No FAQs'}
@@ -364,65 +281,58 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   </div>
 
                   {bookTitle && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        color: 'var(--gold)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 3,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                      title={`Promotes book: ${bookTitle}`}
-                    >
-                      📖 CTA: {bookTitle}
+                    <span style={{ fontSize: 11, color: 'var(--gold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      📖 Book: {bookTitle}
                     </span>
                   )}
                 </div>
 
-                {/* Views */}
-                <div>
-                  <b style={{ fontSize: 14, color: 'var(--cream)' }}>{(post.views || 0).toLocaleString()}</b>
-                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>readers</div>
+                {/* Published Switch */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button
+                    type="button"
+                    role="switch"
+                    className="switch"
+                    aria-checked={post.isPublished}
+                    onClick={() => handleTogglePublished(post)}
+                    title={post.isPublished ? 'Click to make Draft' : 'Click to Publish live'}
+                  >
+                    <span />
+                  </button>
+                  <span style={{ fontSize: 13, color: post.isPublished ? 'var(--cream)' : 'var(--muted)' }}>
+                    {post.isPublished ? 'Live' : 'Draft'}
+                  </span>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Actions */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, alignItems: 'center' }}>
                   {post.isPublished && (
-                    <Link
+                    <a
                       href={`/blog/${post.slug}`}
                       target="_blank"
-                      className="crm-btn sec"
-                      style={{ padding: '6px 10px', fontSize: 11 }}
-                      title="View public article"
+                      rel="noopener noreferrer"
+                      className="crm-sm icon"
+                      title="View live article"
                     >
-                      <Ic k="link" s={13} />VIEW
-                    </Link>
+                      <Ic k="ext" s={14} />
+                    </a>
                   )}
                   <Link
                     href={`/admin/blogs/${post.id}`}
-                    className="crm-btn pri"
-                    style={{ padding: '6px 10px', fontSize: 11 }}
+                    className="crm-sm"
+                    style={{ height: 36, padding: '0 12px', fontSize: 12 }}
                   >
-                    <Ic k="edit" s={13} />EDIT
+                    <Ic k="edit" s={13} /> Edit
                   </Link>
                   <button
                     type="button"
                     onClick={() => handleDelete(post.id, post.title)}
                     disabled={isPending && deletingId === post.id}
-                    className="crm-btn del"
-                    style={{
-                      padding: '6px 8px',
-                      fontSize: 11,
-                      background: 'transparent',
-                      border: '1px solid rgba(229, 138, 120, 0.3)',
-                      color: '#e58a78',
-                    }}
+                    className="crm-sm danger icon"
+                    style={{ height: 36, width: 36 }}
                     title="Delete article"
                   >
-                    {isPending && deletingId === post.id ? '…' : <Ic k="trash" s={13} />}
+                    {isPending && deletingId === post.id ? '…' : <Ic k="trash" s={14} />}
                   </button>
                 </div>
               </div>

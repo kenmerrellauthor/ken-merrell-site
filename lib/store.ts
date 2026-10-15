@@ -68,13 +68,19 @@ async function writeLocal<T>(table: Table, rows: T[]) {
   }
 }
 
+const missingTables = new Set<string>();
+
 async function all<T extends { id: string }>(table: Table): Promise<T[]> {
   const db = supabase();
-  if (!db) return readLocal<T>(table);
+  if (!db || missingTables.has(table)) return readLocal<T>(table);
   try {
     const { data, error } = await db.from(table).select('id, data');
     if (error) {
-      console.warn(`Supabase read ${table} error (${error.message}), falling back to local.`);
+      if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
+        missingTables.add(table);
+      } else {
+        console.warn(`Supabase read ${table} error (${error.message}), falling back to local.`);
+      }
       return readLocal<T>(table);
     }
     const rows = data ?? [];
@@ -88,14 +94,18 @@ async function all<T extends { id: string }>(table: Table): Promise<T[]> {
     }
     return rows.map((r) => r.data as T);
   } catch (err: any) {
-    console.warn(`Supabase read ${table} exception (${err?.message || err}), falling back to local.`);
+    if (err?.message?.includes('schema cache') || err?.message?.includes('does not exist')) {
+      missingTables.add(table);
+    } else {
+      console.warn(`Supabase read ${table} exception (${err?.message || err}), falling back to local.`);
+    }
     return readLocal<T>(table);
   }
 }
 
 async function upsert<T extends { id: string }>(table: Table, row: T) {
   const db = supabase();
-  if (!db) {
+  if (!db || missingTables.has(table)) {
     const rows = await readLocal<T>(table);
     const i = rows.findIndex((r) => r.id === row.id);
     if (i >= 0) rows[i] = row;
@@ -105,14 +115,21 @@ async function upsert<T extends { id: string }>(table: Table, row: T) {
   try {
     const { error } = await db.from(table).upsert({ id: row.id, data: row });
     if (error) {
-      console.warn(`Supabase write ${table} error (${error.message}), falling back to local.`);
+      if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
+        missingTables.add(table);
+      } else {
+        console.warn(`Supabase write ${table} error (${error.message}), falling back to local.`);
+      }
       const rows = await readLocal<T>(table);
       const i = rows.findIndex((r) => r.id === row.id);
       if (i >= 0) rows[i] = row;
       else rows.push(row);
       return writeLocal(table, rows);
     }
-  } catch {
+  } catch (e: any) {
+    if (e?.message?.includes('schema cache') || e?.message?.includes('does not exist')) {
+      missingTables.add(table);
+    }
     const rows = await readLocal<T>(table);
     const i = rows.findIndex((r) => r.id === row.id);
     if (i >= 0) rows[i] = row;
@@ -582,11 +599,14 @@ export async function getPublishedBlogs(): Promise<BlogPost[]> {
 export async function getBlog(id: string): Promise<BlogPost | null> {
   if (!id || id === 'new') return null;
   const db = supabase();
-  if (db) {
+  if (db && !missingTables.has('blogs')) {
     try {
       const { data, error } = await db.from('blogs').select('id, data').eq('id', id).maybeSingle();
       if (!error && data?.data) {
         return sanitizeBlog(data.data as BlogPost);
+      }
+      if (error?.message?.includes('schema cache') || error?.message?.includes('does not exist')) {
+        missingTables.add('blogs');
       }
     } catch {
       /* fallback to scanning all */
@@ -600,11 +620,14 @@ export async function getBlog(id: string): Promise<BlogPost | null> {
 export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
   if (!slug) return null;
   const db = supabase();
-  if (db) {
+  if (db && !missingTables.has('blogs')) {
     try {
       const { data, error } = await db.from('blogs').select('id, data').filter('data->>slug', 'eq', slug).maybeSingle();
       if (!error && data?.data) {
         return sanitizeBlog(data.data as BlogPost);
+      }
+      if (error?.message?.includes('schema cache') || error?.message?.includes('does not exist')) {
+        missingTables.add('blogs');
       }
     } catch {
       /* fallback to scanning all */

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useTransition, useId } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ic } from '@/components/admin/AdIcons';
 import type { BlogPost, Book, BlogFAQItem } from '@/lib/types';
-import { saveBlogPostAction, deleteBlogPostAction } from '@/app/admin/actions';
+import { saveBlogPostAction } from '@/app/admin/actions';
+import { Cover } from '@/components/Bits';
+import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 
 interface Props {
   initialBlog: BlogPost;
@@ -57,11 +59,11 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
       : [{ question: '', answer: '' }]
   );
 
-  // Tab mode in editor
-  const [activeTab, setActiveTab] = useState<'content' | 'seo' | 'preview'>('content');
+  // Editor body view toggle (Write vs Live Preview)
+  const [bodyMode, setBodyMode] = useState<'write' | 'preview'>('write');
   const [statusMessage, setStatusMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
-  // Read time & word count
+  // Word count & read time
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const autoReadTime = Math.max(1, Math.ceil(words / 200));
 
@@ -79,7 +81,6 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setSlug(slugify(title));
   };
 
-  // Quick insertion helpers for editor
   const insertFormatting = (prefix: string, suffix: string = '') => {
     const textarea = document.getElementById('blog-content-area') as HTMLTextAreaElement | null;
     if (!textarea) return;
@@ -91,7 +92,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setContent(nextContent);
   };
 
-  // Key Takeaways management
+  // Takeaways
   const updateTakeaway = (idx: number, val: string) => {
     const copy = [...keyTakeaways];
     copy[idx] = val;
@@ -102,7 +103,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setKeyTakeaways(keyTakeaways.filter((_, i) => i !== idx));
   };
 
-  // FAQ management
+  // FAQs
   const updateFaq = (idx: number, field: 'question' | 'answer', val: string) => {
     const copy = [...faqItems];
     copy[idx] = { ...copy[idx], [field]: val };
@@ -113,9 +114,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setFaqItems(faqItems.filter((_, i) => i !== idx));
   };
 
-  // Submit
-  const handleSave = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSave = async () => {
     setStatusMessage(null);
 
     if (!title.trim()) {
@@ -141,21 +140,20 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     formData.set('featured', String(featured));
     formData.set('publishedAt', new Date(publishedAt).toISOString());
     formData.set('relatedBookSlug', relatedBookSlug || 'none');
-    formData.set('metaTitle', (metaTitle.trim() || title.trim()));
-    formData.set('metaDescription', (metaDescription.trim() || excerpt.trim()));
+    formData.set('metaTitle', metaTitle.trim() || title.trim());
+    formData.set('metaDescription', metaDescription.trim() || excerpt.trim());
     formData.set('keyTakeaways', JSON.stringify(keyTakeaways.filter((t) => t.trim())));
     formData.set('faqItems', JSON.stringify(faqItems.filter((f) => f.question.trim() && f.answer.trim())));
 
-    // Check if cover file was uploaded
-    const coverFileInput = document.getElementById('blog-cover-file') as HTMLInputElement | null;
-    if (coverFileInput?.files?.[0]) {
-      formData.set('coverImageFile', coverFileInput.files[0]);
+    const fileInput = document.getElementById('blog-cover-file') as HTMLInputElement | null;
+    if (fileInput?.files?.[0]) {
+      formData.set('coverImageFile', fileInput.files[0]);
     }
 
     startTransition(async () => {
       const res = await saveBlogPostAction({}, formData);
       if (res.ok) {
-        setStatusMessage({ type: 'ok', text: 'Article saved successfully!' });
+        setStatusMessage({ type: 'ok', text: isPublished ? 'Article saved and published live!' : 'Draft saved successfully.' });
         if (isNew && res.id) {
           router.push(`/admin/blogs/${res.id}`);
         } else {
@@ -170,838 +168,596 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
   const selectedBook = books.find((b) => b.slug === relatedBookSlug);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
-      {/* Header bar */}
-      <div className="crm-top" style={{ alignItems: 'center' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <Link href="/admin/blogs" style={{ color: 'var(--muted)', fontSize: 13, textDecoration: 'none' }}>
-              ← Back to Blog Posts
-            </Link>
-            <span style={{ color: 'var(--line)' }}>/</span>
-            <span style={{ color: 'var(--gold)', fontSize: 13, fontWeight: 600 }}>
-              {isNew ? 'New Article' : 'Edit Article'}
-            </span>
-          </div>
-          <h1 style={{ margin: 0 }}>{title.trim() ? title : 'Untitled Article'}</h1>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      {/* ── Breadcrumb Navigation ── */}
+      <nav className="crumb" aria-label="Breadcrumb">
+        <Link href="/admin/blogs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--gold)', textDecoration: 'none', fontWeight: 500 }}>
+          <Ic k="back" s={14} /> Back to Blog Posts
+        </Link>
+        <span>/</span>
+        <span style={{ color: 'var(--soft)' }}>{isNew ? 'New article' : 'Edit article'}</span>
+      </nav>
 
-        <div className="crm-actions" style={{ alignItems: 'center', gap: 10 }}>
+      {/* ── Top Header Controls ── */}
+      <div className="crm-top">
+        <div>
+          <h1>{isNew ? 'New article' : title.trim() || 'Untitled article'}</h1>
+          <p>{isNew ? 'Draft an article, historical essay, or research note for your readers.' : 'Changes go live on the blog as soon as you press Save.'}</p>
+        </div>
+        <div className="crm-actions">
+          <Link href="/admin/blogs" className="crm-btn" title="Back to blog posts">
+            <Ic k="back" s={16} />BACK TO POSTS
+          </Link>
           {!isNew && isPublished && slug && (
-            <Link href={`/blog/${slug}`} target="_blank" className="crm-btn sec" style={{ fontSize: 12 }}>
-              <Ic k="link" s={14} />VIEW LIVE
-            </Link>
+            <a href={`/blog/${slug}`} target="_blank" rel="noopener noreferrer" className="crm-btn" title="View live article">
+              <Ic k="ext" s={16} />VIEW ARTICLE
+            </a>
           )}
           <button
             type="button"
-            onClick={() => handleSave()}
+            onClick={handleSave}
             disabled={isPending}
             className="crm-btn pri"
-            style={{ fontSize: 13, padding: '10px 20px' }}
           >
-            <Ic k="check" s={16} sw={1.8} />
+            <Ic k="check" s={16} sw={2} />
             {isPending ? 'SAVING…' : isPublished ? 'SAVE & PUBLISH' : 'SAVE DRAFT'}
           </button>
         </div>
       </div>
 
-      {/* Status banner */}
+      {/* ── Status Messages ── */}
       {statusMessage && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            background: statusMessage.type === 'ok' ? 'rgba(92, 219, 149, 0.15)' : 'rgba(229, 138, 120, 0.15)',
-            color: statusMessage.type === 'ok' ? '#5cdb95' : '#f28b7e',
-            border: `1px solid ${statusMessage.type === 'ok' ? 'rgba(92, 219, 149, 0.3)' : 'rgba(229, 138, 120, 0.3)'}`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span>{statusMessage.text}</span>
-          <button
-            type="button"
-            onClick={() => setStatusMessage(null)}
-            style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}
-          >
-            ✕
-          </button>
+        <div className={statusMessage.type === 'ok' ? 'crm-ok' : 'crm-err'} role="alert">
+          <Ic k={statusMessage.type === 'ok' ? 'check' : 'trash'} s={18} sw={2} />
+          <span><b>{statusMessage.type === 'ok' ? 'Success:' : 'Notice:'}</b> {statusMessage.text}</span>
         </div>
       )}
 
-      {/* Editor Tabs */}
-      <nav className="crm-tabs" style={{ margin: 0 }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('content')}
-          className={activeTab === 'content' ? 'on' : ''}
-        >
-          1. Article Content & Media
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('seo')}
-          className={activeTab === 'seo' ? 'on' : ''}
-        >
-          2. SEO & Generative AI (GEO)
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('preview')}
-          className={activeTab === 'preview' ? 'on' : ''}
-        >
-          3. Live Preview
-        </button>
-      </nav>
+      {/* ── Main 2-Column Editor Layout ── */}
+      <div className="crm-editor">
+        {/* Main Column */}
+        <div className="col">
+          {/* Card 1: The Basics */}
+          <section className="crm-card">
+            <h2>The basics</h2>
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="blog-title">ARTICLE TITLE *</label>
+              <input
+                id="blog-title"
+                type="text"
+                className="crm-in"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (isNew && !slug) setSlug(slugify(e.target.value));
+                  if (!metaTitle || metaTitle === title) setMetaTitle(e.target.value);
+                }}
+                placeholder="e.g. Why 19th-Century Justice Was More Dangerous Than the Crime"
+              />
+            </div>
 
-      {/* TAB 1: Content & Media */}
-      {activeTab === 'content' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 24, alignItems: 'start' }}>
-          {/* Main Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Title & Slug */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
+            <div className="crm-grid2">
               <div className="crm-field">
-                <label className="crm-label" htmlFor="post-title">Article Title *</label>
-                <input
-                  id="post-title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
-                    if (isNew && !slug) setSlug(slugify(e.target.value));
-                    if (!metaTitle || metaTitle === title) setMetaTitle(e.target.value);
-                  }}
-                  placeholder="e.g., The Secret Feuds of 1850s Utah: Fact Behind Petticoats and Ash"
-                  className="crm-input"
-                  style={{ fontSize: 16, fontWeight: 600 }}
-                />
+                <label className="crm-label" htmlFor="blog-slug">URL SLUG</label>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ height: 48, padding: '0 12px', background: '#0a0908', border: '1px solid #3a332b', borderRight: 'none', borderRadius: '3px 0 0 3px', display: 'flex', alignItems: 'center', fontSize: 13, color: 'var(--muted)' }}>
+                    /blog/
+                  </span>
+                  <input
+                    id="blog-slug"
+                    type="text"
+                    className="crm-in"
+                    value={slug}
+                    onChange={(e) => setSlug(slugify(e.target.value))}
+                    placeholder="why-19th-century-justice"
+                    style={{ borderRadius: '0 3px 3px 0' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGenerateSlug}
+                    className="crm-sm"
+                    style={{ marginLeft: 8, height: 48, whiteSpace: 'nowrap' }}
+                    title="Auto-generate slug from title"
+                  >
+                    Auto
+                  </button>
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'flex-end', marginTop: 14 }}>
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label" htmlFor="post-slug">URL Slug</label>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)', borderRight: 'none', borderRadius: '4px 0 0 4px', fontSize: 13, color: 'var(--muted)' }}>
-                      /blog/
-                    </span>
-                    <input
-                      id="post-slug"
-                      type="text"
-                      value={slug}
-                      onChange={(e) => setSlug(slugify(e.target.value))}
-                      placeholder="the-secret-feuds-of-1850s-utah"
-                      className="crm-input"
-                      style={{ borderRadius: '0 4px 4px 0', fontSize: 13 }}
-                    />
-                  </div>
-                </div>
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="blog-category">CATEGORY</label>
+                <select
+                  id="blog-category"
+                  className="crm-in"
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    if (e.target.value !== 'Custom') setCustomCategory('');
+                  }}
+                >
+                  {CATEGORY_PRESETS.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="Custom">+ Custom Category...</option>
+                </select>
+                {category === 'Custom' && (
+                  <input
+                    type="text"
+                    className="crm-in"
+                    placeholder="Type custom category"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    style={{ marginTop: 8 }}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="crm-field">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="crm-label" htmlFor="blog-excerpt">SUMMARY / EXCERPT</label>
+                <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.08em', color: excerpt.length > 250 ? 'var(--gold)' : 'var(--muted)' }}>
+                  {excerpt.length} characters (120–220 optimal)
+                </span>
+              </div>
+              <textarea
+                id="blog-excerpt"
+                className="crm-in"
+                rows={3}
+                value={excerpt}
+                onChange={(e) => {
+                  setExcerpt(e.target.value);
+                  if (!metaDescription || metaDescription === excerpt) setMetaDescription(e.target.value);
+                }}
+                placeholder="A compelling summary hook that appears on the blog index, social previews, and Google search..."
+                style={{ height: 'auto', minHeight: 90 }}
+              />
+              <span className="help">Shown as the preview hook on card feeds and in search results.</span>
+            </div>
+
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="blog-tags">TAGS (COMMA SEPARATED)</label>
+              <input
+                id="blog-tags"
+                type="text"
+                className="crm-in"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="e.g. Historical Research, Frontier Justice, Utah, Mormons, Writing Craft"
+              />
+            </div>
+          </section>
+
+          {/* Card 2: Article Body & Markdown */}
+          <section className="crm-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <h2>Article body</h2>
+                <p className="sub" style={{ marginTop: 4, marginBottom: 0 }}>
+                  Write your story using standard Markdown or HTML. Live word count and reading time calculate automatically.
+                </p>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="crm-tabs" style={{ margin: 0 }}>
                 <button
                   type="button"
-                  onClick={handleGenerateSlug}
-                  className="crm-btn sec"
-                  style={{ height: 42, fontSize: 11 }}
-                  title="Generate clean slug from title"
+                  onClick={() => setBodyMode('write')}
+                  className={bodyMode === 'write' ? 'on' : ''}
                 >
-                  AUTO-SLUG
+                  Write
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBodyMode('preview')}
+                  className={bodyMode === 'preview' ? 'on' : ''}
+                >
+                  Live Preview
                 </button>
               </div>
             </div>
 
-            {/* Excerpt / Summary */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <div className="crm-field" style={{ margin: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="crm-label" htmlFor="post-excerpt">Article Excerpt / Subhead</label>
-                  <span style={{ fontSize: 11, color: excerpt.length > 250 ? 'var(--gold)' : 'var(--muted)' }}>
-                    {excerpt.length} characters (Ideal: 120-220)
-                  </span>
-                </div>
-                <textarea
-                  id="post-excerpt"
-                  rows={3}
-                  value={excerpt}
-                  onChange={(e) => {
-                    setExcerpt(e.target.value);
-                    if (!metaDescription || metaDescription === excerpt) setMetaDescription(e.target.value);
-                  }}
-                  placeholder="A concise, captivating hook that summarizes the article for card previews, Google search, and social sharing..."
-                  className="crm-input"
-                  style={{ resize: 'vertical', fontSize: 13, lineHeight: 1.5 }}
-                />
-              </div>
-            </div>
-
-            {/* Content Editor */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-                <label className="crm-label" htmlFor="blog-content-area" style={{ margin: 0 }}>
-                  Article Body (Markdown / HTML)
-                </label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button type="button" onClick={() => insertFormatting('## ', '\n')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>H2</button>
-                  <button type="button" onClick={() => insertFormatting('### ', '\n')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>H3</button>
-                  <button type="button" onClick={() => insertFormatting('**', '**')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>Bold</button>
-                  <button type="button" onClick={() => insertFormatting('*', '*')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>Italic</button>
-                  <button type="button" onClick={() => insertFormatting('> ', '\n')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>Quote</button>
-                  <button type="button" onClick={() => insertFormatting('- ', '\n')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>Bullet</button>
-                  <button type="button" onClick={() => insertFormatting('[Link Text](', ')')} className="crm-btn sec" style={{ padding: '4px 8px', fontSize: 11 }}>Link</button>
-                </div>
-              </div>
-
-              <textarea
-                id="blog-content-area"
-                rows={22}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your article here... You can use standard Markdown:&#10;&#10;## Section Heading&#10;&#10;Paragraph text with historical details...&#10;&#10;> An excerpt from a frontier journal or letter.&#10;&#10;### Another Point&#10;- Detail 1&#10;- Detail 2"
-                className="crm-input"
-                style={{
-                  fontFamily: 'var(--mono, "Menlo", monospace)',
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  resize: 'vertical',
-                  minHeight: 400,
-                }}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
-                <span>{words} words · ~{autoReadTime} min read</span>
-                <span>Supports Markdown & HTML tags</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Publish & Status Card */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: 14, letterSpacing: '0.06em', color: 'var(--gold)' }}>
-                PUBLISHING STATUS
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <label className="chk" style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isPublished}
-                    onChange={(e) => setIsPublished(e.target.checked)}
-                  />
-                  <span>
-                    <b style={{ color: isPublished ? '#5cdb95' : '#ffb74d' }}>
-                      {isPublished ? 'Published' : 'Draft'}
-                    </b>
-                    <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>
-                      {isPublished ? 'Visible publicly to readers & search bots' : 'Only visible in admin panel'}
-                    </span>
-                  </span>
-                </label>
-
-                <label className="chk" style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={featured}
-                    onChange={(e) => setFeatured(e.target.checked)}
-                  />
-                  <span>
-                    <b>Featured Article</b>
-                    <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>
-                      Highlighted in hero banner on public blog page
-                    </span>
-                  </span>
-                </label>
-
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label" htmlFor="pub-date">Publish Date</label>
-                  <input
-                    id="pub-date"
-                    type="date"
-                    value={publishedAt}
-                    onChange={(e) => setPublishedAt(e.target.value)}
-                    className="crm-input"
-                    style={{ fontSize: 13 }}
-                  />
-                </div>
-
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label" htmlFor="post-author">Author</label>
-                  <input
-                    id="post-author"
-                    type="text"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    className="crm-input"
-                    style={{ fontSize: 13 }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Category & Tags Card */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: 14, letterSpacing: '0.06em', color: 'var(--gold)' }}>
-                TAXONOMY
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label">Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => {
-                      setCategory(e.target.value);
-                      if (e.target.value !== 'Custom') setCustomCategory('');
-                    }}
-                    className="crm-select"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(255,255,255,0.03)',
-                      color: 'var(--cream)',
-                      border: '1px solid var(--line)',
-                      padding: '8px 12px',
-                      borderRadius: 4,
-                      fontSize: 13,
-                    }}
-                  >
-                    {CATEGORY_PRESETS.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                    <option value="Custom">+ Custom Category...</option>
-                  </select>
-
-                  {category === 'Custom' && (
-                    <input
-                      type="text"
-                      placeholder="Type custom category name"
-                      value={customCategory}
-                      onChange={(e) => setCustomCategory(e.target.value)}
-                      className="crm-input"
-                      style={{ marginTop: 8, fontSize: 13 }}
-                    />
-                  )}
-                </div>
-
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label" htmlFor="post-tags">Tags (comma separated)</label>
-                  <input
-                    id="post-tags"
-                    type="text"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder="Frontier, Mormon History, Utah, Writing"
-                    className="crm-input"
-                    style={{ fontSize: 13 }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Cover Image Card */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: 14, letterSpacing: '0.06em', color: 'var(--gold)' }}>
-                COVER IMAGE
-              </h3>
-
+            {bodyMode === 'write' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {coverImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={coverImageUrl}
-                    alt="Cover preview"
-                    style={{
-                      width: '100%',
-                      height: 140,
-                      objectFit: 'cover',
-                      borderRadius: 4,
-                      border: '1px solid var(--line)',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: 120,
-                      borderRadius: 4,
-                      border: '1px dashed var(--line)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--muted)',
-                      fontSize: 12,
-                    }}
-                  >
-                    No cover image yet
-                  </div>
-                )}
-
-                <div className="crm-field" style={{ margin: 0 }}>
-                  <label className="crm-label" htmlFor="cover-url">Image URL</label>
-                  <input
-                    id="cover-url"
-                    type="text"
-                    value={coverImageUrl}
-                    onChange={(e) => setCoverImageUrl(e.target.value)}
-                    placeholder="https://... or /covers/..."
-                    className="crm-input"
-                    style={{ fontSize: 12 }}
-                  />
+                {/* Formatting Bar */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '8px 10px', background: '#120f0d', border: '1px solid #3a332b', borderRadius: 4 }}>
+                  <button type="button" onClick={() => insertFormatting('## ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>H2</button>
+                  <button type="button" onClick={() => insertFormatting('### ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>H3</button>
+                  <button type="button" onClick={() => insertFormatting('**', '**')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11, fontWeight: 700 }}>B</button>
+                  <button type="button" onClick={() => insertFormatting('*', '*')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11, fontStyle: 'italic' }}>I</button>
+                  <button type="button" onClick={() => insertFormatting('> ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Quote</button>
+                  <button type="button" onClick={() => insertFormatting('- ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Bullet</button>
+                  <button type="button" onClick={() => insertFormatting('1. ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>1. List</button>
+                  <button type="button" onClick={() => insertFormatting('[Link Text](', ')')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Link</button>
                 </div>
 
-                <div>
-                  <label className="drop" style={{ fontSize: 12, padding: 10, cursor: 'pointer' }}>
-                    <Ic k="up" s={14} /> Upload image file
-                    <input
-                      id="blog-cover-file"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) setCoverImageUrl(URL.createObjectURL(f));
-                      }}
-                    />
-                  </label>
-                </div>
+                <textarea
+                  id="blog-content-area"
+                  className="crm-in"
+                  rows={20}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Start writing your article here..."
+                  style={{
+                    fontFamily: 'var(--serif-b, Georgia, serif)',
+                    fontSize: 15,
+                    lineHeight: 1.75,
+                    minHeight: 440,
+                    resize: 'vertical',
+                  }}
+                />
 
-                {coverImageUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setCoverImageUrl('')}
-                    className="crm-btn sec"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
-                  >
-                    Remove Cover
-                  </button>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: 'var(--muted)' }}>
+                  <span><b>{words.toLocaleString()}</b> words · ~<b>{autoReadTime}</b> min read</span>
+                  <span>Markdown &amp; HTML supported</span>
+                </div>
               </div>
-            </div>
-
-            {/* Related Book CTA Card */}
-            <div className="crm-panel" style={{ padding: 20, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: 14, letterSpacing: '0.06em', color: 'var(--gold)' }}>
-                ATTACHED BOOK CTA
-              </h3>
-              <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
-                Embeds an interactive purchase & sample card at the end of this article to convert blog readers into Amazon buyers.
-              </p>
-
-              <select
-                value={relatedBookSlug}
-                onChange={(e) => setRelatedBookSlug(e.target.value)}
-                className="crm-select"
+            ) : (
+              /* Live Preview within the card */
+              <div
                 style={{
-                  width: '100%',
-                  background: 'rgba(255,255,255,0.03)',
-                  color: 'var(--cream)',
-                  border: '1px solid var(--line)',
-                  padding: '8px 12px',
+                  background: '#0a0908',
+                  border: '1px solid #3a332b',
                   borderRadius: 4,
-                  fontSize: 13,
+                  padding: 28,
+                  minHeight: 440,
                 }}
               >
-                <option value="">No Book Attached</option>
-                {books.map((b) => (
-                  <option key={b.id} value={b.slug}>
-                    {b.title} ({b.status === 'available' ? 'Available' : 'Coming Soon'})
-                  </option>
-                ))}
-              </select>
-
-              {selectedBook && (
-                <div style={{ marginTop: 12, padding: 10, background: 'rgba(201,168,96,0.06)', border: '1px solid rgba(201,168,96,0.2)', borderRadius: 4, fontSize: 12 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--cream)' }}>{selectedBook.title}</div>
-                  <div style={{ color: 'var(--gold)', fontSize: 11, marginTop: 2 }}>
-                    {selectedBook.amazonUrl ? '✓ Has Amazon Buy Link' : '⚠️ No Amazon link yet'}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: SEO & Generative AI (GEO) */}
-      {activeTab === 'seo' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Live Search Engine & AI Card Preview */}
-          <div className="crm-panel" style={{ padding: 22, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: 15, letterSpacing: '0.04em', color: 'var(--gold)' }}>
-              LIVE SEARCH & AI SNIPPET PREVIEW
-            </h3>
-            <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--muted)' }}>
-              This simulates how Google, ChatGPT Search, Perplexity, and Claude present this article to readers searching online.
-            </p>
-
-            <div
-              style={{
-                background: '#121212',
-                border: '1px solid #2a2a2a',
-                borderRadius: 8,
-                padding: '16px 20px',
-                maxWidth: 680,
-                fontFamily: 'arial, sans-serif',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: '#bdc1c6' }}>kenmerrell.com</span>
-                <span style={{ fontSize: 12, color: '#9aa0a6' }}>› blog › {slug || 'article-slug'}</span>
+                <BlogContentRenderer content={content || '*No content written yet. Switch to Write tab to begin.*'} />
               </div>
-              <div style={{ fontSize: 19, color: '#8ab4f8', fontWeight: 400, lineHeight: 1.3, marginBottom: 6, cursor: 'pointer' }}>
-                {metaTitle || title || 'Untitled Blog Post | Ken Merrell'}
+            )}
+          </section>
+
+          {/* Card 3: Search & AI Optimization (SEO & GEO) */}
+          <section className="crm-card">
+            <div>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Ic k="globe" s={22} />
+                Search &amp; AI engine optimization (SEO &amp; GEO)
+              </h2>
+              <p className="sub" style={{ marginTop: 6, marginBottom: 0 }}>
+                Generates Schema.org JSON-LD and structured executive summaries extracted by Google, ChatGPT Search, Claude, and Perplexity.
+              </p>
+            </div>
+
+            {/* Google & AI SERP Simulator */}
+            <div style={{ background: '#12100e', border: '1px solid #3a332b', borderRadius: 4, padding: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.12em', color: 'var(--gold)', fontWeight: 600 }}>
+                SEARCH ENGINE SNIPPET PREVIEW
+              </span>
+              <div style={{ fontSize: 12, color: '#9aa0a6' }}>
+                kenmerrell.com › blog › {slug || 'article-slug'}
+              </div>
+              <div style={{ fontSize: 18, color: '#8ab4f8', lineHeight: 1.3, fontWeight: 500 }}>
+                {metaTitle || title || 'Untitled Article'}
               </div>
               <div style={{ fontSize: 13, color: '#bdc1c6', lineHeight: 1.5 }}>
-                {metaDescription || excerpt || 'Read this in-depth article by historical fiction author Ken Merrell exploring authentic archives and frontier drama.'}
+                {metaDescription || excerpt || 'Article description appearing in search results.'}
               </div>
             </div>
-          </div>
 
-          {/* Meta Tags Form */}
-          <div className="crm-panel" style={{ padding: 22, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 15, letterSpacing: '0.04em', color: 'var(--cream)' }}>
-              GOOGLE & BING META TAGS
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
-              <div className="crm-field" style={{ margin: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="crm-label" htmlFor="meta-title">Meta Title Tag</label>
-                  <span style={{ fontSize: 11, color: metaTitle.length >= 50 && metaTitle.length <= 60 ? '#5cdb95' : 'var(--muted)' }}>
-                    {metaTitle.length} / 60 chars {metaTitle.length >= 50 && metaTitle.length <= 60 ? '(Optimal)' : ''}
+            <div className="crm-grid2">
+              <div className="crm-field">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label className="crm-label" htmlFor="meta-title">META TITLE</label>
+                  <span style={{ fontSize: 11, color: metaTitle.length >= 50 && metaTitle.length <= 60 ? '#6dbf78' : 'var(--muted)' }}>
+                    {metaTitle.length} / 60
                   </span>
                 </div>
                 <input
                   id="meta-title"
                   type="text"
+                  className="crm-in"
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
-                  placeholder="Primary search title (50-60 characters ideal)"
-                  className="crm-input"
+                  placeholder="Primary SEO title"
                 />
               </div>
 
-              <div className="crm-field" style={{ margin: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="crm-label" htmlFor="meta-desc">Meta Description</label>
-                  <span style={{ fontSize: 11, color: metaDescription.length >= 140 && metaDescription.length <= 160 ? '#5cdb95' : 'var(--muted)' }}>
-                    {metaDescription.length} / 160 chars {metaDescription.length >= 140 && metaDescription.length <= 160 ? '(Optimal)' : ''}
+              <div className="crm-field">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <label className="crm-label" htmlFor="meta-desc">META DESCRIPTION</label>
+                  <span style={{ fontSize: 11, color: metaDescription.length >= 140 && metaDescription.length <= 160 ? '#6dbf78' : 'var(--muted)' }}>
+                    {metaDescription.length} / 160
                   </span>
                 </div>
-                <textarea
+                <input
                   id="meta-desc"
-                  rows={3}
+                  type="text"
+                  className="crm-in"
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
-                  placeholder="Compelling 140-160 character summary that entices clicks from search results..."
-                  className="crm-input"
-                  style={{ resize: 'vertical' }}
+                  placeholder="Search snippet summary"
                 />
               </div>
             </div>
-          </div>
 
-          {/* GEO Key Takeaways Manager */}
-          <div className="crm-panel" style={{ padding: 22, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: 15, letterSpacing: '0.04em', color: 'var(--gold)' }}>
-                  GEO: KEY TAKEAWAYS (FOR CHATGPT, PERPLEXITY & CLAUDE)
-                </h3>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', maxWidth: 700, lineHeight: 1.5 }}>
-                  Generative AI search engines actively extract bulleted executive summaries near the top of pages.
-                  These bullet points ensure AI models cite Ken Merrell accurately with verified historical facts.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={addTakeaway}
-                className="crm-btn sec"
-                style={{ fontSize: 11, padding: '6px 12px' }}
-              >
-                + ADD BULLET POINT
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {keyTakeaways.map((takeaway, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 14, minWidth: 20 }}>
-                    {idx + 1}.
-                  </span>
-                  <input
-                    type="text"
-                    value={takeaway}
-                    onChange={(e) => updateTakeaway(idx, e.target.value)}
-                    placeholder="Enter an authoritative summary bullet point..."
-                    className="crm-input"
-                    style={{ fontSize: 13 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeTakeaway(idx)}
-                    disabled={keyTakeaways.length === 1}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#e58a78',
-                      cursor: 'pointer',
-                      padding: 6,
-                      fontSize: 16,
-                      opacity: keyTakeaways.length === 1 ? 0.3 : 1,
-                    }}
-                    title="Remove bullet point"
-                  >
-                    ✕
-                  </button>
+            {/* GEO Key Takeaways Builder */}
+            <div className="crm-field" style={{ marginTop: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <label className="crm-label">⚡ GEO KEY TAKEAWAYS (FOR CHATGPT, PERPLEXITY &amp; CLAUDE)</label>
+                  <p className="help" style={{ margin: '4px 0 0' }}>Bullet points extracted by AI models to summarize this article in generative answers.</p>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* GEO & Google Schema.org FAQs Manager */}
-          <div className="crm-panel" style={{ padding: 22, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: 15, letterSpacing: '0.04em', color: 'var(--gold)' }}>
-                  GEO & SCHEMA.ORG FAQS (RICH SNIPPETS & DIRECT ANSWERS)
-                </h3>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', maxWidth: 700, lineHeight: 1.5 }}>
-                  Generates an automatic schema.org <code style={{ color: 'var(--gold)' }}>FAQPage</code> JSON-LD structure.
-                  Google displays expandable FAQ accordions in search results, and ChatGPT quotes these Q&As directly when answering user queries.
-                </p>
+                <button type="button" onClick={addTakeaway} className="crm-btn" style={{ height: 34, padding: '0 12px', fontSize: 10 }}>
+                  <Ic k="plus" s={14} /> ADD BULLET
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={addFaq}
-                className="crm-btn sec"
-                style={{ fontSize: 11, padding: '6px 12px' }}
-              >
-                + ADD FAQ PAIR
-              </button>
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {faqItems.map((faq, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 6,
-                    padding: 16,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>
-                      Question #{idx + 1}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                {keyTakeaways.map((takeaway, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 13, minWidth: 22 }}>
+                      {idx + 1}.
                     </span>
+                    <input
+                      type="text"
+                      className="crm-in"
+                      value={takeaway}
+                      onChange={(e) => updateTakeaway(idx, e.target.value)}
+                      placeholder="Concise, factual key takeaway..."
+                    />
                     <button
                       type="button"
-                      onClick={() => removeFaq(idx)}
-                      disabled={faqItems.length === 1}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#e58a78',
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        opacity: faqItems.length === 1 ? 0.3 : 1,
-                      }}
+                      onClick={() => removeTakeaway(idx)}
+                      disabled={keyTakeaways.length === 1}
+                      className="crm-sm icon danger"
+                      style={{ height: 48, width: 48, flexShrink: 0 }}
+                      title="Remove bullet"
                     >
-                      Delete FAQ
+                      <Ic k="trash" s={15} />
                     </button>
                   </div>
-
-                  <input
-                    type="text"
-                    value={faq.question}
-                    onChange={(e) => updateFaq(idx, 'question', e.target.value)}
-                    placeholder="e.g., Is Petticoats and Ash based on actual frontier court records?"
-                    className="crm-input"
-                    style={{ fontSize: 13, fontWeight: 600 }}
-                  />
-
-                  <textarea
-                    rows={2}
-                    value={faq.answer}
-                    onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
-                    placeholder="Clear, factual answer that generative engines can directly quote..."
-                    className="crm-input"
-                    style={{ fontSize: 13, resize: 'vertical' }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: Live Reader Preview */}
-      {activeTab === 'preview' && (
-        <div style={{ background: '#0a0908', border: '1px solid var(--line)', borderRadius: 8, padding: '40px 24px', maxWidth: 840, margin: '0 auto', width: '100%' }}>
-          {/* Breadcrumb preview */}
-          <div style={{ fontSize: 12, color: 'var(--gold)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>
-            Blog › {category}
-          </div>
-
-          <h1 style={{ fontSize: 34, fontFamily: 'var(--serif, Georgia, serif)', color: 'var(--cream)', lineHeight: 1.25, margin: '0 0 16px' }}>
-            {title || 'Untitled Article'}
-          </h1>
-
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 13, color: 'var(--muted)', marginBottom: 24 }}>
-            <span>By <b>{authorName}</b></span>
-            <span>•</span>
-            <span>{new Date(publishedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-            <span>•</span>
-            <span>{autoReadTime} min read</span>
-          </div>
-
-          {coverImageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverImageUrl}
-              alt={title}
-              style={{ width: '100%', maxHeight: 420, objectFit: 'cover', borderRadius: 6, marginBottom: 32 }}
-            />
-          )}
-
-          {/* GEO Key Takeaways box */}
-          {keyTakeaways.filter((t) => t.trim()).length > 0 && (
-            <div
-              style={{
-                background: 'rgba(201,168,96,0.06)',
-                border: '1px solid rgba(201,168,96,0.25)',
-                borderLeft: '4px solid var(--gold)',
-                borderRadius: 4,
-                padding: '20px 24px',
-                marginBottom: 32,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 10 }}>
-                ⚡ Key Takeaways
-              </div>
-              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8, color: 'var(--cream)', fontSize: 14, lineHeight: 1.5 }}>
-                {keyTakeaways.filter((t) => t.trim()).map((t, i) => (
-                  <li key={i}>{t}</li>
                 ))}
-              </ul>
+              </div>
             </div>
-          )}
 
-          {/* Excerpt lead */}
-          {excerpt && (
-            <p style={{ fontSize: 18, lineHeight: 1.6, color: '#d8ccb8', fontStyle: 'italic', marginBottom: 28, borderBottom: '1px solid var(--line)', paddingBottom: 24 }}>
-              {excerpt}
-            </p>
-          )}
+            {/* Schema.org FAQs Builder */}
+            <div className="crm-field" style={{ marginTop: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <label className="crm-label">❓ FAQPAGE SCHEMA &amp; DIRECT ANSWERS</label>
+                  <p className="help" style={{ margin: '4px 0 0' }}>Injected into Schema.org FAQPage JSON-LD for Google expandable search snippets.</p>
+                </div>
+                <button type="button" onClick={addFaq} className="crm-btn" style={{ height: 34, padding: '0 12px', fontSize: 10 }}>
+                  <Ic k="plus" s={14} /> ADD FAQ
+                </button>
+              </div>
 
-          {/* Body */}
-          <div
-            style={{
-              color: '#ded3c1',
-              fontSize: 16,
-              lineHeight: 1.8,
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {content || 'Start typing in Tab 1 to see your article body preview here.'}
-          </div>
-
-          {/* FAQs section preview */}
-          {faqItems.filter((f) => f.question.trim() && f.answer.trim()).length > 0 && (
-            <div style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--line)' }}>
-              <h2 style={{ fontSize: 22, color: 'var(--gold)', marginBottom: 20 }}>
-                Frequently Asked Questions
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {faqItems.filter((f) => f.question.trim() && f.answer.trim()).map((faq, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--line)', borderRadius: 6, padding: 18 }}>
-                    <h3 style={{ fontSize: 15, color: 'var(--cream)', margin: '0 0 8px' }}>
-                      {faq.question}
-                    </h3>
-                    <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-                      {faq.answer}
-                    </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+                {faqItems.map((faq, idx) => (
+                  <div key={idx} style={{ background: '#120f0d', border: '1px solid #3a332b', borderRadius: 4, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: 'var(--gold)', fontWeight: 600 }}>
+                        QUESTION {idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeFaq(idx)}
+                        disabled={faqItems.length === 1}
+                        className="crm-sm danger"
+                        style={{ height: 28, padding: '0 8px', fontSize: 11 }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      className="crm-in"
+                      value={faq.question}
+                      onChange={(e) => updateFaq(idx, 'question', e.target.value)}
+                      placeholder="e.g. Is this story based on true archival records?"
+                    />
+                    <textarea
+                      rows={2}
+                      className="crm-in"
+                      value={faq.answer}
+                      onChange={(e) => updateFaq(idx, 'answer', e.target.value)}
+                      placeholder="Direct factual answer that search engines can quote..."
+                      style={{ height: 'auto', minHeight: 70 }}
+                    />
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Attached book CTA preview */}
-          {selectedBook && (
-            <div style={{ marginTop: 48, padding: 24, background: '#1c1712', border: '1px solid rgba(201,168,96,0.3)', borderRadius: 6, display: 'flex', gap: 20, alignItems: 'center' }}>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Related Book by Ken Merrell
-                </span>
-                <h3 style={{ fontSize: 20, color: 'var(--cream)', margin: '4px 0 8px' }}>
-                  {selectedBook.title}
-                </h3>
-                <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0, lineHeight: 1.4 }}>
-                  {selectedBook.tagline || selectedBook.description?.slice(0, 140) + '...'}
-                </p>
-              </div>
-              <div>
-                <span className="crm-btn pri" style={{ fontSize: 12 }}>
-                  EXPLORE BOOK →
-                </span>
-              </div>
-            </div>
-          )}
+          </section>
         </div>
-      )}
 
-      {/* Sticky Save Bar at bottom */}
-      <div
-        style={{
-          position: 'sticky',
-          bottom: 16,
-          background: 'rgba(20, 18, 15, 0.95)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid var(--line)',
-          borderRadius: 8,
-          padding: '12px 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-          zIndex: 40,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: isPublished ? '#5cdb95' : '#ffb74d',
-            }}
-          />
-          <span style={{ fontSize: 13, color: 'var(--cream)', fontWeight: 600 }}>
-            {isPublished ? 'Ready to Publish' : 'Draft Mode'}
+        {/* Right Sticky Sidebar */}
+        <aside className="col side">
+          {/* Card: Publishing */}
+          <section className="crm-card">
+            <h2>Publishing</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Published Switch */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 14, color: isPublished ? 'var(--cream-2)' : 'var(--muted)' }}>
+                    {isPublished ? 'Published' : 'Draft'}
+                  </strong>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    {isPublished ? 'Visible publicly' : 'Only in admin'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  className="switch"
+                  aria-checked={isPublished}
+                  onClick={() => setIsPublished(!isPublished)}
+                >
+                  <span />
+                </button>
+              </div>
+
+              {/* Featured Switch */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTop: '1px solid rgba(239,231,214,.06)' }}>
+                <div>
+                  <strong style={{ display: 'block', fontSize: 14, color: 'var(--cream-2)' }}>
+                    Featured Article
+                  </strong>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    Pinned to blog hero spotlight
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  className="switch"
+                  aria-checked={featured}
+                  onClick={() => setFeatured(!featured)}
+                >
+                  <span />
+                </button>
+              </div>
+
+              <div className="crm-field" style={{ paddingTop: 6 }}>
+                <label className="crm-label" htmlFor="pub-date">PUBLISH DATE</label>
+                <input
+                  id="pub-date"
+                  type="date"
+                  className="crm-in"
+                  value={publishedAt}
+                  onChange={(e) => setPublishedAt(e.target.value)}
+                />
+              </div>
+
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="author-name">AUTHOR</label>
+                <input
+                  id="author-name"
+                  type="text"
+                  className="crm-in"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                />
+              </div>
+
+              {!isNew && (
+                <div style={{ padding: '12px 14px', background: 'rgba(201,168,96,.06)', border: '1px solid rgba(201,168,96,.2)', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>Total Readers:</span>
+                  <b style={{ fontSize: 16, color: 'var(--gold)', fontFamily: 'var(--serif-d)' }}>{(initialBlog.views || 0).toLocaleString()}</b>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Card: Cover Image */}
+          <section className="crm-card">
+            <h2>Cover image</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {coverImageUrl ? (
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,.6)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={coverImageUrl} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ) : (
+                <div style={{ width: '100%', aspectRatio: '16/9', border: '1px dashed #4a4137', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6e6457', fontSize: 13, textAlign: 'center', padding: 12, borderRadius: 4 }}>
+                  No cover image yet
+                </div>
+              )}
+
+              <div className="crm-field">
+                <label className="crm-label" htmlFor="cover-url">IMAGE WEB ADDRESS</label>
+                <input
+                  id="cover-url"
+                  type="text"
+                  className="crm-in"
+                  value={coverImageUrl}
+                  onChange={(e) => setCoverImageUrl(e.target.value)}
+                  placeholder="https://... or /covers/..."
+                />
+              </div>
+
+              <label className="drop" style={{ justifyContent: 'center', minHeight: 44 }}>
+                <Ic k="up" s={16} /> Choose image file
+                <input
+                  id="blog-cover-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) setCoverImageUrl(URL.createObjectURL(f));
+                  }}
+                />
+              </label>
+
+              {coverImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setCoverImageUrl('')}
+                  className="crm-sm danger"
+                  style={{ justifyContent: 'center' }}
+                >
+                  <Ic k="trash" s={14} /> Remove image
+                </button>
+              )}
+            </div>
+          </section>
+
+          {/* Card: Attached Book CTA */}
+          <section className="crm-card">
+            <h2>Promote a book</h2>
+            <p className="sub" style={{ marginTop: -8 }}>
+              Embeds a purchase card at the bottom of the article to convert readers into Amazon buyers.
+            </p>
+
+            <div className="crm-field">
+              <label className="crm-label">ATTACHED BOOK</label>
+              <select
+                className="crm-in"
+                value={relatedBookSlug}
+                onChange={(e) => setRelatedBookSlug(e.target.value)}
+              >
+                <option value="">No Book Attached</option>
+                {books.map((b) => (
+                  <option key={b.id} value={b.slug}>
+                    {b.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedBook && (
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 12, background: '#120f0d', border: '1px solid rgba(201,168,96,.3)', borderRadius: 4, marginTop: 4 }}>
+                <div style={{ width: 44, height: 66, flexShrink: 0, position: 'relative' }}>
+                  <Cover book={selectedBook} w={44} h={66} title={8} author={4} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <strong style={{ fontSize: 13, color: 'var(--cream)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {selectedBook.title}
+                  </strong>
+                  <span style={{ fontSize: 11, color: selectedBook.amazonUrl ? '#6dbf78' : 'var(--gold)' }}>
+                    {selectedBook.amazonUrl ? '✓ Amazon link active' : '⚠️ No Amazon link'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </section>
+        </aside>
+      </div>
+
+      {/* ── Bottom Floating Bar ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: '#1a1612', border: '1px solid rgba(239,231,214,.1)', borderRadius: 4, marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: isPublished ? '#6dbf78' : '#e2b86a' }} />
+          <span style={{ fontSize: 14, color: 'var(--cream)', fontWeight: 500 }}>
+            {isPublished ? 'Ready to publish' : 'Saved as draft'}
           </span>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-            • {words} words • {keyTakeaways.filter(Boolean).length} Takeaways • {faqItems.filter((f) => f.question).length} FAQs
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+            · {words} words · {keyTakeaways.filter(Boolean).length} GEO takeaways
           </span>
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/admin/blogs" className="crm-btn sec" style={{ fontSize: 12 }}>
-            CANCEL
-          </Link>
+          <Link href="/admin/blogs" className="crm-btn">CANCEL</Link>
           <button
             type="button"
-            onClick={() => handleSave()}
+            onClick={handleSave}
             disabled={isPending}
             className="crm-btn pri"
-            style={{ fontSize: 13, padding: '8px 18px' }}
           >
-            <Ic k="check" s={15} sw={1.8} />
+            <Ic k="check" s={16} sw={2} />
             {isPending ? 'SAVING…' : isPublished ? 'SAVE & PUBLISH' : 'SAVE DRAFT'}
           </button>
         </div>
