@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
-import { RangeTabs, cleanLocation, isPaidMedium, isPaidSession, resolvePlatformName, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
+import { RangeTabs, cleanLocation, isPaidMedium, isPaidSession, resolvePlatformName, resolveCampaignName, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
 
 /** Number of visitors shown per "page" in the journey feed. */
 const FEED_PAGE_SIZE = 30;
@@ -251,10 +251,11 @@ export default function AdTrackingClient({
     }>();
 
     for (const s of windowSessions) {
-      const key = `${s.campaign || '(direct)'}\u0000${s.source}`;
+      const campName = resolveCampaignName(s.campaign, s);
+      const key = `${campName}\u0000${s.source}`;
       const isPaid = isPaidSession(s);
       const g = groups.get(key) ?? {
-        campaign: s.campaign || '(direct)',
+        campaign: campName,
         source: s.source,
         medium: s.medium || '',
         isPaid,
@@ -384,8 +385,9 @@ export default function AdTrackingClient({
 
       row.paidVisitors += 1;
 
-      if (session.campaign && !['(direct)', 'social_referral', '(organic)', '(not set)'].includes(session.campaign)) {
-        row.campaigns.add(session.campaign);
+      const cleanCamp = resolveCampaignName(session.campaign, session);
+      if (cleanCamp && !['(direct)', 'social_referral', '(organic)', '(not set)'].includes(cleanCamp)) {
+        row.campaigns.add(cleanCamp);
       } else if (session.content && !session.content.includes('(direct)')) {
         row.campaigns.add(session.content);
       }
@@ -407,8 +409,9 @@ export default function AdTrackingClient({
           amazonClicks: 0,
         };
         row.paidVisitors += c.visitors;
-        if (c.campaign && !['(direct)', '(not set)'].includes(c.campaign)) {
-          row.campaigns.add(c.campaign);
+        const cleanCamp = resolveCampaignName(c.campaign);
+        if (cleanCamp && !['(direct)', '(not set)'].includes(cleanCamp)) {
+          row.campaigns.add(cleanCamp);
         }
         row.amazonClicks += c.amazonClicks;
         totals.set(platform, row);
@@ -806,7 +809,7 @@ export default function AdTrackingClient({
                   <span className={`an-lead-source ${isPaid ? 'paid' : 'marketing'}`}>
                     {isPaid ? 'Paid ad' : 'Marketing'} <span aria-hidden="true">·</span> {lead.source}
                   </span>
-                  <span className="an-lead-campaign">{lead.campaign}</span>
+                  <span className="an-lead-campaign">{resolveCampaignName(lead.campaign, lead)}</span>
                 </div>
                 <time className="an-lead-date" dateTime={signupDate}>
                   {new Date(signupDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -939,7 +942,7 @@ export default function AdTrackingClient({
                           {v.source} ({isPaid ? 'Paid Ad' : 'Organic'})
                         </span>
                         <span style={{ fontSize: 12, color: '#8c7e6c' }}>
-                          Campaign: {v.campaign}
+                          Campaign: {resolveCampaignName(v.campaign, v)}
                         </span>
                       </div>
                     </td>
@@ -1057,7 +1060,7 @@ export default function AdTrackingClient({
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                 <span style={{ color: '#8c7e6c' }}>Acquired Channel:</span>
                 <span style={{ color: '#93c5fd', fontWeight: 600 }}>
-                  {selectedVisitor.source} ({selectedVisitor.medium}) — {selectedVisitor.campaign}
+                  {selectedVisitor.source} ({selectedVisitor.medium}) — {resolveCampaignName(selectedVisitor.campaign, selectedVisitor)}
                 </span>
               </div>
               <div className="an-ad-click-detail">
