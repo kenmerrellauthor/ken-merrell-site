@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Book, CampaignSummary, AnalyticsSession, AnalyticsEvent } from '@/lib/types';
 import type { DailyTrafficPoint } from '@/lib/seedAnalytics';
 import { Ic } from '../AdIcons';
-import { RangeTabs, cleanLocation, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, type TimeRange } from './shared';
+import { RangeTabs, cleanLocation, isPaidMedium, rangeDaysOf, rangeLabelOf, windowStartOf, parseDateBoundary, type TimeRange } from './shared';
 
 /** Number of visitors shown per "page" in the journey feed. */
 const FEED_PAGE_SIZE = 30;
@@ -29,9 +29,14 @@ export default function AdTrackingClient({
 
   const handleRangeChange = (range: TimeRange, start?: string, end?: string) => {
     setTimeRange(range);
-    if (start && end) {
-      setCustomStart(start);
-      setCustomEnd(end);
+    if (range === 'custom') {
+      const s = start || new Date().toISOString().slice(0, 10);
+      const e = end || s;
+      setCustomStart(s);
+      setCustomEnd(e);
+    } else {
+      setCustomStart('');
+      setCustomEnd('');
     }
   };
 
@@ -125,9 +130,40 @@ export default function AdTrackingClient({
     setTimeout(() => setCopied(false), 2400);
   };
 
-  // Filtered visitor list
+  // Date window shared by visitor feed, paid-social table, and reader signups list
+  const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
+  const visibleTraffic = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      const startDay = customStart.slice(0, 10);
+      const endDay = (customEnd || customStart).slice(0, 10);
+      const filtered = dailyTraffic.filter((p) => p.isoDate >= startDay && p.isoDate <= endDay);
+      if (filtered.length > 0) return filtered;
+    }
+    return dailyTraffic.slice(-rangeDays);
+  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
+
+  const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
+
+  const leadWindowStart = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      return parseDateBoundary(customStart, false);
+    }
+    return windowStartOf(visibleTraffic);
+  }, [timeRange, customStart, visibleTraffic]);
+
+  const leadWindowEnd = useMemo(() => {
+    if (timeRange === 'custom' && customStart) {
+      return parseDateBoundary(customEnd || customStart, true);
+    }
+    return Date.now();
+  }, [timeRange, customStart, customEnd]);
+
+  // Filtered visitor list (respects date range, filters, and search)
   const filteredVisitors = useMemo(() => {
     return initialSessions.filter((s) => {
+      const createdAt = new Date(s.createdAt).getTime();
+      if (createdAt < leadWindowStart || createdAt > leadWindowEnd) return false;
+
       if (visitorFilter === 'amazon' && s.exitOutcome !== 'amazon_click') return false;
       if (visitorFilter === 'arc' && s.exitOutcome !== 'arc_signup') return false;
       if (visitorFilter === 'paid' && !isPaidMedium(s.medium)) return false;
@@ -149,7 +185,12 @@ export default function AdTrackingClient({
 
       return true;
     });
-  }, [initialSessions, visitorFilter, visitorSearch]);
+  }, [initialSessions, leadWindowStart, leadWindowEnd, visitorFilter, visitorSearch]);
+
+  // Reset pagination when filter or date range changes
+  useEffect(() => {
+    setVisibleCount(FEED_PAGE_SIZE);
+  }, [timeRange, customStart, customEnd, visitorFilter, visitorSearch]);
 
   // Clickstream events for selected visitor
   const selectedVisitorEvents = useMemo(() => {
@@ -159,22 +200,6 @@ export default function AdTrackingClient({
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [selectedVisitor, initialEvents]);
 
-  // Date window shared by the paid-social table and the reader signups list
-  const rangeDays = rangeDaysOf(timeRange, customStart, customEnd);
-  const visibleTraffic = useMemo(() => {
-    if (timeRange === 'custom' && customStart && customEnd) {
-      return dailyTraffic.filter((p) => p.isoDate >= customStart && p.isoDate <= customEnd);
-    }
-    return dailyTraffic.slice(-rangeDays);
-  }, [dailyTraffic, timeRange, rangeDays, customStart, customEnd]);
-  const rangeLabel = rangeLabelOf(timeRange, customStart, customEnd);
-  const leadWindowStart = useMemo(() => {
-    if (timeRange === 'custom' && customStart) {
-      return new Date(`${customStart}T00:00:00.000Z`).getTime();
-    }
-    return windowStartOf(visibleTraffic);
-  }, [timeRange, customStart, visibleTraffic]);
-
   const socialPlatformRows = useMemo(() => {
     const platformNames: Record<string, string> = {
       instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', youtube: 'YouTube',
@@ -182,11 +207,10 @@ export default function AdTrackingClient({
       reddit: 'Reddit', snapchat: 'Snapchat',
     };
     const totals = new Map<string, { name: string; paidVisitors: number; campaigns: Set<string>; amazonClicks: number }>();
-    const now = Date.now();
 
     initialSessions.forEach((session) => {
       const createdAt = new Date(session.createdAt).getTime();
-      if (createdAt < leadWindowStart || createdAt > now) return;
+      if (createdAt < leadWindowStart || createdAt > leadWindowEnd) return;
       const platform = platformNames[session.source.trim().toLowerCase()];
       if (!platform) return;
       const isPaid = isPaidMedium(session.medium);
@@ -199,13 +223,16 @@ export default function AdTrackingClient({
     });
 
     return [...totals.values()].sort((a, b) => b.paidVisitors - a.paidVisitors);
-  }, [initialSessions, leadWindowStart]);
+  }, [initialSessions, leadWindowStart, leadWindowEnd]);
 
   const campaignLeads = useMemo(() => initialSessions
     .filter((session) => session.exitOutcome === 'arc_signup' && Boolean(session.readerEmail?.trim()))
-    .filter((session) => new Date(session.updatedAt || session.createdAt).getTime() >= leadWindowStart)
+    .filter((session) => {
+      const t = new Date(session.updatedAt || session.createdAt).getTime();
+      return t >= leadWindowStart && t <= leadWindowEnd;
+    })
     .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()),
-  [initialSessions, leadWindowStart]);
+  [initialSessions, leadWindowStart, leadWindowEnd]);
 
   const leadCounts = useMemo(() => campaignLeads.reduce((counts, session) => {
     const isPaid = isPaidMedium(session.medium);
