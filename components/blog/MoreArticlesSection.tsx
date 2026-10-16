@@ -153,6 +153,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                 {/* Category Pill */}
                 {post.category && (
                   <span
+                    className="blog-card-badge"
                     style={{
                       position: 'absolute',
                       top: 10,
@@ -275,10 +276,11 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                       textTransform: 'uppercase',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 4,
+                      gap: 6,
                     }}
                   >
-                    Read Article →
+                    <span>Read Article</span>
+                    <span className="blog-card-arrow">→</span>
                   </span>
                 </div>
               </div>
