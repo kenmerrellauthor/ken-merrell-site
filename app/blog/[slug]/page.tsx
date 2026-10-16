@@ -9,6 +9,7 @@ import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
 import BlogComments from '@/components/BlogComments';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
+import { parseYouTubeId } from '@/lib/youtube';
 
 export const revalidate = 60;
 
@@ -195,7 +196,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           <div className="blog-reader-layout">
             {/* Left Sidebar Ad Space */}
-            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" />
+            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={site.adSettings?.leftAd} />
 
             {/* Central Article Column */}
             <div className="blog-reader-main">
@@ -365,6 +366,31 @@ export default async function BlogPostPage({ params }: PageProps) {
               >
                 {post.excerpt}
               </p>
+            )}
+
+            {/* Featured Video Spotlight */}
+            {post.videoUrl && parseYouTubeId(post.videoUrl) && (
+              <div
+                style={{
+                  marginBottom: 36,
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(201, 168, 96, 0.35)',
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                  background: '#0a0908',
+                }}
+              >
+                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${parseYouTubeId(post.videoUrl)}`}
+                    title={`${post.title} — Video Spotlight`}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+              </div>
             )}
 
             {/* Main Article Body */}
@@ -575,7 +601,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
 
             {/* Right Sidebar Ad Space */}
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" />
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={site.adSettings?.rightAd} />
           </div>
         </article>
 

@@ -118,11 +118,11 @@ export default async function BlogIndexPage() {
           }}
         >
           <div className="blog-archive-layout">
-            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" />
+            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" adConfig={site.adSettings?.leftAd} />
             <div className="blog-archive-main">
               <BlogArchiveClient posts={posts} />
             </div>
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" />
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={site.adSettings?.rightAd} />
           </div>
         </main>
 

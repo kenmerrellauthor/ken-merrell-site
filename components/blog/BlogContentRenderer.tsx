@@ -170,11 +170,14 @@ function renderInline(text: string): React.ReactNode {
   return parts;
 }
 
+import { parseYouTubeId } from '@/lib/youtube';
+
 type ParsedBlock =
   | { type: 'h1'; text: string }
   | { type: 'h2'; text: string }
   | { type: 'h3'; text: string }
   | { type: 'h4'; text: string }
+  | { type: 'video'; youtubeId: string; title?: string }
   | { type: 'quote'; lines: string[] }
   | { type: 'ul'; items: string[] }
   | { type: 'ol'; items: string[] }
@@ -192,6 +195,19 @@ function parseMarkdownBlocks(content: string): ParsedBlock[] {
 
     // Blank line
     if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // Video Embed (YouTube URL on its own line or [video](https://...) or [video: Title](https://...))
+    const videoMarkdown = trimmed.match(/^\[(?:video|youtube)(?::\s*(.*?))?\]\((https?:\/\/[^\s)]+)\)/i);
+    const ytId = videoMarkdown ? parseYouTubeId(videoMarkdown[2]) : parseYouTubeId(trimmed);
+    if (ytId && (videoMarkdown || /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed))) {
+      blocks.push({
+        type: 'video',
+        youtubeId: ytId,
+        title: videoMarkdown?.[1]?.trim() || undefined,
+      });
       i++;
       continue;
     }
@@ -377,6 +393,50 @@ export default function BlogContentRenderer({ content }: Props) {
               >
                 {renderInline(block.text)}
               </h4>
+            );
+
+          case 'video':
+            return (
+              <div
+                key={idx}
+                style={{
+                  margin: '28px 0',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(201, 168, 96, 0.35)',
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                  background: '#0a0908',
+                }}
+              >
+                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${block.youtubeId}`}
+                    title={block.title || 'Video Player'}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+                {block.title && (
+                  <div
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: 12,
+                      color: 'var(--gold, #c9a860)',
+                      background: 'rgba(20, 16, 12, 0.95)',
+                      borderTop: '1px solid rgba(201, 168, 96, 0.18)',
+                      fontStyle: 'italic',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span>▶</span>
+                    <span>{block.title}</span>
+                  </div>
+                )}
+              </div>
             );
 
           case 'quote':
