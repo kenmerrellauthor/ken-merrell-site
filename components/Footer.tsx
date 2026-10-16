@@ -12,11 +12,11 @@ export default function Footer({ site }: { site: SiteSettings; hideSocial?: bool
         <img src="/img/logo.png" alt="Ken Merrell" width={276} height={64} />
         <nav aria-label="Footer">
           <Link href="/books">BOOKS</Link>
+          <Link href="/blog">BLOG</Link>
           <Link href="/#coming">COMING SOON</Link>
           <Link href="/#videos">VIDEOS</Link>
           <Link href="/advance-readers">ADVANCE READERS</Link>
           <Link href="/author">ABOUT KEN</Link>
-          <Link href="/blog">BLOG</Link>
           <Link href="/#contact">CONTACT</Link>
         </nav>
       </div>

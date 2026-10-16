@@ -11,6 +11,8 @@ import BlogComments from '@/components/BlogComments';
 import { parseYouTubeId } from '@/lib/youtube';
 import BlogShareBar from '@/components/blog/BlogShareBar';
 import MoreArticlesSection from '@/components/blog/MoreArticlesSection';
+import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
+import { SocialIcon } from '@/components/icons';
 
 export const revalidate = 60;
 
@@ -99,6 +101,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   const relatedBook = post.relatedBookSlug
     ? books.find((b) => b.slug === post.relatedBookSlug)
     : null;
+
+  const leftBook = books[0] || null;
+  const rightBook = books.find((b) => b.slug !== leftBook?.slug && b.slug !== relatedBook?.slug) || books[1] || books[0] || null;
 
   const rawBase =
     (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
@@ -213,37 +218,62 @@ export default async function BlogPostPage({ params }: PageProps) {
         >
           <div className="km-grain abs" style={{ opacity: 0.35 }} />
 
-          <div className="blog-reader-main" style={{ maxWidth: 840, margin: '0 auto' }}>
-            {/* Breadcrumb Navigation */}
-            <nav
-              aria-label="Breadcrumb"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 12,
-                fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: 'var(--muted)',
-                marginBottom: 20,
-              }}
-            >
-              <Link href="/" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
-                Home
-              </Link>
-              <span>/</span>
-              <Link href="/blog" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
-                Blog
-              </Link>
-              <span>/</span>
-              <Link
-                href={`/blog?category=${encodeURIComponent(post.category || 'All')}`}
-                style={{ color: 'var(--gold)', textDecoration: 'none', transition: 'color 0.2s' }}
+          <div className="blog-reader-layout">
+            {/* Left Sidebar Ad Rail */}
+            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={adSettings.leftAd} />
+
+            {/* Central Article Column */}
+            <div className="blog-reader-main">
+              {/* Breadcrumb Navigation: Home / Blog / Category / Post */}
+              <nav
+                aria-label="Breadcrumb"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: 12,
+                  fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--muted)',
+                  marginBottom: 20,
+                  flexWrap: 'wrap',
+                }}
               >
-                {post.category}
-              </Link>
-            </nav>
+                <Link href="/" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+                  Home
+                </Link>
+                <span>/</span>
+                <Link href="/blog" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+                  Blog
+                </Link>
+                {post.category && (
+                  <>
+                    <span>/</span>
+                    <Link
+                      href={`/blog?category=${encodeURIComponent(post.category)}`}
+                      style={{ color: 'var(--muted)', textDecoration: 'none', transition: 'color 0.2s' }}
+                    >
+                      {post.category}
+                    </Link>
+                  </>
+                )}
+                <span>/</span>
+                <span
+                  style={{
+                    color: 'var(--gold)',
+                    maxWidth: 340,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'inline-block',
+                    verticalAlign: 'bottom',
+                  }}
+                  title={post.title}
+                >
+                  {post.title}
+                </span>
+              </nav>
 
             {/* Article Header */}
             <header style={{ marginBottom: 32 }}>
@@ -736,6 +766,52 @@ export default async function BlogPostPage({ params }: PageProps) {
                     Explore Novels & Archives
                   </Link>
                 </div>
+
+                {/* Ken's Author Social Handles */}
+                {site.socialLinks && site.socialLinks.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap', borderTop: '1px solid rgba(201, 168, 96, 0.15)', paddingTop: 12 }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                        fontSize: 10,
+                        letterSpacing: '0.14em',
+                        color: 'var(--gold)',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                      }}
+                    >
+                      FOLLOW KEN:
+                    </span>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {site.socialLinks.map((link, idx) => (
+                        <a
+                          key={idx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Follow Ken Merrell on ${link.platform}`}
+                          aria-label={`Follow Ken Merrell on ${link.platform}`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '4px 10px',
+                            borderRadius: 14,
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(201, 168, 96, 0.25)',
+                            color: 'var(--cream)',
+                            fontSize: 11,
+                            textDecoration: 'none',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <SocialIcon platform={link.platform} s={13} />
+                          <span>{link.platform}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -765,6 +841,10 @@ export default async function BlogPostPage({ params }: PageProps) {
                 ← Back to All Articles
               </Link>
             </div>
+            </div>
+
+            {/* Right Sidebar Ad Rail */}
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
           </div>
         </article>
 

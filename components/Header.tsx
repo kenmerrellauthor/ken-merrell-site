@@ -8,10 +8,10 @@ import { Close, Menu } from './icons';
 const MOBILE_LINKS = [
   { href: '/', label: 'Home', key: 'home' },
   { href: '/books', label: 'All Books', key: 'books' },
+  { href: '/blog', label: 'Blog', key: 'blog' },
   { href: '/#coming', label: 'Coming Soon', key: 'coming' },
   { href: '/#videos', label: 'Videos', key: 'videos' },
   { href: '/author', label: 'About Ken', key: 'author' },
-  { href: '/blog', label: 'Blog', key: 'blog' },
   { href: '/#contact', label: 'Contact', key: 'contact' },
   { href: '/advance-readers', label: 'Advance Readers', key: 'advance' }
 ];
@@ -143,10 +143,10 @@ export default function Header({ active }: { active?: string }) {
           </Link>
           <nav aria-label="Primary navigation" className="nav-links">
             <Link href="/books" className={cls('books')} onClick={() => setCurrentActive('books')}>BOOKS</Link>
+            <Link href="/blog" className={cls('blog')} onClick={() => setCurrentActive('blog')}>BLOG</Link>
             <Link href="/#coming" className={cls('coming')} onClick={() => setCurrentActive('coming')}>COMING SOON</Link>
             <Link href="/#videos" className={cls('videos')} onClick={() => setCurrentActive('videos')}>VIDEOS</Link>
             <Link href="/author" className={cls('author')} onClick={() => setCurrentActive('author')}>AUTHOR</Link>
-            <Link href="/blog" className={cls('blog')} onClick={() => setCurrentActive('blog')}>BLOG</Link>
             <Link href="/#contact" className={cls('contact')} onClick={() => setCurrentActive('contact')}>CONTACT</Link>
           </nav>
           <button type="button" className="icon-btn menu-btn" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
