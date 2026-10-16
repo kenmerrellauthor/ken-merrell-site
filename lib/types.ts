@@ -130,6 +130,7 @@ export interface CrmNotification {
     readerName?: string;
     blogTitle?: string;
     blogId?: string;
+    blogSlug?: string;
   };
 }
 

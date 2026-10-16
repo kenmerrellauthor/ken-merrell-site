@@ -42,10 +42,17 @@ const blankBlog: BlogPost = {
 export default async function AdminBlogEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const isCreating = id === 'new';
-  const [blog, books] = await Promise.all([
-    isCreating ? Promise.resolve(blankBlog) : getBlog(id),
-    getBooks(),
-  ]);
+
+  let blog: BlogPost | null = null;
+  if (!isCreating) {
+    blog = await getBlog(id);
+    // If accessed via raw ID (e.g. /admin/blogs/blog-2), redirect to the clean title-based URL
+    if (blog && blog.slug && id !== blog.slug) {
+      redirect(`/admin/blogs/${blog.slug}`);
+    }
+  }
+
+  const books = await getBooks();
 
   if (!blog && !isCreating) {
     redirect('/admin/blogs');
