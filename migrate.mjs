@@ -2,9 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
-const url = 'https://ixjsftrwnjzsimkztuzv.supabase.co';
-const key = 'sb_secret_aKLrfjLxcLhWd9VwxWilgw_OABTmtEj';
-const db = createClient(url, key);
+const url = process.env.SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !key) {
+  console.error('Please provide SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+  process.exit(1);
+}
+const db = createClient(url, key, { auth: { persistSession: false } });
 
 async function migrateTable(table) {
   const file = path.join(process.cwd(), 'data', table + '.json');
@@ -23,5 +27,6 @@ async function run() {
   await migrateTable('videos');
   await migrateTable('readers');
   await migrateTable('settings');
+  await migrateTable('blogs');
 }
 run();
