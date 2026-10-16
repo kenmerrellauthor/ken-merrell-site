@@ -19,7 +19,7 @@
     "updatedAt": "2026-10-16T04:42:05.765Z",
     "isPublished": true,
     "featured": true,
-    "views": 417,
+    "views": 0,
     "relatedBookSlug": "petticoats-and-ash",
     "metaTitle": "How Petticoats and Ash Was Born | Ken Merrell Historical Fiction",
     "metaDescription": "Discover the 19th-century frontier court archives, historical letters, and forgotten women's voices that inspired author Ken Merrell to write Petticoats and Ash.",
@@ -39,28 +39,7 @@
         "answer": "You can read the full prologue and first chapter for free right on this site in the Books section, or sample it directly on Amazon Kindle."
       }
     ],
-    "comments": [
-      {
-        "id": "c-sample-1",
-        "blogId": "blog-1",
-        "authorName": "Eleanor Vance",
-        "authorEmail": "eleanor@example.com",
-        "content": "The attention to historical courtroom procedure in Petticoats and Ash blew me away. It is so rare to find historical fiction where the legal constraints feel genuinely true to the 1800s rather than retrofitted modern drama.",
-        "createdAt": "2026-09-16T14:20:00.000Z",
-        "approved": true,
-        "authorReply": "Thank you so much, Eleanor! Those handwritten territory transcripts in Salt Lake City took months to transcribe, but hearing that the authenticity resonated makes every late night worth it.",
-        "authorReplyAt": "2026-09-17T09:15:00.000Z"
-      },
-      {
-        "id": "c-sample-2",
-        "blogId": "blog-1",
-        "authorName": "Arthur Pendelton",
-        "authorEmail": "arthur.p@example.com",
-        "content": "Will your upcoming books also delve into territorial mining disputes? The frontier legal battles of that era were brutal.",
-        "createdAt": "2026-09-18T18:45:00.000Z",
-        "approved": true
-      }
-    ]
+    "comments": []
   },
   {
     "id": "blog-2",
@@ -79,10 +58,10 @@
     "readTimeMinutes": 1,
     "authorName": "Ken Merrell",
     "publishedAt": "2026-09-28T14:30:00.000Z",
-    "updatedAt": "2026-10-15T19:36:27.543Z",
+    "updatedAt": "2026-10-16T14:18:20.484Z",
     "isPublished": true,
-    "featured": false,
-    "views": 288,
+    "featured": true,
+    "views": 1,
     "relatedBookSlug": "petticoats-and-a-traitors-death",
     "metaTitle": "The Art of the Twist in Historical Suspense | Ken Merrell",
     "metaDescription": "Explore why period limitations like the lack of modern forensics and rapid communication make 19th-century historical thrillers so gripping.",
@@ -102,16 +81,6 @@
         "answer": "Petticoats and a Traitor's Death is crafted specifically around high-stakes espionage, treason, and frontier suspense."
       }
     ],
-    "comments": [
-      {
-        "id": "c-sample-3",
-        "blogId": "blog-2",
-        "authorName": "Clara Higgins",
-        "authorEmail": "clara@example.com",
-        "content": "That point about period-accurate blind spots is brilliant. When an era doesn't allow people to question authority or certain social classes, the villain has the perfect camouflage.",
-        "createdAt": "2026-09-29T11:05:00.000Z",
-        "approved": true
-      }
-    ]
+    "comments": []
   }
 ]

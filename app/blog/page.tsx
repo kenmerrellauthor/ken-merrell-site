@@ -8,7 +8,8 @@ import BlogArchiveClient from '@/components/blog/BlogArchiveClient';
 import BlogFeaturedSpotlight from '@/components/blog/BlogFeaturedSpotlight';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: 'Blog & Historical Essays · Behind the Frontier | Ken Merrell',
@@ -34,8 +35,7 @@ export const metadata: Metadata = {
 
 export default async function BlogIndexPage() {
   const [site, posts, books] = await Promise.all([getSite(), getPublishedBlogs(), getBooks()]);
-  const featuredPosts = posts.filter((p) => p.featured);
-  const spotlightPosts = featuredPosts.length > 0 ? featuredPosts : (posts[0] ? [posts[0]] : []);
+  const spotlightPosts = posts.filter((p) => p.featured);
   const leftBook = books[0] || null;
   const rightBook = books[1] || books[0] || null;
 
