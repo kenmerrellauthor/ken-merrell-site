@@ -38,7 +38,8 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
   const [coverImageUrl, setCoverImageUrl] = useState(initialBlog.coverImage || '');
   const [authorName, setAuthorName] = useState(initialBlog.authorName || 'Ken Merrell');
   const [tags, setTags] = useState((initialBlog.tags || []).join(', '));
-  const [isPublished, setIsPublished] = useState(initialBlog.isPublished ?? true);
+  const [isPublished, setIsPublished] = useState(initialBlog.isPublished ?? false);
+  const [savingMode, setSavingMode] = useState<'draft' | 'publish' | null>(null);
   const [featured, setFeatured] = useState(initialBlog.featured ?? false);
   const [publishedAt, setPublishedAt] = useState(
     initialBlog.publishedAt ? initialBlog.publishedAt.slice(0, 10) : new Date().toISOString().slice(0, 10)
@@ -119,13 +120,17 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setFaqItems(faqItems.filter((_, i) => i !== idx));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (targetPublishedStatus?: boolean) => {
     setStatusMessage(null);
 
     if (!title.trim()) {
       setStatusMessage({ type: 'err', text: 'Please provide an article title.' });
       return;
     }
+
+    const willBePublished = typeof targetPublishedStatus === 'boolean' ? targetPublishedStatus : isPublished;
+    setIsPublished(willBePublished);
+    setSavingMode(willBePublished ? 'publish' : 'draft');
 
     const finalSlug = slug.trim() ? slugify(slug) : slugify(title);
     const finalCategory = customCategory.trim() || category;
@@ -141,7 +146,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     formData.set('authorName', authorName.trim() || 'Ken Merrell');
     formData.set('tags', tags);
     formData.set('readTimeMinutes', String(autoReadTime));
-    formData.set('isPublished', String(isPublished));
+    formData.set('isPublished', String(willBePublished));
     formData.set('featured', String(featured));
     formData.set('publishedAt', new Date(publishedAt).toISOString());
     formData.set('relatedBookSlug', relatedBookSlug || 'none');
@@ -156,16 +161,25 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     }
 
     startTransition(async () => {
-      const res = await saveBlogPostAction({}, formData);
-      if (res.ok) {
-        setStatusMessage({ type: 'ok', text: isPublished ? 'Article saved and published live!' : 'Draft saved successfully.' });
-        if (isNew && res.id) {
-          router.push(`/admin/blogs/${res.id}`);
+      try {
+        const res = await saveBlogPostAction({}, formData);
+        if (res.ok) {
+          setStatusMessage({
+            type: 'ok',
+            text: willBePublished ? 'Article saved and published live!' : 'Article saved as draft successfully.',
+          });
+          if (isNew && res.id) {
+            router.push(`/admin/blogs/${res.id}`);
+          } else {
+            router.refresh();
+          }
         } else {
-          router.refresh();
+          setStatusMessage({ type: 'err', text: res.error || 'Failed to save blog post.' });
         }
-      } else {
-        setStatusMessage({ type: 'err', text: res.error || 'Failed to save blog post.' });
+      } catch (err: any) {
+        setStatusMessage({ type: 'err', text: err?.message || 'Failed to save blog post.' });
+      } finally {
+        setSavingMode(null);
       }
     });
   };
@@ -187,7 +201,13 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
       <div className="crm-top">
         <div>
           <h1>{isNew ? 'New article' : title.trim() || 'Untitled article'}</h1>
-          <p>{isNew ? 'Draft an article, historical essay, or research note for your readers.' : 'Changes go live on the blog as soon as you press Save.'}</p>
+          <p>
+            {isNew
+              ? 'Draft an article, historical essay, or research note for your readers. You can save as a draft anytime.'
+              : isPublished
+              ? 'This article is currently published live on your public blog.'
+              : 'This article is currently saved as an unpublished draft.'}
+          </p>
         </div>
         <div className="crm-actions">
           <Link href="/admin/blogs" className="crm-btn" title="Back to blog posts">
@@ -200,12 +220,32 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
           )}
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave(false)}
+            disabled={isPending}
+            className="crm-btn"
+            style={{
+              borderColor: !isPublished ? 'rgba(226,184,106,0.6)' : undefined,
+              color: !isPublished ? 'var(--gold)' : undefined,
+              background: !isPublished ? 'rgba(226,184,106,0.08)' : undefined,
+            }}
+            title="Save changes as an unpublished draft (not visible publicly)"
+          >
+            <Ic k="file" s={15} sw={1.8} />
+            {isPending && savingMode === 'draft' ? 'SAVING DRAFT…' : 'SAVE AS DRAFT'}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
             disabled={isPending}
             className="crm-btn pri"
+            title="Publish article live to readers on the website"
           >
             <Ic k="check" s={16} sw={2} />
-            {isPending ? 'SAVING…' : isPublished ? 'SAVE & PUBLISH' : 'SAVE DRAFT'}
+            {isPending && savingMode === 'publish'
+              ? 'PUBLISHING…'
+              : isPublished
+              ? 'SAVE & PUBLISH'
+              : 'PUBLISH NOW'}
           </button>
         </div>
       </div>
@@ -741,15 +781,55 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
           {/* Card: Publishing */}
           <section className="crm-card">
             <h2>Publishing</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Status Indicator Badge */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 12px',
+                  borderRadius: 4,
+                  background: isPublished ? 'rgba(109,191,120,0.1)' : 'rgba(226,184,106,0.1)',
+                  border: `1px solid ${isPublished ? 'rgba(109,191,120,0.3)' : 'rgba(226,184,106,0.3)'}`,
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: isPublished ? '#6dbf78' : '#e2b86a',
+                    flexShrink: 0,
+                    boxShadow: isPublished ? '0 0 8px rgba(109,191,120,0.6)' : '0 0 8px rgba(226,184,106,0.5)',
+                  }}
+                />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: isPublished ? '#6dbf78' : 'var(--gold)',
+                      letterSpacing: '.08em',
+                      fontFamily: 'var(--serif-c)',
+                    }}
+                  >
+                    {isPublished ? 'STATUS: PUBLISHED LIVE' : 'STATUS: DRAFT (HIDDEN)'}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                    {isPublished ? 'Visible to readers on /blog' : 'Only visible inside admin CRM'}
+                  </div>
+                </div>
+              </div>
+
               {/* Published Switch */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 2 }}>
                 <div>
                   <strong style={{ display: 'block', fontSize: 14, color: isPublished ? 'var(--cream-2)' : 'var(--muted)' }}>
                     {isPublished ? 'Published' : 'Draft'}
                   </strong>
                   <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                    {isPublished ? 'Visible publicly' : 'Only in admin'}
+                    {isPublished ? 'Toggle off to make draft' : 'Toggle on to publish live'}
                   </span>
                 </div>
                 <button
@@ -758,8 +838,47 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                   className="switch"
                   aria-checked={isPublished}
                   onClick={() => setIsPublished(!isPublished)}
+                  title={isPublished ? 'Switch to Draft' : 'Switch to Published'}
                 >
                   <span />
+                </button>
+              </div>
+
+              {/* Quick Save Buttons inside Publishing Card */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, paddingTop: 4, borderTop: '1px solid rgba(239,231,214,.06)' }}>
+                <button
+                  type="button"
+                  onClick={() => handleSave(false)}
+                  disabled={isPending}
+                  className="crm-btn"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    height: 40,
+                    fontSize: 11,
+                    borderColor: !isPublished ? 'rgba(226,184,106,0.6)' : undefined,
+                    color: !isPublished ? 'var(--gold)' : undefined,
+                    background: !isPublished ? 'rgba(226,184,106,0.08)' : undefined,
+                  }}
+                  title="Save article as an unpublished draft"
+                >
+                  <Ic k="file" s={14} sw={1.8} />
+                  {isPending && savingMode === 'draft' ? 'SAVING DRAFT…' : 'SAVE AS DRAFT'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSave(true)}
+                  disabled={isPending}
+                  className="crm-btn pri"
+                  style={{ width: '100%', justifyContent: 'center', height: 40, fontSize: 11 }}
+                  title="Save and publish article live"
+                >
+                  <Ic k="check" s={15} sw={2} />
+                  {isPending && savingMode === 'publish'
+                    ? 'PUBLISHING…'
+                    : isPublished
+                    ? 'SAVE & PUBLISH'
+                    : 'PUBLISH NOW'}
                 </button>
               </div>
 
@@ -911,27 +1030,47 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
       </div>
 
       {/* ── Bottom Floating Bar ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: '#1a1612', border: '1px solid rgba(239,231,214,.1)', borderRadius: 4, marginTop: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: '#1a1612', border: '1px solid rgba(239,231,214,.1)', borderRadius: 4, marginTop: 12, flexWrap: 'wrap', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: isPublished ? '#6dbf78' : '#e2b86a' }} />
           <span style={{ fontSize: 14, color: 'var(--cream)', fontWeight: 500 }}>
-            {isPublished ? 'Ready to publish' : 'Saved as draft'}
+            {isPublished ? 'Status: Published live' : 'Status: Saved as draft'}
           </span>
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>
             · {words} words · {keyTakeaways.filter(Boolean).length} GEO takeaways
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <Link href="/admin/blogs" className="crm-btn">CANCEL</Link>
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave(false)}
+            disabled={isPending}
+            className="crm-btn"
+            style={{
+              borderColor: !isPublished ? 'rgba(226,184,106,0.6)' : undefined,
+              color: !isPublished ? 'var(--gold)' : undefined,
+              background: !isPublished ? 'rgba(226,184,106,0.08)' : undefined,
+            }}
+            title="Save article as an unpublished draft"
+          >
+            <Ic k="file" s={15} sw={1.8} />
+            {isPending && savingMode === 'draft' ? 'SAVING DRAFT…' : 'SAVE AS DRAFT'}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
             disabled={isPending}
             className="crm-btn pri"
+            title="Publish article live to readers"
           >
             <Ic k="check" s={16} sw={2} />
-            {isPending ? 'SAVING…' : isPublished ? 'SAVE & PUBLISH' : 'SAVE DRAFT'}
+            {isPending && savingMode === 'publish'
+              ? 'PUBLISHING…'
+              : isPublished
+              ? 'SAVE & PUBLISH'
+              : 'PUBLISH NOW'}
           </button>
         </div>
       </div>

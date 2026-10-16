@@ -19,7 +19,7 @@ const blankBlog: BlogPost = {
   authorName: 'Ken Merrell',
   publishedAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  isPublished: true,
+  isPublished: false,
   featured: false,
   views: 0,
   relatedBookSlug: null,

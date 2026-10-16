@@ -12,7 +12,7 @@ interface Props {
   books: Book[];
 }
 
-const COLS = '58px minmax(280px, 1.8fr) 160px 200px 100px 140px';
+const COLS = '58px minmax(260px, 1.8fr) 150px 190px 100px 220px';
 
 export default function BlogListClient({ initialBlogs, books }: Props) {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const categories = Array.from(new Set(blogs.map((b) => b.category).filter(Boolean)));
@@ -44,19 +45,24 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
       return;
     }
     setDeletingId(id);
+    // Optimistic removal for instant UI response
+    setBlogs((prev) => prev.filter((p) => p.id !== id));
     startTransition(async () => {
       const res = await deleteBlogPostAction(id);
-      if (res.ok) {
-        setBlogs((prev) => prev.filter((p) => p.id !== id));
-        router.refresh();
-      } else {
+      if (!res.ok) {
         alert(res.error || 'Failed to delete blog post.');
+        router.refresh();
       }
       setDeletingId(null);
     });
   };
 
-  const handleTogglePublished = (post: BlogPost) => {
+  const handleTogglePublished = (post: BlogPost, forceTarget?: boolean) => {
+    const nextStatus = typeof forceTarget === 'boolean' ? forceTarget : !post.isPublished;
+    // Optimistic status update for instant click feedback
+    setBlogs((prev) => prev.map((p) => (p.id === post.id ? { ...p, isPublished: nextStatus } : p)));
+    setTogglingId(post.id);
+
     startTransition(async () => {
       const fd = new FormData();
       fd.set('id', post.id);
@@ -69,7 +75,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
       fd.set('authorName', post.authorName || 'Ken Merrell');
       fd.set('tags', (post.tags || []).join(', '));
       fd.set('readTimeMinutes', String(post.readTimeMinutes || 5));
-      fd.set('isPublished', String(!post.isPublished));
+      fd.set('isPublished', String(nextStatus));
       fd.set('featured', String(post.featured || false));
       fd.set('publishedAt', post.publishedAt || new Date().toISOString());
       fd.set('relatedBookSlug', post.relatedBookSlug || 'none');
@@ -81,8 +87,12 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
       const res = await saveBlogPostAction({}, fd);
       if (res.ok && res.post) {
         setBlogs((prev) => prev.map((p) => (p.id === post.id ? res.post! : p)));
-        router.refresh();
+      } else {
+        // Rollback on failure
+        setBlogs((prev) => prev.map((p) => (p.id === post.id ? { ...p, isPublished: post.isPublished } : p)));
+        alert(res.error || 'Failed to update article status.');
       }
+      setTogglingId(null);
     });
   };
 
@@ -170,7 +180,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
 
       {/* ── Native CRM Table ── */}
       <div className="crm-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div className="crm-tr head" style={{ gridTemplateColumns: COLS, minWidth: 1040 }}>
+        <div className="crm-tr head" style={{ gridTemplateColumns: COLS, minWidth: 1080 }}>
           <span>COVER</span>
           <span>ARTICLE</span>
           <span>CATEGORY</span>
@@ -197,7 +207,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
               <div
                 key={post.id}
                 className="crm-tr row"
-                style={{ gridTemplateColumns: COLS, minHeight: 96, padding: '16px 20px', minWidth: 1040 }}
+                style={{ gridTemplateColumns: COLS, minHeight: 96, padding: '16px 20px', minWidth: 1080 }}
               >
                 {/* Cover Thumbnail */}
                 <div style={{ width: 50, height: 72, borderRadius: 3, overflow: 'hidden', background: '#120f0d', boxShadow: '0 3px 10px rgba(0,0,0,.6)', position: 'relative', flexShrink: 0 }}>
@@ -220,6 +230,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <Link
                       href={`/admin/blogs/${post.id}`}
+                      prefetch={true}
                       className="crm-title"
                       style={{
                         fontSize: 17,
@@ -364,17 +375,49 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                     className="switch"
                     aria-checked={post.isPublished}
                     onClick={() => handleTogglePublished(post)}
-                    title={post.isPublished ? 'Click to make Draft' : 'Click to Publish live'}
+                    disabled={isPending && togglingId === post.id}
+                    title={post.isPublished ? 'Click to make draft (unpublish)' : 'Click to publish live'}
+                    style={{ opacity: isPending && togglingId === post.id ? 0.6 : 1 }}
                   >
                     <span />
                   </button>
-                  <span style={{ fontSize: 13, color: post.isPublished ? 'var(--cream)' : 'var(--muted)', minWidth: 38 }}>
-                    {post.isPublished ? 'Live' : 'Draft'}
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: post.isPublished ? '#6dbf78' : 'var(--gold)',
+                      minWidth: 42,
+                    }}
+                  >
+                    {isPending && togglingId === post.id ? '…' : post.isPublished ? 'Live' : 'Draft'}
                   </span>
                 </div>
 
                 {/* Actions */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                  {post.isPublished ? (
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublished(post, false)}
+                      disabled={isPending && togglingId === post.id}
+                      className="crm-sm"
+                      style={{ height: 36, padding: '0 10px', fontSize: 11, borderColor: 'rgba(226,184,106,.4)', color: 'var(--gold)' }}
+                      title="Save as draft (hide from public blog)"
+                    >
+                      <Ic k="file" s={13} /> Draft
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublished(post, true)}
+                      disabled={isPending && togglingId === post.id}
+                      className="crm-sm"
+                      style={{ height: 36, padding: '0 10px', fontSize: 11, borderColor: 'rgba(109,191,120,.4)', color: '#6dbf78' }}
+                      title="Publish article live to blog"
+                    >
+                      <Ic k="check" s={13} /> Publish
+                    </button>
+                  )}
                   {post.isPublished && (
                     <a
                       href={`/blog/${post.slug}`}
@@ -388,6 +431,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                   )}
                   <Link
                     href={`/admin/blogs/${post.id}`}
+                    prefetch={true}
                     className="crm-sm"
                     style={{ height: 36, padding: '0 12px', fontSize: 12 }}
                   >

@@ -12,10 +12,19 @@ export default function BlogArchiveClient({ posts }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const categories = ['All', ...Array.from(new Set(posts.map((p) => p.category).filter(Boolean)))];
+  const hasFeatured = posts.some((p) => p.featured);
+  const categories = [
+    'All',
+    ...(hasFeatured ? ['Featured'] : []),
+    ...Array.from(new Set(posts.map((p) => p.category).filter(Boolean))),
+  ];
 
   const filteredPosts = posts.filter((p) => {
-    if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+    if (selectedCategory === 'Featured') {
+      if (!p.featured) return false;
+    } else if (selectedCategory !== 'All' && p.category !== selectedCategory) {
+      return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = p.title.toLowerCase().includes(q);
@@ -140,7 +149,8 @@ export default function BlogArchiveClient({ posts }: Props) {
               className="blog-card"
               style={{
                 background: 'linear-gradient(180deg, rgba(28, 23, 18, 0.6) 0%, rgba(14, 12, 10, 0.8) 100%)',
-                border: '1px solid rgba(201, 168, 96, 0.18)',
+                border: post.featured ? '1px solid rgba(201, 168, 96, 0.5)' : '1px solid rgba(201, 168, 96, 0.18)',
+                boxShadow: post.featured ? '0 8px 24px rgba(201, 168, 96, 0.1)' : undefined,
                 borderRadius: 8,
                 overflow: 'hidden',
                 display: 'flex',
@@ -206,6 +216,28 @@ export default function BlogArchiveClient({ posts }: Props) {
                   >
                     {post.category || 'Article'}
                   </span>
+
+                  {/* Featured Badge on image */}
+                  {post.featured && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        background: 'rgba(201, 168, 96, 0.95)',
+                        color: '#15120f',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        padding: '3px 8px',
+                        borderRadius: 3,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      ★ FEATURED
+                    </span>
+                  )}
                 </div>
 
                 {/* Card Content */}

@@ -213,6 +213,7 @@ export default function Sidebar({
               <Link
                 key={it.k}
                 href={it.href}
+                prefetch={true}
                 className={`crm-nav${it.on ? ' on' : ''}`}
                 aria-current={it.on ? 'page' : undefined}
                 onClick={() => setMobileOpen(false)}
