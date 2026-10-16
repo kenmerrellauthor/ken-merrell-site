@@ -111,8 +111,11 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const baseOrigin = rawBase.startsWith('http') ? rawBase : `https://${rawBase}`;
   const canonicalUrl = `${baseOrigin}/books/${book.slug}`;
 
-  const approvedReviews = (book.reviews ?? []).filter((r) => r.approved);
-  const avgRating = approvedReviews.length > 0
+  const approvedReviews = (book.reviews ?? []).filter(
+    (r) => r.approved && typeof r.rating === 'number' && r.rating >= 1 && r.rating <= 5
+  );
+  const hasReviews = approvedReviews.length > 0;
+  const avgRating = hasReviews
     ? (approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length).toFixed(1)
     : null;
 
@@ -150,17 +153,17 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       availability: book.status === 'available' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
       priceCurrency: 'USD'
     } : undefined,
-    aggregateRating: avgRating ? {
-      '@type': 'AggregateRating',
-      ratingValue: avgRating,
-      reviewCount: approvedReviews.length,
-      bestRating: 5,
-      worstRating: 1
-    } : undefined,
-    review: [
-      ...approvedReviews.slice(0, 10).map((r) => ({
+    ...(hasReviews && avgRating ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: avgRating,
+        reviewCount: approvedReviews.length,
+        bestRating: 5,
+        worstRating: 1
+      },
+      review: approvedReviews.slice(0, 10).map((r) => ({
         '@type': 'Review',
-        author: { '@type': 'Person', name: r.name },
+        author: { '@type': 'Person', name: r.name?.trim() || 'Verified Reader' },
         datePublished: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : undefined,
         reviewBody: r.text,
         reviewRating: {
@@ -169,13 +172,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           bestRating: 5,
           worstRating: 1
         }
-      })),
-      ...quotes.map((q) => ({
-        '@type': 'Review',
-        author: { '@type': 'Person', name: q.source || 'Editorial Review' },
-        reviewBody: q.text
       }))
-    ]
+    } : {})
   };
 
   return (
