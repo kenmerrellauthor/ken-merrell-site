@@ -479,167 +479,13 @@ export default async function BlogPostPage({ params }: PageProps) {
               <BlogFaqAccordion faqs={post.faqItems} />
             )}
 
-            {/* Promote a Book Showcase Banner */}
-            {relatedBook && (
-              <section
-                aria-label={`Featured Novel: ${relatedBook.title}`}
-                className="in-article-banner blog-promote-book-banner"
-                style={{
-                  marginTop: 48,
-                  marginBottom: 28,
-                  padding: '22px 26px',
-                  background: 'linear-gradient(135deg, rgba(30, 24, 18, 0.98) 0%, rgba(16, 13, 10, 0.99) 100%)',
-                  border: '1px solid rgba(201, 168, 96, 0.45)',
-                  borderRadius: 8,
-                  boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(201, 168, 96, 0.25)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* 4 Decorative vintage gold corner accents */}
-                <span style={{ position: 'absolute', top: 3, left: 3, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderLeft: '2px solid var(--gold, #c9a860)' }} />
-                <span style={{ position: 'absolute', top: 3, right: 3, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderRight: '2px solid var(--gold, #c9a860)' }} />
-                <span style={{ position: 'absolute', bottom: 3, left: 3, width: 8, height: 8, borderBottom: '2px solid var(--gold, #c9a860)', borderLeft: '2px solid var(--gold, #c9a860)' }} />
-                <span style={{ position: 'absolute', bottom: 3, right: 3, width: 8, height: 8, borderBottom: '2px solid var(--gold, #c9a860)', borderRight: '2px solid var(--gold, #c9a860)' }} />
-
-                {/* Top Banner Header Bar */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingBottom: 12,
-                    marginBottom: 16,
-                    borderBottom: '1px solid rgba(201, 168, 96, 0.2)',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span
-                      style={{
-                        background: 'linear-gradient(135deg, var(--gold) 0%, #b8934a 100%)',
-                        color: '#15120f',
-                        fontSize: 9.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.14em',
-                        padding: '3px 9px',
-                        borderRadius: 3,
-                        textTransform: 'uppercase',
-                        fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                      }}
-                    >
-                      FEATURED NOVEL
-                    </span>
-                    <span style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2 }}>★★★★★</span>
-                  </div>
-                  <span
-                    style={{
-                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                      fontSize: 10,
-                      letterSpacing: '0.12em',
-                      color: 'var(--muted)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Historical Suspense by Ken Merrell
-                  </span>
-                </div>
-
-                {/* Horizontal Banner Body */}
-                <div className="in-article-banner-body">
-                  {/* Left: Book Cover */}
-                  <div className="in-article-banner-cover" style={{ width: 80, height: 120 }}>
-                    <Cover book={relatedBook} w={80} h={120} title={10} author={6} />
-                    <div className="km-spine abs" />
-                  </div>
-
-                  {/* Center: Details & Hook */}
-                  <div className="in-article-banner-content">
-                    <h4
-                      style={{
-                        fontFamily: 'var(--serif, Georgia, serif)',
-                        fontSize: 'clamp(18px, 2.2vw, 22px)',
-                        color: 'var(--cream, #fdfbf7)',
-                        margin: '0 0 6px',
-                        lineHeight: 1.25,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {relatedBook.title}
-                    </h4>
-
-                    <p
-                      style={{
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        color: '#ded3c1',
-                        margin: 0,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {relatedBook.tagline || relatedBook.description || 'Step into the unforgiving 1880s frontier with Ken Merrell’s signature suspense.'}
-                    </p>
-                  </div>
-
-                  {/* Right: Actions */}
-                  <div className="in-article-banner-actions">
-                    {relatedBook.amazonUrl && (
-                      <a
-                        href={relatedBook.amazonUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn pri in-article-banner-btn"
-                        style={{
-                          fontSize: 11,
-                          padding: '9px 18px',
-                          letterSpacing: '0.08em',
-                          fontWeight: 700,
-                          whiteSpace: 'nowrap',
-                          textAlign: 'center',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <span>BUY ON AMAZON</span>
-                        <span>↗</span>
-                      </a>
-                    )}
-                    <Link
-                      href={`/books/${relatedBook.slug}`}
-                      className="btn sec"
-                      style={{
-                        fontSize: 10.5,
-                        padding: '8px 16px',
-                        letterSpacing: '0.08em',
-                        whiteSpace: 'nowrap',
-                        textAlign: 'center',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <span>READ SAMPLE</span>
-                      <span>→</span>
-                    </Link>
-                  </div>
-                </div>
-              </section>
-            )}
-
             {/* Author Bio Showcase Banner */}
             <section
               aria-label="About the Author: Ken Merrell"
               className="in-article-banner blog-author-bio-banner"
               style={{
-                marginTop: 32,
-                marginBottom: 32,
+                marginTop: 44,
+                marginBottom: 20,
                 padding: '22px 26px',
                 background: 'linear-gradient(135deg, rgba(28, 22, 16, 0.98) 0%, rgba(14, 11, 9, 0.99) 100%)',
                 border: '1px solid rgba(201, 168, 96, 0.45)',
@@ -825,6 +671,160 @@ export default async function BlogPostPage({ params }: PageProps) {
                 </div>
               </div>
             </section>
+
+            {/* Promote a Book Showcase Banner — At the bottom */}
+            {relatedBook && (
+              <section
+                aria-label={`Featured Novel: ${relatedBook.title}`}
+                className="in-article-banner blog-promote-book-banner"
+                style={{
+                  marginTop: 20,
+                  marginBottom: 36,
+                  padding: '22px 26px',
+                  background: 'linear-gradient(135deg, rgba(30, 24, 18, 0.98) 0%, rgba(16, 13, 10, 0.99) 100%)',
+                  border: '1px solid rgba(201, 168, 96, 0.45)',
+                  borderRadius: 8,
+                  boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(201, 168, 96, 0.25)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* 4 Decorative vintage gold corner accents */}
+                <span style={{ position: 'absolute', top: 3, left: 3, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderLeft: '2px solid var(--gold, #c9a860)' }} />
+                <span style={{ position: 'absolute', top: 3, right: 3, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderRight: '2px solid var(--gold, #c9a860)' }} />
+                <span style={{ position: 'absolute', bottom: 3, left: 3, width: 8, height: 8, borderBottom: '2px solid var(--gold, #c9a860)', borderLeft: '2px solid var(--gold, #c9a860)' }} />
+                <span style={{ position: 'absolute', bottom: 3, right: 3, width: 8, height: 8, borderBottom: '2px solid var(--gold, #c9a860)', borderRight: '2px solid var(--gold, #c9a860)' }} />
+
+                {/* Top Banner Header Bar */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingBottom: 12,
+                    marginBottom: 16,
+                    borderBottom: '1px solid rgba(201, 168, 96, 0.2)',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        background: 'linear-gradient(135deg, var(--gold) 0%, #b8934a 100%)',
+                        color: '#15120f',
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        letterSpacing: '0.14em',
+                        padding: '3px 9px',
+                        borderRadius: 3,
+                        textTransform: 'uppercase',
+                        fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      }}
+                    >
+                      FEATURED NOVEL
+                    </span>
+                    <span style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: 2 }}>★★★★★</span>
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      fontSize: 10,
+                      letterSpacing: '0.12em',
+                      color: 'var(--muted)',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Historical Suspense by Ken Merrell
+                  </span>
+                </div>
+
+                {/* Horizontal Banner Body */}
+                <div className="in-article-banner-body">
+                  {/* Left: Book Cover */}
+                  <div className="in-article-banner-cover" style={{ width: 80, height: 120 }}>
+                    <Cover book={relatedBook} w={80} h={120} title={10} author={6} />
+                    <div className="km-spine abs" />
+                  </div>
+
+                  {/* Center: Details & Hook */}
+                  <div className="in-article-banner-content">
+                    <h4
+                      style={{
+                        fontFamily: 'var(--serif, Georgia, serif)',
+                        fontSize: 'clamp(18px, 2.2vw, 22px)',
+                        color: 'var(--cream, #fdfbf7)',
+                        margin: '0 0 6px',
+                        lineHeight: 1.25,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {relatedBook.title}
+                    </h4>
+
+                    <p
+                      style={{
+                        fontSize: 13,
+                        lineHeight: 1.55,
+                        color: '#ded3c1',
+                        margin: 0,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {relatedBook.tagline || relatedBook.description || 'Step into the unforgiving 1880s frontier with Ken Merrell’s signature suspense.'}
+                    </p>
+                  </div>
+
+                  {/* Right: Actions */}
+                  <div className="in-article-banner-actions">
+                    {relatedBook.amazonUrl && (
+                      <a
+                        href={relatedBook.amazonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn pri in-article-banner-btn"
+                        style={{
+                          fontSize: 11,
+                          padding: '9px 18px',
+                          letterSpacing: '0.08em',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          textAlign: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <span>BUY ON AMAZON</span>
+                        <span>↗</span>
+                      </a>
+                    )}
+                    <Link
+                      href={`/books/${relatedBook.slug}`}
+                      className="btn sec"
+                      style={{
+                        fontSize: 10.5,
+                        padding: '8px 16px',
+                        letterSpacing: '0.08em',
+                        whiteSpace: 'nowrap',
+                        textAlign: 'center',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <span>READ SAMPLE</span>
+                      <span>→</span>
+                    </Link>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* More Articles & Related Dispatches */}
             <MoreArticlesSection posts={morePosts} currentCategory={post.category} />
