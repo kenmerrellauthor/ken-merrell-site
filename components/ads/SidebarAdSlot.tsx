@@ -221,10 +221,6 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
           </div>
         )}
       </div>
-
-      <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--muted)', opacity: 0.6 }}>
-        160 × 600 Skyscraper
-      </div>
     </aside>
   );
 }
