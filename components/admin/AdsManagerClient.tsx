@@ -18,7 +18,7 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
     ...initialSettings,
     inArticleAd: initialSettings.inArticleAd || defaultInArticleAd,
   });
-  const [activeTab, setActiveTab] = useState<'left' | 'right' | 'inArticle'>('left');
+  const [activeTab, setActiveTab] = useState<'inArticle' | 'left' | 'right'>('inArticle');
   const [isPending, startTransition] = useTransition();
   const [statusMsg, setStatusMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -140,8 +140,38 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
         </div>
       )}
 
-      {/* ── 3-Tab Switcher: Left Rail vs Right Rail vs In-Article Blog Ad ── */}
+      {/* ── Tab Switcher: In-Article Blog Banner vs Optional Sidebar Rails ── */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('inArticle')}
+          className="crm-btn"
+          style={{
+            padding: '12px 20px',
+            borderColor: activeTab === 'inArticle' ? 'var(--gold)' : '#3a332b',
+            background: activeTab === 'inArticle' ? 'rgba(201,168,96,0.12)' : '#14100c',
+            color: activeTab === 'inArticle' ? 'var(--gold)' : 'var(--cream-2)',
+            fontWeight: activeTab === 'inArticle' ? 700 : 500,
+            fontSize: 13,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span>📰 IN-ARTICLE BANNER AD</span>
+          <span
+            style={{
+              fontSize: 10,
+              padding: '2px 6px',
+              borderRadius: 3,
+              background: (settings.inArticleAd?.enabled ?? true) ? 'rgba(109,191,120,0.2)' : 'rgba(255,255,255,0.08)',
+              color: (settings.inArticleAd?.enabled ?? true) ? '#6dbf78' : 'var(--muted)',
+            }}
+          >
+            {(settings.inArticleAd?.enabled ?? true) ? 'ENABLED' : 'DISABLED'}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('left')}
@@ -199,36 +229,6 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
             }}
           >
             {settings.rightAd.enabled ? 'ENABLED' : 'DISABLED'}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('inArticle')}
-          className="crm-btn"
-          style={{
-            padding: '12px 20px',
-            borderColor: activeTab === 'inArticle' ? 'var(--gold)' : '#3a332b',
-            background: activeTab === 'inArticle' ? 'rgba(201,168,96,0.12)' : '#14100c',
-            color: activeTab === 'inArticle' ? 'var(--gold)' : 'var(--cream-2)',
-            fontWeight: activeTab === 'inArticle' ? 700 : 500,
-            fontSize: 13,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <span>📖 IN-ARTICLE AD (BLOG POSTS)</span>
-          <span
-            style={{
-              fontSize: 10,
-              padding: '2px 6px',
-              borderRadius: 3,
-              background: inArticleConfig.enabled ? 'rgba(109,191,120,0.2)' : 'rgba(255,255,255,0.08)',
-              color: inArticleConfig.enabled ? '#6dbf78' : 'var(--muted)',
-            }}
-          >
-            {inArticleConfig.enabled ? 'ENABLED' : 'DISABLED'}
           </span>
         </button>
       </div>

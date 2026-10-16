@@ -3,10 +3,9 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Eyebrow } from '@/components/Bits';
-import { getPublishedBlogs, getSite, getBooks, getAdSettings } from '@/lib/store';
+import { getPublishedBlogs, getSite } from '@/lib/store';
 import BlogArchiveClient from '@/components/blog/BlogArchiveClient';
 import BlogFeaturedSpotlight from '@/components/blog/BlogFeaturedSpotlight';
-import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -34,10 +33,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const [site, posts, books, adSettings] = await Promise.all([getSite(), getPublishedBlogs(), getBooks(), getAdSettings()]);
+  const [site, posts] = await Promise.all([getSite(), getPublishedBlogs()]);
   const spotlightPosts = posts.filter((p) => p.featured);
-  const leftBook = books[0] || null;
-  const rightBook = books[1] || books[0] || null;
 
   return (
     <>
@@ -106,23 +103,19 @@ export default async function BlogIndexPage() {
           <BlogFeaturedSpotlight posts={spotlightPosts} />
         )}
 
-        {/* Main Archive Grid flanked by Left & Right Ad Rails */}
+        {/* Main Archive Grid / List */}
         <main
           style={{
             paddingLeft: 'max(20px, env(safe-area-inset-left))',
             paddingRight: 'max(20px, env(safe-area-inset-right))',
             paddingTop: 40,
             paddingBottom: 100,
-            maxWidth: 1540,
+            maxWidth: 1140,
             margin: '0 auto',
           }}
         >
-          <div className="blog-archive-layout">
-            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" adConfig={adSettings.leftAd} />
-            <div className="blog-archive-main">
-              <BlogArchiveClient posts={posts} />
-            </div>
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
+          <div className="blog-archive-main">
+            <BlogArchiveClient posts={posts} />
           </div>
         </main>
 
