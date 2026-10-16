@@ -620,6 +620,8 @@ export default function BlogArchiveClient({ posts }: Props) {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
+                        marginLeft: 'auto',
+                        textAlign: 'right',
                       }}
                     >
                       <span>READ FULL ARTICLE</span>

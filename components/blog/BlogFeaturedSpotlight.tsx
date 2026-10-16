@@ -127,52 +127,12 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
-        {/* Outside Left Navigation Arrow */}
-        {total > 1 && (
-          <button
-            type="button"
-            onClick={handlePrev}
-            aria-label="Previous article slide"
-            style={{
-              flexShrink: 0,
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(28, 23, 18, 0.95)',
-              border: '1px solid rgba(201, 168, 96, 0.45)',
-              color: 'var(--gold, #c9a860)',
-              fontSize: 24,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-              transition: 'all 0.2s ease',
-              zIndex: 10,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--gold)';
-              e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
-              e.currentTarget.style.color = 'var(--gold, #c9a860)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            ‹
-          </button>
-        )}
-
-        {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
-        <div
-          className="blog-featured-frame"
-          style={{
-            flex: 1,
-            minWidth: 0,
-            background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.96) 0%, rgba(14, 12, 10, 0.98) 100%)',
+      {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
+      <div
+        className="blog-featured-frame"
+        style={{
+          width: '100%',
+          background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.96) 0%, rgba(14, 12, 10, 0.98) 100%)',
             border: '1px solid rgba(201, 168, 96, 0.35)',
             borderRadius: 12,
             overflow: 'hidden',
@@ -378,16 +338,15 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                   {post.excerpt}
                 </p>
 
-                {/* CTA Action & Slide Indicators */}
+                {/* CTA Action: Aligned to the Extreme Right */}
                 <div
                   className="blog-spotlight-cta-row"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    justifyContent: 'flex-end',
                     paddingTop: 8,
-                    flexWrap: 'wrap',
-                    gap: 14,
+                    width: '100%',
                   }}
                 >
                   <Link
@@ -400,45 +359,11 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                       padding: '12px 24px',
                       fontSize: 11.5,
                       letterSpacing: '0.12em',
-                      alignSelf: 'flex-start',
+                      marginLeft: 'auto',
                     }}
                   >
                     READ FULL ARTICLE →
                   </Link>
-
-                  {/* Dot Indicators */}
-                  {total > 1 && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 8,
-                        alignItems: 'center',
-                        background: 'rgba(0, 0, 0, 0.45)',
-                        padding: '6px 12px',
-                        borderRadius: 20,
-                        border: '1px solid rgba(201, 168, 96, 0.2)',
-                      }}
-                    >
-                      {posts.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => goToSlide(i)}
-                          aria-label={`Go to featured article ${i + 1}`}
-                          style={{
-                            width: currentIndex === i ? 26 : 8,
-                            height: 8,
-                            borderRadius: 4,
-                            background: currentIndex === i ? 'var(--gold, #c9a860)' : 'rgba(255,255,255,0.25)',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
-                            padding: 0,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -473,44 +398,140 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
         )}
       </div>
 
-        {/* Outside Right Navigation Arrow */}
-        {total > 1 && (
+      {/* Bottom Manual Swipe / Navigation Bar (When 2 or more featured posts exist) */}
+      {total > 1 && (
+        <div
+          className="blog-featured-manual-nav"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            marginTop: 20,
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Previous Manual Button */}
           <button
             type="button"
-            onClick={handleNext}
-            aria-label="Next article slide"
+            onClick={handlePrev}
+            aria-label="Previous featured article"
             style={{
-              flexShrink: 0,
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 24,
               background: 'rgba(28, 23, 18, 0.95)',
               border: '1px solid rgba(201, 168, 96, 0.45)',
               color: 'var(--gold, #c9a860)',
-              fontSize: 24,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: 11,
+              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
               transition: 'all 0.2s ease',
-              zIndex: 10,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--gold)';
               e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.transform = 'translateX(-2px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
               e.currentTarget.style.color = 'var(--gold, #c9a860)';
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.transform = 'translateX(0)';
             }}
           >
-            ›
+            <span>←</span>
+            <span>PREV ARTICLE</span>
           </button>
-        )}
-      </div>
+
+          {/* Dot / Slide Indicator Pills */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'rgba(20, 16, 13, 0.9)',
+              padding: '8px 18px',
+              borderRadius: 24,
+              border: '1px solid rgba(201, 168, 96, 0.3)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+            }}
+          >
+            {posts.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goToSlide(i)}
+                aria-label={`Go to featured article ${i + 1}`}
+                style={{
+                  width: currentIndex === i ? 28 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  background: currentIndex === i ? 'var(--gold, #c9a860)' : 'rgba(255,255,255,0.22)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
+                  padding: 0,
+                }}
+              />
+            ))}
+            <span
+              style={{
+                fontSize: 11,
+                color: 'var(--cream)',
+                fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                letterSpacing: '0.08em',
+                marginLeft: 4,
+                fontWeight: 600,
+                opacity: 0.9,
+              }}
+            >
+              {currentIndex + 1} / {total}
+            </span>
+          </div>
+
+          {/* Next Manual Button */}
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next featured article"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 24,
+              background: 'rgba(28, 23, 18, 0.95)',
+              border: '1px solid rgba(201, 168, 96, 0.45)',
+              color: 'var(--gold, #c9a860)',
+              fontSize: 11,
+              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gold)';
+              e.currentTarget.style.color = '#15120f';
+              e.currentTarget.style.transform = 'translateX(2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
+              e.currentTarget.style.color = 'var(--gold, #c9a860)';
+              e.currentTarget.style.transform = 'translateX(0)';
+            }}
+          >
+            <span>NEXT ARTICLE</span>
+            <span>→</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 }
