@@ -8,6 +8,7 @@ import type { BlogPost, Book, BlogFAQItem, BlogComment } from '@/lib/types';
 import { saveBlogPostAction, deleteBlogCommentAction, replyBlogCommentAction, toggleBlogCommentApprovalAction } from '@/app/admin/actions';
 import { Cover } from '@/components/Bits';
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
+import { parseYouTubeId } from '@/lib/youtube';
 
 interface Props {
   initialBlog: BlogPost;
@@ -36,6 +37,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
   const [excerpt, setExcerpt] = useState(initialBlog.excerpt || '');
   const [content, setContent] = useState(initialBlog.content || '');
   const [coverImageUrl, setCoverImageUrl] = useState(initialBlog.coverImage || '');
+  const [videoUrl, setVideoUrl] = useState(initialBlog.videoUrl || '');
   const [authorName, setAuthorName] = useState(initialBlog.authorName || 'Ken Merrell');
   const [tags, setTags] = useState((initialBlog.tags || []).join(', '));
   const [isPublished, setIsPublished] = useState(initialBlog.isPublished ?? false);
@@ -87,7 +89,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setSlug(slugify(title));
   };
 
-  const insertFormatting = (action: 'h2' | 'h3' | 'bold' | 'italic' | 'quote' | 'bullet' | 'list' | 'link') => {
+  const insertFormatting = (action: 'h2' | 'h3' | 'bold' | 'italic' | 'quote' | 'bullet' | 'list' | 'link' | 'video') => {
     const textarea = document.getElementById('blog-content-area') as HTMLTextAreaElement | null;
     if (!textarea) return;
     const start = textarea.selectionStart ?? 0;
@@ -178,6 +180,20 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
         cursorOffset = replacement.length;
         break;
       }
+      case 'video': {
+        const inputUrl = window.prompt(
+          'Enter YouTube Video URL (e.g. https://www.youtube.com/watch?v=...):',
+          selected.trim().startsWith('http') ? selected.trim() : 'https://www.youtube.com/watch?v=F2U9na4rA9g'
+        );
+        if (!inputUrl) return;
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        replacement = `${before}${inputUrl.trim()}${after}`;
+        cursorOffset = replacement.length;
+        break;
+      }
     }
 
     const nextContent = content.substring(0, start) + replacement + content.substring(end);
@@ -234,6 +250,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     formData.set('content', content);
     formData.set('category', finalCategory);
     formData.set('coverImageUrl', coverImageUrl.trim());
+    formData.set('videoUrl', videoUrl.trim());
     formData.set('authorName', authorName.trim() || 'Ken Merrell');
     formData.set('tags', tags);
     formData.set('readTimeMinutes', String(autoReadTime));
@@ -524,6 +541,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                     <button type="button" onClick={() => insertFormatting('bullet')} className="crm-sm" title="Bullet List (-)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Bullet</button>
                     <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
                     <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
+                    <button type="button" onClick={() => insertFormatting('video')} className="crm-sm" title="Insert YouTube Video Player" style={{ height: 32, padding: '0 9px', fontSize: 11, color: '#e69138', fontWeight: 600 }}>▶ Video</button>
                   </div>
 
                   <textarea
@@ -587,6 +605,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                   <button type="button" onClick={() => insertFormatting('bullet')} className="crm-sm" title="Bullet List (-)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Bullet</button>
                   <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
                   <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
+                  <button type="button" onClick={() => insertFormatting('video')} className="crm-sm" title="Insert YouTube Video Player" style={{ height: 32, padding: '0 9px', fontSize: 11, color: '#e69138', fontWeight: 600 }}>▶ Video</button>
                 </div>
 
                 <textarea
@@ -1160,6 +1179,37 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                 </button>
               )}
             </div>
+          </section>
+
+          {/* Card: Video Spotlight */}
+          <section className="crm-card">
+            <h2>Video spotlight</h2>
+            <p className="sub" style={{ marginTop: 4, marginBottom: 12 }}>
+              Attach a YouTube video trailer, chapter reading, or interview to this article.
+            </p>
+            <div className="crm-field">
+              <label className="crm-label" htmlFor="video-url">YOUTUBE VIDEO URL</label>
+              <input
+                id="video-url"
+                type="text"
+                className="crm-in"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="e.g. https://www.youtube.com/watch?v=F2U9na4rA9g"
+              />
+            </div>
+            {videoUrl && parseYouTubeId(videoUrl) && (
+              <div style={{ marginTop: 12, borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(201,168,96,0.35)' }}>
+                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${parseYouTubeId(videoUrl)}`}
+                    title="Featured video preview"
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Card: Attached Book CTA */}

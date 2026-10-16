@@ -97,6 +97,7 @@ export default function Sidebar({
     { href: '/admin/videos', k: 'video', label: 'Videos', on: path.startsWith('/admin/videos') },
     { href: '/admin/about', k: 'user', label: 'Author & bio', on: path.startsWith('/admin/about') },
     { href: '/admin/readers', k: 'readers', label: 'Advance readers', on: path.startsWith('/admin/readers'), badge },
+    { href: '/admin/ads', k: 'image', label: 'Sidebar Ads', on: path.startsWith('/admin/ads') },
     { href: '/admin/analytics', k: 'chart', label: 'Analytics', on: path.startsWith('/admin/analytics') },
     { href: '/admin/tracking', k: 'target', label: 'Ad Tracking', on: path.startsWith('/admin/tracking') }
   ];

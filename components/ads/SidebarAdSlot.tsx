@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import type { Book } from '@/lib/types';
+import type { Book, SidebarAdItem } from '@/lib/types';
 import { Cover } from '@/components/Bits';
 
 interface Props {
@@ -8,16 +8,33 @@ interface Props {
   book?: Book | null;
   slotId?: string;
   label?: string;
+  adConfig?: SidebarAdItem | null;
 }
 
-export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTISEMENT' }: Props) {
+export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTISEMENT', adConfig }: Props) {
+  // If explicitly disabled in admin settings, do not render
+  if (adConfig && adConfig.enabled === false) {
+    return null;
+  }
+
   const defaultSlotId = slotId || (position === 'left' ? 'ad-slot-skyscraper-left' : 'ad-slot-skyscraper-right');
+  const adLabel = adConfig?.label?.trim() || label;
+  const badgeText = adConfig?.badge?.trim() || (position === 'left' ? '★ BESTSELLER' : '⚡ NEW RELEASE');
+  const adTitle = adConfig?.title?.trim() || book?.title || 'Featured Novel';
+  const coverUrl = adConfig?.coverImage?.trim() || book?.cover || null;
+  const ratingCount = adConfig?.ratingStars ?? 5;
+  const stars = '★'.repeat(Math.max(1, Math.min(5, ratingCount)));
+  const tagline = adConfig?.tagline?.trim() || book?.tagline || (book?.description ? book.description.slice(0, 80) + '...' : 'A gripping historical suspense novel by Ken Merrell.');
+  const primaryUrl = adConfig?.primaryBtnUrl?.trim() || book?.amazonUrl || '#';
+  const primaryText = adConfig?.primaryBtnText?.trim() || (primaryUrl.includes('amazon') ? 'BUY ON AMAZON ↗' : 'GET THE BOOK ↗');
+  const secondaryUrl = adConfig?.secondaryBtnUrl?.trim() || (book?.slug ? `/books/${book.slug}` : undefined);
+  const secondaryText = adConfig?.secondaryBtnText?.trim() || 'READ SAMPLE';
 
   return (
     <aside
       id={defaultSlotId}
       className={`sidebar-ad-rail sidebar-ad-${position}`}
-      aria-label={`${label} (${position} sidebar)`}
+      aria-label={`${adLabel} (${position} sidebar)`}
       style={{
         width: 170,
         flexShrink: 0,
@@ -46,11 +63,11 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
             fontSize: 9,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: 'var(--gold)',
+            color: 'var(--gold, #c9a860)',
             opacity: 0.85,
           }}
         >
-          {label}
+          {adLabel}
         </span>
       </div>
 
@@ -73,27 +90,33 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
         }}
       >
         {/* Subtle decorative gold corner notches */}
-        <span style={{ position: 'absolute', top: 3, left: 3, width: 6, height: 6, borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }} />
-        <span style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderTop: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }} />
-        <span style={{ position: 'absolute', bottom: 3, left: 3, width: 6, height: 6, borderBottom: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }} />
-        <span style={{ position: 'absolute', bottom: 3, right: 3, width: 6, height: 6, borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }} />
+        <span style={{ position: 'absolute', top: 3, left: 3, width: 6, height: 6, borderTop: '1px solid var(--gold, #c9a860)', borderLeft: '1px solid var(--gold, #c9a860)' }} />
+        <span style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderTop: '1px solid var(--gold, #c9a860)', borderRight: '1px solid var(--gold, #c9a860)' }} />
+        <span style={{ position: 'absolute', bottom: 3, left: 3, width: 6, height: 6, borderBottom: '1px solid var(--gold, #c9a860)', borderLeft: '1px solid var(--gold, #c9a860)' }} />
+        <span style={{ position: 'absolute', bottom: 3, right: 3, width: 6, height: 6, borderBottom: '1px solid var(--gold, #c9a860)', borderRight: '1px solid var(--gold, #c9a860)' }} />
 
-        {book ? (
+        {/* If custom HTML / script tag was provided */}
+        {adConfig?.customHtml ? (
+          <div
+            dangerouslySetInnerHTML={{ __html: adConfig.customHtml }}
+            style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+          />
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', width: '100%' }}>
             <span
               style={{
                 fontSize: 10,
-                color: 'var(--gold)',
+                color: 'var(--gold, #c9a860)',
                 letterSpacing: '0.1em',
                 fontFamily: 'var(--serif-c, "Cinzel", serif)',
                 fontWeight: 700,
                 marginBottom: 8,
               }}
             >
-              {position === 'left' ? '★ BESTSELLER' : '⚡ NEW RELEASE'}
+              {badgeText}
             </span>
 
-            {/* Book Cover */}
+            {/* Book / Custom Banner Cover */}
             <div
               style={{
                 width: 110,
@@ -104,32 +127,46 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
                 overflow: 'hidden',
                 margin: '6px 0 12px',
                 border: '1px solid rgba(201, 168, 96, 0.3)',
+                background: '#15120f',
               }}
             >
-              <Cover book={book} w={110} h={165} title={11} author={6} />
+              {coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={coverUrl}
+                  alt={adTitle}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              ) : book ? (
+                <Cover book={book} w={110} h={165} title={11} author={6} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold, #c9a860)', fontSize: 10 }}>
+                  KM AD
+                </div>
+              )}
               <div className="km-spine abs" />
             </div>
 
-            {/* Book Title */}
+            {/* Title */}
             <h4
               style={{
                 fontFamily: 'var(--serif, Georgia, serif)',
                 fontSize: 14,
-                color: 'var(--cream)',
+                color: 'var(--cream, #fdfbf7)',
                 margin: '0 0 6px',
                 lineHeight: 1.3,
                 fontWeight: 600,
               }}
             >
-              {book.title}
+              {adTitle}
             </h4>
 
             {/* Stars */}
-            <div style={{ color: 'var(--gold)', fontSize: 12, margin: '2px 0 8px' }}>
-              ★★★★★
+            <div style={{ color: 'var(--gold, #c9a860)', fontSize: 12, margin: '2px 0 8px', letterSpacing: 2 }}>
+              {stars}
             </div>
 
-            {/* Short Hook */}
+            {/* Hook */}
             <p
               style={{
                 fontSize: 11,
@@ -140,14 +177,14 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
                 flex: 1,
               }}
             >
-              &ldquo;{book.tagline || (book.description ? book.description.slice(0, 80) + '...' : 'A gripping historical suspense novel by Ken Merrell.')}&rdquo;
+              &ldquo;{tagline}&rdquo;
             </p>
 
             {/* CTAs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 'auto' }}>
-              {book.amazonUrl ? (
+              {primaryUrl && primaryUrl !== '#' && (
                 <a
-                  href={book.amazonUrl}
+                  href={primaryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn pri"
@@ -160,63 +197,27 @@ export default function SidebarAdSlot({ position, book, slotId, label = 'ADVERTI
                     textAlign: 'center',
                   }}
                 >
-                  BUY ON AMAZON ↗
+                  {primaryText}
                 </a>
-              ) : null}
+              )}
 
-              <Link
-                href={`/books/${book.slug}`}
-                className="btn sec"
-                style={{
-                  fontSize: 10,
-                  padding: '6px 8px',
-                  letterSpacing: '0.08em',
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'center',
-                }}
-              >
-                READ SAMPLE
-              </Link>
+              {secondaryUrl && (
+                <Link
+                  href={secondaryUrl}
+                  className="btn sec"
+                  style={{
+                    fontSize: 10,
+                    padding: '6px 8px',
+                    letterSpacing: '0.08em',
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'center',
+                  }}
+                >
+                  {secondaryText}
+                </Link>
+              )}
             </div>
-          </div>
-        ) : (
-          /* Placeholder / Script Target for External Display Ads */
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              width: '100%',
-              color: 'var(--muted)',
-              gap: 12,
-              padding: 10,
-            }}
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'rgba(201, 168, 96, 0.08)',
-                border: '1px solid rgba(201, 168, 96, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--gold)',
-                fontSize: 18,
-              }}
-            >
-              📢
-            </div>
-            <div style={{ fontSize: 11, fontFamily: 'var(--serif-c, "Cinzel", serif)', letterSpacing: '0.1em', color: 'var(--gold)' }}>
-              160 × 600
-            </div>
-            <p style={{ fontSize: 11, color: '#8c7e6c', margin: 0, lineHeight: 1.4 }}>
-              Reserved space for display banner &amp; sponsor ads.
-            </p>
           </div>
         )}
       </div>

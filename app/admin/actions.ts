@@ -17,7 +17,7 @@ import {
   sanitizeBook, deleteBlog, getBlog, getBlogs, saveBlog,
   addBlogComment, deleteBlogComment, replyBlogComment, toggleBlogCommentApproval
 } from '@/lib/store';
-import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType, BlogPost, BlogFAQItem, BlogComment } from '@/lib/types';
+import type { Book, BookVideo, HomeQuote, Quote, Video, VideoType, BlogPost, BlogFAQItem, BlogComment, AdSettings, SidebarAdItem } from '@/lib/types';
 import { parseYouTubeId } from '@/lib/youtube';
 import { formatStylishTitle } from '@/components/Bits';
 
@@ -728,6 +728,9 @@ export async function saveBlogPostAction(_p: BlogAdminState, form: FormData): Pr
     const calculatedMinutes = Math.max(1, Math.ceil(wordCount / 200));
     const readTimeMinutes = parseInt(str(form, 'readTimeMinutes'), 10) || calculatedMinutes;
 
+    // Featured video URL
+    const videoUrl = str(form, 'videoUrl', 500) || null;
+
     // Dates
     const publishedAt = str(form, 'publishedAt') || existing?.publishedAt || new Date().toISOString();
     const updatedAt = new Date().toISOString();
@@ -787,6 +790,7 @@ export async function saveBlogPostAction(_p: BlogAdminState, form: FormData): Pr
       featured,
       views: existing?.views ?? 0,
       relatedBookSlug,
+      videoUrl,
       metaTitle,
       metaDescription,
       canonicalUrl,
@@ -929,6 +933,27 @@ export async function toggleBlogCommentApprovalAction(blogId: string, commentId:
     return { ok: true };
   } catch (err: any) {
     return { error: err?.message || 'Failed to toggle comment approval.' };
+  }
+}
+
+export async function saveAdSettingsAction(data: AdSettings): Promise<{ ok?: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    const site = await getSite();
+    await saveSite({
+      ...site,
+      adSettings: data,
+    });
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/blog', 'page');
+      revalidatePath('/admin/ads', 'page');
+    } catch {
+      /* ignore */
+    }
+    return { ok: true };
+  } catch (err: any) {
+    return { error: err?.message || 'Failed to save ad settings.' };
   }
 }
 

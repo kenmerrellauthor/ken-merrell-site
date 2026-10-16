@@ -100,6 +100,28 @@ export interface SiteSettings {
   notifyEmail: string;
   homeQuotes: HomeQuote[];
   lastSeenReaders?: string;
+  adSettings?: AdSettings;
+}
+
+export interface SidebarAdItem {
+  enabled: boolean;
+  label?: string; // e.g. "ADVERTISEMENT", "SPONSORED", "FEATURED NOVEL"
+  badge?: string; // e.g. "★ BESTSELLER", "⚡ NEW RELEASE"
+  bookSlug?: string; // auto-populate from an existing book
+  title?: string;
+  coverImage?: string;
+  tagline?: string;
+  ratingStars?: number; // 1-5
+  primaryBtnText?: string;
+  primaryBtnUrl?: string;
+  secondaryBtnText?: string;
+  secondaryBtnUrl?: string;
+  customHtml?: string; // for custom scripts or external ad tags
+}
+
+export interface AdSettings {
+  leftAd: SidebarAdItem;
+  rightAd: SidebarAdItem;
 }
 
 export interface Reader {
@@ -244,6 +266,7 @@ export interface BlogPost {
   featured?: boolean;
   views?: number;
   relatedBookSlug?: string | null;
+  videoUrl?: string | null; // Optional YouTube / video spotlight URL
   // SEO & Generative Engine Optimization (GEO) Fields
   metaTitle?: string;
   metaDescription?: string;
