@@ -11,10 +11,15 @@ interface Props {
 
 export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inline' }: Props) {
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Derive absolute article URL safely on client or fallback to canonical
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.kenmerrell.com';
   const articleUrl = `${origin}/blog/${slug}`;
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const encodedUrl = encodeURIComponent(articleUrl);
   const encodedTitle = encodeURIComponent(title);
@@ -22,16 +27,18 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
 
   const shareLinks = [
     {
+      id: 'x',
       name: 'X (Twitter)',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       ),
-      url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
+      url: `https://x.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
       color: '#ffffff',
     },
     {
+      id: 'facebook',
       name: 'Facebook',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -42,6 +49,7 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
       color: '#1877f2',
     },
     {
+      id: 'linkedin',
       name: 'LinkedIn',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -52,16 +60,18 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
       color: '#0077b5',
     },
     {
+      id: 'whatsapp',
       name: 'WhatsApp',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
         </svg>
       ),
-      url: `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`,
+      url: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
       color: '#25d366',
     },
     {
+      id: 'email',
       name: 'Email',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,18 +79,41 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
           <polyline points="22,6 12,13 2,6" />
         </svg>
       ),
-      url: `mailto:?subject=${encodedTitle}&body=${encodedExcerpt}%0A%0ARead%20here:%20${encodedUrl}`,
+      url: `mailto:?subject=${encodedTitle}&body=${encodedExcerpt}%0A%0ARead%20article:%20${encodedUrl}`,
       color: 'var(--cream)',
     },
   ];
 
+  const handleShareClick = (e: React.MouseEvent<HTMLAnchorElement>, item: (typeof shareLinks)[0]) => {
+    if (item.id === 'email') return; // mailto works natively
+
+    e.preventDefault();
+    const liveUrl = (typeof window !== 'undefined' && window.location.href) ? window.location.href : articleUrl;
+    const encUrl = encodeURIComponent(liveUrl);
+    const encTitle = encodeURIComponent(title);
+
+    let target = item.url;
+    if (item.id === 'x') {
+      target = `https://x.com/intent/tweet?text=${encTitle}&url=${encUrl}`;
+    } else if (item.id === 'facebook') {
+      target = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`;
+    } else if (item.id === 'linkedin') {
+      target = `https://www.linkedin.com/sharing/share-offsite/?url=${encUrl}`;
+    } else if (item.id === 'whatsapp') {
+      target = `https://wa.me/?text=${encTitle}%20${encUrl}`;
+    }
+
+    window.open(target, '_blank', 'noopener,noreferrer,width=620,height=540');
+  };
+
   const handleCopyLink = async () => {
     try {
+      const liveUrl = (typeof window !== 'undefined' && window.location.href) ? window.location.href : articleUrl;
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(articleUrl);
+        await navigator.clipboard.writeText(liveUrl);
       } else {
         const textarea = document.createElement('textarea');
-        textarea.value = articleUrl;
+        textarea.value = liveUrl;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
@@ -94,12 +127,13 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
   };
 
   const handleNativeShare = async () => {
+    const liveUrl = (typeof window !== 'undefined' && window.location.href) ? window.location.href : articleUrl;
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title,
           text: excerpt,
-          url: articleUrl,
+          url: liveUrl,
         });
       } catch {
         // User cancelled or share failed
@@ -172,6 +206,7 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
               <a
                 key={item.name}
                 href={item.url}
+                onClick={(e) => handleShareClick(e, item)}
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`Share on ${item.name}`}
@@ -274,6 +309,7 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
         <a
           key={item.name}
           href={item.url}
+          onClick={(e) => handleShareClick(e, item)}
           target="_blank"
           rel="noopener noreferrer"
           title={`Share on ${item.name}`}
@@ -341,7 +377,7 @@ export default function BlogShareBar({ title, slug, excerpt = '', variant = 'inl
       </button>
 
       {/* Mobile Native Share Button if supported */}
-      {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+      {mounted && typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
         <button
           type="button"
           onClick={handleNativeShare}
