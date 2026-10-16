@@ -488,25 +488,49 @@ export default async function BlogPostPage({ params }: PageProps) {
                 flexWrap: 'wrap',
               }}
             >
-              <div
+              <Link
+                href="/author"
+                title="Ken Merrell — About the Author"
                 style={{
-                  width: 64,
-                  height: 64,
+                  width: 68,
+                  height: 68,
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle, #2a2219 0%, #120f0c 100%)',
                   border: '2px solid var(--gold)',
+                  overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--gold)',
-                  fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                  fontWeight: 700,
-                  fontSize: 18,
+                  background: 'radial-gradient(circle, #2a2219 0%, #120f0c 100%)',
                   flexShrink: 0,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                  position: 'relative',
                 }}
               >
-                KM
-              </div>
+                {site.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={site.photo}
+                    alt="Ken Merrell"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{
+                      color: 'var(--gold)',
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      fontWeight: 700,
+                      fontSize: 18,
+                    }}
+                  >
+                    KM
+                  </span>
+                )}
+              </Link>
               <div style={{ flex: 1, minWidth: 240 }}>
                 <div style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   About the Author
