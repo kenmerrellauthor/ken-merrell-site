@@ -36,7 +36,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
           }}
         >
           <span style={{ display: 'inline-block', width: 20, height: 1, background: 'var(--gold)', opacity: 0.7 }} />
-          <span>MORE DISPATCHES & ESSAYS</span>
+          <span>MORE DISPATCHES & ARTICLES</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
@@ -146,7 +146,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                       fontSize: 11,
                     }}
                   >
-                    KEN MERRELL · ESSAY
+                    KEN MERRELL · ARTICLE
                   </div>
                 )}
 
@@ -258,6 +258,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                 </p>
 
                 <div
+                  className="blog-card-bottom-row"
                   style={{
                     marginTop: 'auto',
                     paddingTop: 10,
@@ -268,6 +269,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                   }}
                 >
                   <span
+                    className="blog-card-read-link"
                     style={{
                       fontFamily: 'var(--serif-c, "Cinzel", serif)',
                       fontSize: 11,
@@ -279,7 +281,7 @@ export default function MoreArticlesSection({ posts, currentCategory }: MoreArti
                       gap: 6,
                     }}
                   >
-                    <span>Read Article</span>
+                    <span>Read Full Article</span>
                     <span className="blog-card-arrow">→</span>
                   </span>
                 </div>
