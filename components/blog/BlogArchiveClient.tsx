@@ -1,12 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { BlogPost } from '@/lib/types';
 
 interface Props {
   posts: BlogPost[];
 }
+
+const CATEGORY_ICONS: Record<string, string> = {
+  All: '✦',
+  Featured: '★',
+  'Behind the Book': '📖',
+  'Historical Research': '🔍',
+  'Writing Craft': '✒️',
+  'Character Notes': '👤',
+  'Frontier History': '🌄',
+  'Author News': '📰',
+};
 
 export default function BlogArchiveClient({ posts }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -19,6 +30,39 @@ export default function BlogArchiveClient({ posts }: Props) {
     ...(hasFeatured ? ['Featured'] : []),
     ...Array.from(new Set(posts.map((p) => p.category).filter(Boolean))),
   ];
+
+  // Sync category with URL search param on mount (e.g., /blog?category=Behind+the+Book)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get('category');
+      if (catParam) {
+        const matched = categories.find((c) => c.toLowerCase() === catParam.toLowerCase());
+        if (matched) {
+          setSelectedCategory(matched);
+        }
+      }
+    }
+  }, []);
+
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (cat === 'All') {
+        url.searchParams.delete('category');
+      } else {
+        url.searchParams.set('category', cat);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  const getCategoryCount = (cat: string) => {
+    if (cat === 'All') return posts.length;
+    if (cat === 'Featured') return posts.filter((p) => p.featured).length;
+    return posts.filter((p) => p.category === cat).length;
+  };
 
   const filteredPosts = posts.filter((p) => {
     if (selectedCategory === 'Featured') {
@@ -46,35 +90,75 @@ export default function BlogArchiveClient({ posts }: Props) {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 16,
-          marginBottom: 36,
+          marginBottom: 28,
           borderBottom: '1px solid rgba(201, 168, 96, 0.15)',
           paddingBottom: 20,
         }}
       >
-        {/* Category Pills */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
-              style={{
-                fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                fontSize: 11,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                padding: '7px 15px',
-                borderRadius: 20,
-                border: selectedCategory === cat ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.08)',
-                background: selectedCategory === cat ? 'rgba(201, 168, 96, 0.15)' : 'rgba(255,255,255,0.02)',
-                color: selectedCategory === cat ? 'var(--gold)' : 'var(--cream)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Category Pills with Horizontal Scroll on Mobile */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            maxWidth: '100%',
+            paddingBottom: 4,
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+            alignItems: 'center',
+          }}
+        >
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            const count = getCategoryCount(cat);
+            const icon = CATEGORY_ICONS[cat] || '🏷️';
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => handleCategorySelect(cat)}
+                style={{
+                  fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                  fontSize: 11,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  padding: '7px 14px',
+                  borderRadius: 24,
+                  border: isSelected
+                    ? '1px solid var(--gold)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(201, 168, 96, 0.22) 0%, rgba(201, 168, 96, 0.08) 100%)'
+                    : 'rgba(255, 255, 255, 0.02)',
+                  color: isSelected ? 'var(--gold)' : 'var(--cream)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  whiteSpace: 'nowrap',
+                  boxShadow: isSelected ? '0 0 14px rgba(201, 168, 96, 0.22)' : 'none',
+                  transition: 'all 0.25s ease',
+                  fontWeight: isSelected ? 700 : 500,
+                }}
+              >
+                <span style={{ fontSize: 13, opacity: isSelected ? 1 : 0.8 }}>{icon}</span>
+                <span>{cat}</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    padding: '1px 6px',
+                    borderRadius: 10,
+                    background: isSelected ? 'rgba(201, 168, 96, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                    color: isSelected ? '#fff' : 'var(--muted)',
+                    marginLeft: 2,
+                    fontWeight: 600,
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Right Controls: View Switcher (List vs Grid) + Search Bar */}
@@ -195,6 +279,75 @@ export default function BlogArchiveClient({ posts }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Active Filter Indicator */}
+      {(selectedCategory !== 'All' || searchQuery.trim()) && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 24,
+            padding: '10px 16px',
+            background: 'rgba(201, 168, 96, 0.06)',
+            border: '1px solid rgba(201, 168, 96, 0.25)',
+            borderRadius: 8,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--cream-2)', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--gold)' }}>Filtered by:</span>
+            {selectedCategory !== 'All' && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(201, 168, 96, 0.15)',
+                  border: '1px solid rgba(201, 168, 96, 0.35)',
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                  color: 'var(--gold)',
+                  fontSize: 11,
+                  fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {selectedCategory}
+              </span>
+            )}
+            {searchQuery.trim() && (
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>
+                matching &ldquo;{searchQuery}&rdquo;
+              </span>
+            )}
+            <span style={{ color: 'var(--muted)', fontSize: 12 }}>
+              ({filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'})
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              handleCategorySelect('All');
+              setSearchQuery('');
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--gold)',
+              fontSize: 11,
+              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+              letterSpacing: '0.08em',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: 0,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
 
       {/* Posts List or Grid */}
       {filteredPosts.length === 0 ? (
