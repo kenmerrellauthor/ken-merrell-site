@@ -17,12 +17,12 @@ interface Props {
 }
 
 const CATEGORY_PRESETS = [
-  'Behind the Book',
-  'Historical Research',
-  'Writing Craft',
-  'Character Notes',
-  'Frontier History',
-  'Author News',
+  { name: 'Behind the Book', icon: '📖', desc: 'Inspirations, backstories & book origins' },
+  { name: 'Historical Research', icon: '🔍', desc: 'Real 1880s history, artifacts & outlaws' },
+  { name: 'Writing Craft', icon: '✒️', desc: 'Pacing, dialogue, suspense & technique' },
+  { name: 'Character Notes', icon: '👤', desc: 'Character profiles, villains & motives' },
+  { name: 'Frontier History', icon: '🌄', desc: 'Western life, territories & frontier lore' },
+  { name: 'Author News', icon: '📰', desc: 'Book releases, signings & author updates' },
 ];
 
 export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
@@ -32,8 +32,15 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
   // Core fields
   const [title, setTitle] = useState(initialBlog.title || '');
   const [slug, setSlug] = useState(initialBlog.slug || '');
-  const [category, setCategory] = useState(initialBlog.category || 'Behind the Book');
-  const [customCategory, setCustomCategory] = useState('');
+  const isPresetCategory = CATEGORY_PRESETS.some((c) => c.name === initialBlog.category);
+  const [category, setCategory] = useState(
+    initialBlog.category
+      ? (isPresetCategory ? initialBlog.category : 'Custom')
+      : 'Behind the Book'
+  );
+  const [customCategory, setCustomCategory] = useState(
+    initialBlog.category && !isPresetCategory ? initialBlog.category : ''
+  );
   const [excerpt, setExcerpt] = useState(initialBlog.excerpt || '');
   const [content, setContent] = useState(initialBlog.content || '');
   const [coverImageUrl, setCoverImageUrl] = useState(initialBlog.coverImage || '');
@@ -249,7 +256,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setSavingMode(willBePublished ? 'publish' : 'draft');
 
     const finalSlug = slug.trim() ? slugify(slug) : slugify(title);
-    const finalCategory = customCategory.trim() || category;
+    const finalCategory = (category === 'Custom' ? customCategory.trim() : category) || 'Behind the Book';
 
     const formData = new FormData();
     formData.set('id', initialBlog.id || '');
@@ -429,30 +436,140 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
               </div>
 
               <div className="crm-field">
-                <label className="crm-label" htmlFor="blog-category">CATEGORY</label>
-                <select
-                  id="blog-category"
-                  className="crm-in"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    if (e.target.value !== 'Custom') setCustomCategory('');
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label className="crm-label" style={{ margin: 0 }}>CATEGORY</label>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      color: 'var(--gold)',
+                      letterSpacing: '0.08em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span>Selected:</span>
+                    <strong style={{ color: 'var(--cream)' }}>
+                      {category === 'Custom' ? (customCategory.trim() || 'Custom (please specify)') : category}
+                    </strong>
+                  </span>
+                </div>
+
+                {/* Interactive Category Chips Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                    gap: 8,
+                    marginBottom: 10,
                   }}
                 >
-                  {CATEGORY_PRESETS.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                  <option value="Custom">+ Custom Category...</option>
-                </select>
+                  {CATEGORY_PRESETS.map((cat) => {
+                    const isSelected = category === cat.name;
+                    return (
+                      <button
+                        key={cat.name}
+                        type="button"
+                        onClick={() => {
+                          setCategory(cat.name);
+                          setCustomCategory('');
+                        }}
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          borderRadius: 6,
+                          border: isSelected ? '1px solid var(--gold)' : '1px solid #2e261f',
+                          background: isSelected
+                            ? 'linear-gradient(135deg, rgba(201, 168, 96, 0.18) 0%, rgba(201, 168, 96, 0.05) 100%)'
+                            : '#14100c',
+                          color: isSelected ? 'var(--gold)' : 'var(--cream-2)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          boxShadow: isSelected ? '0 0 12px rgba(201, 168, 96, 0.2)' : 'none',
+                        }}
+                      >
+                        <span style={{ fontSize: 18 }}>{cat.icon}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: isSelected ? 700 : 500, lineHeight: 1.2 }}>
+                            {cat.name}
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
+                            {cat.desc}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {/* + Custom Category Option */}
+                  <button
+                    type="button"
+                    onClick={() => setCategory('Custom')}
+                    style={{
+                      textAlign: 'left',
+                      padding: '10px 12px',
+                      borderRadius: 6,
+                      border: category === 'Custom' ? '1px solid var(--gold)' : '1px dashed #3a332b',
+                      background: category === 'Custom'
+                        ? 'linear-gradient(135deg, rgba(201, 168, 96, 0.18) 0%, rgba(201, 168, 96, 0.05) 100%)'
+                        : '#14100c',
+                      color: category === 'Custom' ? 'var(--gold)' : 'var(--muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      boxShadow: category === 'Custom' ? '0 0 12px rgba(201, 168, 96, 0.2)' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>✨</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: category === 'Custom' ? 700 : 500, lineHeight: 1.2 }}>
+                        + Custom Category
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
+                        Type your own topic
+                      </div>
+                    </div>
+                    {category === 'Custom' && (
+                      <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>✓</span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Custom Category Input (shown when Custom is active) */}
                 {category === 'Custom' && (
-                  <input
-                    type="text"
-                    className="crm-in"
-                    placeholder="Type custom category"
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    style={{ marginTop: 8 }}
-                  />
+                  <div
+                    style={{
+                      marginTop: 8,
+                      padding: 12,
+                      background: 'rgba(201, 168, 96, 0.05)',
+                      borderRadius: 6,
+                      border: '1px solid rgba(201, 168, 96, 0.25)',
+                    }}
+                  >
+                    <label className="crm-label" style={{ fontSize: 11, marginBottom: 4 }}>
+                      CUSTOM CATEGORY NAME
+                    </label>
+                    <input
+                      type="text"
+                      className="crm-in"
+                      placeholder="e.g. Victorian Mysteries, Frontier Law, Book Signings..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      autoFocus
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
+                      This category name will be displayed on the article card, reader view, and archive filters.
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

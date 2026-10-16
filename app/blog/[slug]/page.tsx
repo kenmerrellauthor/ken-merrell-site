@@ -237,11 +237,46 @@ export default async function BlogPostPage({ params }: PageProps) {
                 Blog
               </Link>
               <span>/</span>
-              <span style={{ color: 'var(--gold)' }}>{post.category}</span>
+              <Link
+                href={`/blog?category=${encodeURIComponent(post.category || 'All')}`}
+                style={{ color: 'var(--gold)', textDecoration: 'none', transition: 'color 0.2s' }}
+              >
+                {post.category}
+              </Link>
             </nav>
 
             {/* Article Header */}
             <header style={{ marginBottom: 32 }}>
+              {/* Category Eyebrow Pill */}
+              {post.category && (
+                <div style={{ marginBottom: 14 }}>
+                  <Link
+                    href={`/blog?category=${encodeURIComponent(post.category)}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 11,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      padding: '5px 14px',
+                      borderRadius: 20,
+                      border: '1px solid rgba(201, 168, 96, 0.4)',
+                      background: 'linear-gradient(135deg, rgba(201, 168, 96, 0.15) 0%, rgba(201, 168, 96, 0.04) 100%)',
+                      color: 'var(--gold)',
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    <span style={{ fontSize: 12 }}>✦</span>
+                    <span>{post.category}</span>
+                  </Link>
+                </div>
+              )}
+
               <h1
                 style={{
                   fontFamily: 'var(--serif, Georgia, serif)',
@@ -426,6 +461,31 @@ export default async function BlogPostPage({ params }: PageProps) {
                   flexWrap: 'wrap',
                 }}
               >
+                {post.category && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      Category:
+                    </span>
+                    <Link
+                      href={`/blog?category=${encodeURIComponent(post.category)}`}
+                      style={{
+                        background: 'rgba(201, 168, 96, 0.12)',
+                        border: '1px solid rgba(201, 168, 96, 0.35)',
+                        padding: '3px 10px',
+                        borderRadius: 14,
+                        fontSize: 11,
+                        color: 'var(--gold)',
+                        textDecoration: 'none',
+                        fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {post.category}
+                    </Link>
+                  </div>
+                )}
                 <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   Topics:
                 </span>

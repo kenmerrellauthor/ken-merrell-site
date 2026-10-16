@@ -209,9 +209,11 @@ export default function BlogListClient({ initialBlogs, books, adSettings }: Prop
               className="crm-in"
               style={{ width: 'auto', height: 40, padding: '0 12px', fontSize: 13 }}
             >
-              <option value="all">All Categories</option>
+              <option value="all">All Categories ({blogs.length})</option>
               {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c} ({blogs.filter((b) => b.category === c).length})
+                </option>
               ))}
             </select>
           )}
