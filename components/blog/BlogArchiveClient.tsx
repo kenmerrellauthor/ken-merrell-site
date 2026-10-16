@@ -84,6 +84,7 @@ export default function BlogArchiveClient({ posts }: Props) {
     <div>
       {/* Category Pills, View Mode & Search */}
       <div
+        className="blog-archive-filter-bar"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -95,19 +96,51 @@ export default function BlogArchiveClient({ posts }: Props) {
           paddingBottom: 20,
         }}
       >
-        {/* Category Pills with Horizontal Scroll on Mobile */}
+        {/* Category Filter Rail with FILTER Label */}
         <div
+          className="blog-category-rail-wrapper"
           style={{
             display: 'flex',
-            gap: 8,
-            overflowX: 'auto',
-            maxWidth: '100%',
-            paddingBottom: 4,
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch',
             alignItems: 'center',
+            gap: 12,
+            maxWidth: '100%',
+            minWidth: 0,
+            flex: '1 1 auto',
           }}
         >
+          {/* Filter Label */}
+          <span
+            style={{
+              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+              fontSize: 11,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <span>FILTER:</span>
+          </span>
+
+          {/* Category Pills with Horizontal Scroll on Mobile */}
+          <div
+            className="blog-category-pills-rail"
+            style={{
+              display: 'flex',
+              gap: 8,
+              overflowX: 'auto',
+              maxWidth: '100%',
+              paddingBottom: 4,
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch',
+              alignItems: 'center',
+            }}
+          >
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat;
             const count = getCategoryCount(cat);
@@ -159,12 +192,17 @@ export default function BlogArchiveClient({ posts }: Props) {
               </button>
             );
           })}
+          </div>
         </div>
 
         {/* Right Controls: View Switcher (List vs Grid) + Search Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div
+          className="blog-archive-controls"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}
+        >
           {/* View Mode Switcher */}
           <div
+            className="blog-viewmode-switcher"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -173,6 +211,7 @@ export default function BlogArchiveClient({ posts }: Props) {
               padding: '3px 4px',
               borderRadius: 20,
               border: '1px solid rgba(201, 168, 96, 0.25)',
+              flexShrink: 0,
             }}
             aria-label="Article layout view mode"
           >
@@ -226,13 +265,17 @@ export default function BlogArchiveClient({ posts }: Props) {
             </button>
           </div>
 
-          {/* Search Bar */}
-          <div style={{ position: 'relative', minWidth: 240 }}>
+          {/* Search Bar (Full width on mobile) */}
+          <div
+            className="blog-search-box-wrap"
+            style={{ position: 'relative', minWidth: 240, flex: '1 1 auto' }}
+          >
             <input
               type="text"
               placeholder="Search articles & topics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="blog-search-input"
               style={{
                 width: '100%',
                 background: 'rgba(255,255,255,0.03)',
@@ -433,7 +476,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                         fontSize: 12,
                       }}
                     >
-                      KEN MERRELL · ESSAY
+                      KEN MERRELL · ARTICLE
                     </div>
                   )}
 
@@ -538,6 +581,7 @@ export default function BlogArchiveClient({ posts }: Props) {
 
                   {/* Highlights (Takeaways / FAQs pill & Action) */}
                   <div
+                    className="blog-card-bottom-row"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -545,9 +589,10 @@ export default function BlogArchiveClient({ posts }: Props) {
                       paddingTop: 14,
                       borderTop: '1px solid rgba(255,255,255,0.06)',
                       marginTop: 'auto',
+                      gap: 10,
                     }}
                   >
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {post.keyTakeaways && post.keyTakeaways.length > 0 && (
                         <span
                           style={{
@@ -579,6 +624,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                     </div>
 
                     <span
+                      className="blog-card-read-link"
                       style={{
                         fontSize: 11,
                         color: 'var(--gold)',
@@ -590,7 +636,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                         gap: 6,
                       }}
                     >
-                      <span>READ ESSAY</span>
+                      <span>READ FULL ARTICLE</span>
                       <span className="blog-card-arrow">→</span>
                     </span>
                   </div>

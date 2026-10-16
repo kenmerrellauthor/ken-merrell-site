@@ -397,6 +397,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
 
                 {/* CTA Action & Slide Indicators */}
                 <div
+                  className="blog-spotlight-cta-row"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -408,7 +409,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                 >
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="btn pri"
+                    className="btn pri blog-spotlight-btn"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -416,9 +417,10 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                       padding: '12px 24px',
                       fontSize: 11.5,
                       letterSpacing: '0.12em',
+                      alignSelf: 'flex-start',
                     }}
                   >
-                    READ FULL ESSAY →
+                    READ FULL ARTICLE →
                   </Link>
 
                   {/* Dot Indicators */}

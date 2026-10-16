@@ -2609,5 +2609,74 @@ button { font: inherit; }
   .blog-comment-form-grid {
     grid-template-columns: 1fr !important;
   }
+
+  /* Full-width search bar & filter layout on mobile */
+  .blog-archive-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .blog-category-rail-wrapper {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .blog-category-pills-rail {
+    flex: 1 1 auto;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .blog-archive-controls {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .blog-viewmode-switcher {
+    align-self: flex-start !important;
+  }
+
+  .blog-search-box-wrap {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .blog-search-input {
+    width: 100% !important;
+    height: 42px !important;
+    font-size: 13.5px !important;
+  }
+
+  /* Left-aligned READ FULL ARTICLE button on mobile */
+  .blog-spotlight-cta-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .blog-spotlight-btn {
+    align-self: flex-start !important;
+    margin-right: auto !important;
+    width: auto !important;
+    text-align: left !important;
+  }
+
+  .blog-card-bottom-row {
+    flex-direction: column-reverse !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .blog-card-read-link {
+    align-self: flex-start !important;
+    margin-right: auto !important;
+  }
 }
 
