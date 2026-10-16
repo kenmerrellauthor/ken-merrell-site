@@ -27,7 +27,7 @@ export default async function AdminBlogsPage() {
           <Link href="/blog" target="_blank" className="crm-btn sec">
             <Ic k="link" s={15} />VIEW PUBLIC BLOG
           </Link>
-          <Link href="/admin/blogs/new" className="crm-btn pri">
+          <Link href="/admin/blogs/new" prefetch={true} className="crm-btn pri">
             <Ic k="plus" s={16} sw={1.8} />NEW ARTICLE
           </Link>
         </div>

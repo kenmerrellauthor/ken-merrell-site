@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -84,40 +85,84 @@ async function writeLocal<T>(table: Table, rows: T[]) {
 
 const missingTables = new Set<string>();
 
-async function all<T extends { id: string }>(table: Table): Promise<T[]> {
-  const db = supabase();
-  if (!db || missingTables.has(table)) return readLocal<T>(table);
-  try {
-    const { data, error } = await db.from(table).select('id, data');
-    if (error) {
-      if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
-        missingTables.add(table);
-      } else {
-        console.warn(`Supabase read ${table} error (${error.message}), falling back to local.`);
-      }
-      return readLocal<T>(table);
-    }
-    const rows = data ?? [];
-    if (!rows.length && seeds[table].length) {
-      try {
-        await db.from(table).insert(seeds[table].map((r) => ({ id: r.id, data: r })));
-      } catch {
-        /* ignore seed error */
-      }
-      return seeds[table] as unknown as T[];
-    }
-    return rows.map((r) => r.data as T);
-  } catch (err: any) {
-    if (err?.message?.includes('schema cache') || err?.message?.includes('does not exist')) {
-      missingTables.add(table);
-    } else {
-      console.warn(`Supabase read ${table} exception (${err?.message || err}), falling back to local.`);
-    }
-    return readLocal<T>(table);
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const memoryCache = new Map<string, CacheEntry<any>>();
+const CACHE_TTL_MS = 60_000; // 60s cache for ultra-fast tab switches and instant edits
+
+function getCached<T>(key: string): T | null {
+  const entry = memoryCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCached<T>(key: string, data: T): void {
+  memoryCache.set(key, { data, timestamp: Date.now() });
+}
+
+export function invalidateCache(table?: Table): void {
+  if (table) {
+    memoryCache.delete(`table:${table}`);
+    memoryCache.delete('crm:notifications');
+  } else {
+    memoryCache.clear();
   }
 }
 
+async function all<T extends { id: string }>(table: Table): Promise<T[]> {
+  const cacheKey = `table:${table}`;
+  const cached = getCached<T[]>(cacheKey);
+  if (cached) return cached;
+
+  const db = supabase();
+  let result: T[];
+  if (!db || missingTables.has(table)) {
+    result = await readLocal<T>(table);
+  } else {
+    try {
+      const { data, error } = await db.from(table).select('id, data');
+      if (error) {
+        if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
+          missingTables.add(table);
+        } else {
+          console.warn(`Supabase read ${table} error (${error.message}), falling back to local.`);
+        }
+        result = await readLocal<T>(table);
+      } else {
+        const rows = data ?? [];
+        if (!rows.length && seeds[table].length) {
+          try {
+            await db.from(table).insert(seeds[table].map((r) => ({ id: r.id, data: r })));
+          } catch {
+            /* ignore seed error */
+          }
+          result = seeds[table] as unknown as T[];
+        } else {
+          result = rows.map((r) => r.data as T);
+        }
+      }
+    } catch (err: any) {
+      if (err?.message?.includes('schema cache') || err?.message?.includes('does not exist')) {
+        missingTables.add(table);
+      } else {
+        console.warn(`Supabase read ${table} exception (${err?.message || err}), falling back to local.`);
+      }
+      result = await readLocal<T>(table);
+    }
+  }
+
+  setCached(cacheKey, result);
+  return result;
+}
+
 async function upsert<T extends { id: string }>(table: Table, row: T) {
+  invalidateCache(table);
   const db = supabase();
   if (!db || missingTables.has(table)) {
     const rows = await readLocal<T>(table);
@@ -153,6 +198,7 @@ async function upsert<T extends { id: string }>(table: Table, row: T) {
 }
 
 async function upsertMany<T extends { id: string }>(table: Table, rows: T[]) {
+  invalidateCache(table);
   const db = supabase();
   if (!db || missingTables.has(table)) {
     const cur = await readLocal<T>(table);
@@ -185,6 +231,7 @@ async function upsertMany<T extends { id: string }>(table: Table, rows: T[]) {
 }
 
 async function remove(table: Table, id: string) {
+  invalidateCache(table);
   const db = supabase();
   if (!db || missingTables.has(table)) {
     const rows = await readLocal<{ id: string }>(table);
@@ -292,7 +339,7 @@ export function sanitizeBook(b: Partial<Book> & { id: string }): Book {
 }
 
 /* ---------------- Books ---------------- */
-export async function getBooks(): Promise<Book[]> {
+export const getBooks = cache(async (): Promise<Book[]> => {
   const rows = await all<Book>('books');
   const sanitized = rows.map(sanitizeBook);
 
@@ -326,9 +373,14 @@ export async function getBooks(): Promise<Book[]> {
     const tB = new Date(b.createdAt || b.updatedAt || 0).getTime();
     return tB - tA;
   });
-}
-export async function getBook(id: string): Promise<Book | null> {
+});
+export const getBook = cache(async (id: string): Promise<Book | null> => {
   if (!id || id === 'new') return null;
+  const cachedBooks = getCached<Book[]>('table:books');
+  if (cachedBooks) {
+    const found = cachedBooks.find((x) => x.id === id);
+    if (found) return sanitizeBook(found);
+  }
   const db = supabase();
   if (db) {
     try {
@@ -340,18 +392,10 @@ export async function getBook(id: string): Promise<Book | null> {
       /* fallback to scanning all */
     }
   }
-  let books = await getBooks();
-  let b = books.find((x) => x.id === id) ?? null;
-  if (!b && id && id !== 'new') {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
-      books = await getBooks();
-      b = books.find((x) => x.id === id) ?? null;
-      if (b) break;
-    }
-  }
+  const books = await getBooks();
+  const b = books.find((x) => x.id === id) ?? null;
   return b ? sanitizeBook(b) : null;
-}
+});
 export async function getBookBySlug(slug: string): Promise<Book | null> {
   if (!slug) return null;
   const db = supabase();
@@ -434,20 +478,20 @@ export async function saveVideoOrder(ids: string[]) {
 }
 
 /* ---------------- Site settings ---------------- */
-export async function getSite(): Promise<SiteSettings> {
+export const getSite = cache(async (): Promise<SiteSettings> => {
   const rows = await all<SiteSettings & { id: string }>('settings');
   const row = rows.find((r) => r.id === 'site');
   const { id: _id, ...rest } = row ?? { id: 'site', ...seedSite };
   return { ...seedSite, ...rest };
-}
+});
 export async function saveSite(s: SiteSettings) {
   return upsert('settings', { id: 'site', ...s });
 }
 
 /* ---------------- Advance readers ---------------- */
-export async function getReaders(): Promise<Reader[]> {
+export const getReaders = cache(async (): Promise<Reader[]> => {
   return (await all<Reader>('readers')).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
+});
 export async function addReader(r: Reader) {
   const existing = (await getReaders()).find((x) => x.email.toLowerCase() === r.email.toLowerCase());
   if (existing) {
@@ -536,7 +580,16 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
 }
 
 /* ---------------- CRM Notifications ---------------- */
-export async function getCrmNotifications(limit?: number): Promise<{ notifications: CrmNotification[]; unreadCount: number }> {
+export const getCrmNotifications = cache(async (limit?: number): Promise<{ notifications: CrmNotification[]; unreadCount: number }> => {
+  const cacheKey = 'crm:notifications';
+  const cached = getCached<{ notifications: CrmNotification[]; unreadCount: number }>(cacheKey);
+  if (cached) {
+    return {
+      notifications: typeof limit === 'number' ? cached.notifications.slice(0, limit) : cached.notifications,
+      unreadCount: cached.unreadCount,
+    };
+  }
+
   const [readers, books, site, blogs] = await Promise.all([getReaders(), getBooks(), getSite(), getBlogs()]);
   const lastSeen = site.lastSeenReaders ? new Date(site.lastSeenReaders).getTime() : 0;
 
@@ -608,11 +661,14 @@ export async function getCrmNotifications(limit?: number): Promise<{ notificatio
   notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const unreadCount = notifications.filter(n => n.unread).length;
 
+  const result = { notifications, unreadCount };
+  setCached(cacheKey, result);
+
   return {
     notifications: typeof limit === 'number' ? notifications.slice(0, limit) : notifications,
     unreadCount
   };
-}
+});
 
 /* --- Blog Posts --- */
 
@@ -644,22 +700,27 @@ function sanitizeBlog(post: BlogPost): BlogPost {
   };
 }
 
-export async function getBlogs(): Promise<BlogPost[]> {
+export const getBlogs = cache(async (): Promise<BlogPost[]> => {
   const rows = await all<BlogPost>('blogs');
   return rows.map(sanitizeBlog).sort((a, b) => {
     const tA = new Date(a.publishedAt || a.updatedAt).getTime();
     const tB = new Date(b.publishedAt || b.updatedAt).getTime();
     return tB - tA;
   });
-}
+});
 
-export async function getPublishedBlogs(): Promise<BlogPost[]> {
+export const getPublishedBlogs = cache(async (): Promise<BlogPost[]> => {
   const allPosts = await getBlogs();
   return allPosts.filter((b) => b.isPublished);
-}
+});
 
-export async function getBlog(id: string): Promise<BlogPost | null> {
+export const getBlog = cache(async (id: string): Promise<BlogPost | null> => {
   if (!id || id === 'new') return null;
+  const cachedBlogs = getCached<BlogPost[]>('table:blogs');
+  if (cachedBlogs) {
+    const found = cachedBlogs.find((x) => x.id === id);
+    if (found) return sanitizeBlog(found);
+  }
   const db = supabase();
   if (db && !missingTables.has('blogs')) {
     try {
@@ -677,7 +738,7 @@ export async function getBlog(id: string): Promise<BlogPost | null> {
   const blogs = await getBlogs();
   const b = blogs.find((x) => x.id === id) ?? null;
   return b ? sanitizeBlog(b) : null;
-}
+});
 
 export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
   if (!slug) return null;
