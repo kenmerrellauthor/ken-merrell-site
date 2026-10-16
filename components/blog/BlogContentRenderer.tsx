@@ -5,64 +5,97 @@ interface Props {
 }
 
 function renderInline(text: string): React.ReactNode {
-  // Parses **bold**, *italic*, and [link](url)
   const parts: React.ReactNode[] = [];
   let remaining = text;
   let keyIdx = 0;
 
   while (remaining.length > 0) {
-    // Check for bold **text**
-    const boldMatch = remaining.match(/^(\*\*|__)(.*?)\1/);
+    // 1. Check for bold-italic ***text*** or ___text___
+    const boldItalicMatch = remaining.match(/^(\*\*\*|___)(.+?)\1/);
+    if (boldItalicMatch) {
+      parts.push(
+        <strong key={`bi-${keyIdx++}`} style={{ color: 'var(--cream)', fontWeight: 700 }}>
+          <em>{boldItalicMatch[2]}</em>
+        </strong>
+      );
+      remaining = remaining.slice(boldItalicMatch[0].length);
+      continue;
+    }
+
+    // 2. Check for bold **text** or __text__
+    const boldMatch = remaining.match(/^(\*\*|__)(.+?)\1/);
     if (boldMatch) {
       parts.push(
         <strong key={`b-${keyIdx++}`} style={{ color: 'var(--cream)', fontWeight: 600 }}>
-          {boldMatch[2]}
+          {renderInline(boldMatch[2])}
         </strong>
       );
       remaining = remaining.slice(boldMatch[0].length);
       continue;
     }
 
-    // Check for link [text](url)
-    const linkMatch = remaining.match(/^\[(.*?)\]\((.*?)\)/);
+    // 3. Check for link [text](url)
+    const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
     if (linkMatch) {
-      const isExternal = linkMatch[2].startsWith('http');
+      const href = linkMatch[2].trim();
+      const isExternal = href.startsWith('http://') || href.startsWith('https://');
       parts.push(
         <a
           key={`l-${keyIdx++}`}
-          href={linkMatch[2]}
+          href={href}
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
-          style={{ color: 'var(--gold)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+          style={{
+            color: 'var(--gold, #c9a860)',
+            textDecoration: 'underline',
+            textUnderlineOffset: 3,
+            transition: 'opacity 0.2s',
+          }}
         >
-          {linkMatch[1]}
+          {renderInline(linkMatch[1])}
         </a>
       );
       remaining = remaining.slice(linkMatch[0].length);
       continue;
     }
 
-    // Check for italic *text* or _text_
-    const italicMatch = remaining.match(/^(\*|_)(.*?)\1/);
-    if (italicMatch && !italicMatch[2].includes(' ')) {
-      parts.push(<em key={`i-${keyIdx++}`}>{italicMatch[2]}</em>);
+    // 4. Check for italic *text* or _text_ (supports multiple words with spaces)
+    const italicMatch = remaining.match(/^(\*|_)([^\*_]+?)\1/);
+    if (italicMatch) {
+      parts.push(
+        <em key={`i-${keyIdx++}`} style={{ fontStyle: 'italic', color: '#eae2d5' }}>
+          {renderInline(italicMatch[2])}
+        </em>
+      );
       remaining = remaining.slice(italicMatch[0].length);
       continue;
     }
 
-    // Check for code `code`
-    const codeMatch = remaining.match(/^`(.*?)`/);
+    // 5. Check for strikethrough ~~text~~
+    const strikeMatch = remaining.match(/^~~(.+?)~~/);
+    if (strikeMatch) {
+      parts.push(
+        <del key={`s-${keyIdx++}`} style={{ opacity: 0.7 }}>
+          {renderInline(strikeMatch[1])}
+        </del>
+      );
+      remaining = remaining.slice(strikeMatch[0].length);
+      continue;
+    }
+
+    // 6. Check for inline code `code`
+    const codeMatch = remaining.match(/^`([^`]+)`/);
     if (codeMatch) {
       parts.push(
         <code
           key={`c-${keyIdx++}`}
           style={{
-            background: 'rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.08)',
             padding: '2px 6px',
             borderRadius: 3,
-            fontSize: '0.9em',
+            fontSize: '0.88em',
             fontFamily: 'monospace',
-            color: 'var(--gold)',
+            color: 'var(--gold, #c9a860)',
           }}
         >
           {codeMatch[1]}
@@ -72,8 +105,56 @@ function renderInline(text: string): React.ReactNode {
       continue;
     }
 
-    // Normal character or text before next special char
-    const nextSpecial = remaining.search(/[\*_\[`]/);
+    // 7. Check for raw HTML tags (e.g. <b>, <strong>, <i>, <em>, <a>, <br>)
+    const htmlBreak = remaining.match(/^<br\s*\/?>/i);
+    if (htmlBreak) {
+      parts.push(<br key={`br-${keyIdx++}`} />);
+      remaining = remaining.slice(htmlBreak[0].length);
+      continue;
+    }
+
+    const htmlBold = remaining.match(/^<(b|strong)>(.*?)<\/\1>/i);
+    if (htmlBold) {
+      parts.push(
+        <strong key={`hb-${keyIdx++}`} style={{ color: 'var(--cream)', fontWeight: 600 }}>
+          {renderInline(htmlBold[2])}
+        </strong>
+      );
+      remaining = remaining.slice(htmlBold[0].length);
+      continue;
+    }
+
+    const htmlItalic = remaining.match(/^<(i|em)>(.*?)<\/\1>/i);
+    if (htmlItalic) {
+      parts.push(
+        <em key={`hi-${keyIdx++}`} style={{ fontStyle: 'italic', color: '#eae2d5' }}>
+          {renderInline(htmlItalic[2])}
+        </em>
+      );
+      remaining = remaining.slice(htmlItalic[0].length);
+      continue;
+    }
+
+    const htmlLink = remaining.match(/^<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/i);
+    if (htmlLink) {
+      const isExternal = htmlLink[1].startsWith('http');
+      parts.push(
+        <a
+          key={`hl-${keyIdx++}`}
+          href={htmlLink[1]}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          style={{ color: 'var(--gold, #c9a860)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+        >
+          {renderInline(htmlLink[2])}
+        </a>
+      );
+      remaining = remaining.slice(htmlLink[0].length);
+      continue;
+    }
+
+    // 8. Normal text before next special character
+    const nextSpecial = remaining.search(/[\*_\[`~<]/);
     if (nextSpecial === -1) {
       parts.push(remaining);
       break;
@@ -89,11 +170,128 @@ function renderInline(text: string): React.ReactNode {
   return parts;
 }
 
+type ParsedBlock =
+  | { type: 'h1'; text: string }
+  | { type: 'h2'; text: string }
+  | { type: 'h3'; text: string }
+  | { type: 'h4'; text: string }
+  | { type: 'quote'; lines: string[] }
+  | { type: 'ul'; items: string[] }
+  | { type: 'ol'; items: string[] }
+  | { type: 'hr' }
+  | { type: 'p'; lines: string[] };
+
+function parseMarkdownBlocks(content: string): ParsedBlock[] {
+  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  const blocks: ParsedBlock[] = [];
+
+  let i = 0;
+  while (i < lines.length) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    // Blank line
+    if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // Horizontal Rule
+    if (/^(---|___|\*\*\*)$/.test(trimmed)) {
+      blocks.push({ type: 'hr' });
+      i++;
+      continue;
+    }
+
+    // Heading 1
+    if (/^#\s+/.test(trimmed)) {
+      blocks.push({ type: 'h1', text: trimmed.replace(/^#\s+/, '') });
+      i++;
+      continue;
+    }
+
+    // Heading 2 (## or <h2>)
+    if (/^##\s+/.test(trimmed) || /^<h2>(.*?)<\/h2>$/i.test(trimmed)) {
+      const text = trimmed.replace(/^##\s+/, '').replace(/^<h2>|<\/h2>$/gi, '');
+      blocks.push({ type: 'h2', text });
+      i++;
+      continue;
+    }
+
+    // Heading 3 (### or <h3>)
+    if (/^###\s+/.test(trimmed) || /^<h3>(.*?)<\/h3>$/i.test(trimmed)) {
+      const text = trimmed.replace(/^###\s+/, '').replace(/^<h3>|<\/h3>$/gi, '');
+      blocks.push({ type: 'h3', text });
+      i++;
+      continue;
+    }
+
+    // Heading 4 (#### or <h4>)
+    if (/^####\s+/.test(trimmed) || /^<h4>(.*?)<\/h4>$/i.test(trimmed)) {
+      const text = trimmed.replace(/^####\s+/, '').replace(/^<h4>|<\/h4>$/gi, '');
+      blocks.push({ type: 'h4', text });
+      i++;
+      continue;
+    }
+
+    // Blockquote (> ...)
+    if (/^>\s*/.test(trimmed) || /^<blockquote>/i.test(trimmed)) {
+      const quoteLines: string[] = [];
+      while (i < lines.length && (lines[i].trim().startsWith('>') || /^<blockquote>/i.test(lines[i].trim()))) {
+        quoteLines.push(lines[i].trim().replace(/^>\s*/, '').replace(/<\/?blockquote>/gi, ''));
+        i++;
+      }
+      blocks.push({ type: 'quote', lines: quoteLines.filter(Boolean) });
+      continue;
+    }
+
+    // Unordered List (- item or * item)
+    if (/^[-*•]\s+/.test(trimmed)) {
+      const items: string[] = [];
+      while (i < lines.length && /^[-*•]\s+/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^[-*•]\s+/, ''));
+        i++;
+      }
+      blocks.push({ type: 'ul', items });
+      continue;
+    }
+
+    // Ordered List (1. item or 1) item)
+    if (/^\d+[.)]\s+/.test(trimmed)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+[.)]\s+/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^\d+[.)]\s+/, ''));
+        i++;
+      }
+      blocks.push({ type: 'ol', items });
+      continue;
+    }
+
+    // Regular Paragraph lines (accumulate until next block or blank line)
+    const pLines: string[] = [rawLine];
+    i++;
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !/^#{1,4}\s+/.test(lines[i].trim()) &&
+      !/^[-*•]\s+/.test(lines[i].trim()) &&
+      !/^\d+[.)]\s+/.test(lines[i].trim()) &&
+      !lines[i].trim().startsWith('>') &&
+      !/^(---|___|\*\*\*)$/.test(lines[i].trim())
+    ) {
+      pLines.push(lines[i]);
+      i++;
+    }
+    blocks.push({ type: 'p', lines: pLines });
+  }
+
+  return blocks;
+}
+
 export default function BlogContentRenderer({ content }: Props) {
   if (!content) return null;
 
-  // Split into raw paragraph blocks separated by 2 or more newlines
-  const blocks = content.split(/\n\s*\n/).filter(Boolean);
+  const blocks = parseMarkdownBlocks(content);
 
   return (
     <div
@@ -101,7 +299,7 @@ export default function BlogContentRenderer({ content }: Props) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 22,
+        gap: 20,
         color: '#ded3c1',
         fontSize: 'clamp(16px, 1.2vw, 18px)',
         lineHeight: 1.85,
@@ -109,124 +307,169 @@ export default function BlogContentRenderer({ content }: Props) {
       }}
     >
       {blocks.map((block, idx) => {
-        const trimmed = block.trim();
+        switch (block.type) {
+          case 'h1':
+            return (
+              <h1
+                key={idx}
+                style={{
+                  fontFamily: 'var(--serif, Georgia, serif)',
+                  fontSize: 'clamp(28px, 3.2vw, 36px)',
+                  lineHeight: 1.25,
+                  color: 'var(--cream, #fdfbf7)',
+                  margin: '32px 0 8px',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                {renderInline(block.text)}
+              </h1>
+            );
 
-        // Heading 2
-        if (trimmed.startsWith('## ')) {
-          const h2Text = trimmed.replace(/^##\s+/, '');
-          return (
-            <h2
-              key={idx}
-              style={{
-                fontFamily: 'var(--serif, Georgia, serif)',
-                fontSize: 'clamp(24px, 2.8vw, 30px)',
-                lineHeight: 1.3,
-                color: 'var(--cream)',
-                margin: '28px 0 6px',
-                paddingBottom: 10,
-                borderBottom: '1px solid rgba(201, 168, 96, 0.2)',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {renderInline(h2Text)}
-            </h2>
-          );
+          case 'h2':
+            return (
+              <h2
+                key={idx}
+                style={{
+                  fontFamily: 'var(--serif, Georgia, serif)',
+                  fontSize: 'clamp(24px, 2.6vw, 30px)',
+                  lineHeight: 1.3,
+                  color: 'var(--cream, #fdfbf7)',
+                  margin: '28px 0 6px',
+                  paddingBottom: 10,
+                  borderBottom: '1px solid rgba(201, 168, 96, 0.22)',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                {renderInline(block.text)}
+              </h2>
+            );
+
+          case 'h3':
+            return (
+              <h3
+                key={idx}
+                style={{
+                  fontFamily: 'var(--serif, Georgia, serif)',
+                  fontSize: 'clamp(20px, 2.1vw, 23px)',
+                  lineHeight: 1.35,
+                  color: 'var(--gold, #c9a860)',
+                  margin: '20px 0 4px',
+                  fontWeight: 600,
+                }}
+              >
+                {renderInline(block.text)}
+              </h3>
+            );
+
+          case 'h4':
+            return (
+              <h4
+                key={idx}
+                style={{
+                  fontFamily: 'var(--serif, Georgia, serif)',
+                  fontSize: 'clamp(17px, 1.6vw, 19px)',
+                  lineHeight: 1.4,
+                  color: 'var(--cream, #fdfbf7)',
+                  margin: '16px 0 2px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '.05em',
+                }}
+              >
+                {renderInline(block.text)}
+              </h4>
+            );
+
+          case 'quote':
+            return (
+              <blockquote
+                key={idx}
+                style={{
+                  margin: '18px 0',
+                  padding: '18px 24px',
+                  borderLeft: '4px solid var(--gold, #c9a860)',
+                  background: 'rgba(201, 168, 96, 0.06)',
+                  borderRadius: '0 6px 6px 0',
+                  fontStyle: 'italic',
+                  color: '#eae2d5',
+                  fontSize: 'clamp(17px, 1.3vw, 19px)',
+                  lineHeight: 1.7,
+                }}
+              >
+                {block.lines.map((l, lIdx) => (
+                  <p key={lIdx} style={{ margin: lIdx === 0 ? 0 : '8px 0 0' }}>
+                    {renderInline(l)}
+                  </p>
+                ))}
+              </blockquote>
+            );
+
+          case 'ul':
+            return (
+              <ul
+                key={idx}
+                style={{
+                  margin: '8px 0',
+                  paddingLeft: 24,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  listStyleType: 'disc',
+                }}
+              >
+                {block.items.map((item, itemIdx) => (
+                  <li key={itemIdx} style={{ lineHeight: 1.75, color: '#ded3c1' }}>
+                    {renderInline(item)}
+                  </li>
+                ))}
+              </ul>
+            );
+
+          case 'ol':
+            return (
+              <ol
+                key={idx}
+                style={{
+                  margin: '8px 0',
+                  paddingLeft: 24,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  listStyleType: 'decimal',
+                }}
+              >
+                {block.items.map((item, itemIdx) => (
+                  <li key={itemIdx} style={{ lineHeight: 1.75, color: '#ded3c1' }}>
+                    {renderInline(item)}
+                  </li>
+                ))}
+              </ol>
+            );
+
+          case 'hr':
+            return (
+              <hr
+                key={idx}
+                style={{
+                  border: 'none',
+                  borderTop: '1px solid rgba(201, 168, 96, 0.25)',
+                  margin: '28px 0',
+                }}
+              />
+            );
+
+          case 'p':
+          default:
+            return (
+              <p key={idx} style={{ margin: 0 }}>
+                {block.lines.map((l, lIdx) => (
+                  <React.Fragment key={lIdx}>
+                    {renderInline(l)}
+                    {lIdx < block.lines.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+            );
         }
-
-        // Heading 3
-        if (trimmed.startsWith('### ')) {
-          const h3Text = trimmed.replace(/^###\s+/, '');
-          return (
-            <h3
-              key={idx}
-              style={{
-                fontFamily: 'var(--serif, Georgia, serif)',
-                fontSize: 'clamp(20px, 2.2vw, 24px)',
-                lineHeight: 1.35,
-                color: 'var(--gold)',
-                margin: '20px 0 4px',
-              }}
-            >
-              {renderInline(h3Text)}
-            </h3>
-          );
-        }
-
-        // Blockquote
-        if (trimmed.startsWith('>')) {
-          const quoteText = trimmed.replace(/^>\s*/gm, '');
-          return (
-            <blockquote
-              key={idx}
-              style={{
-                margin: '18px 0',
-                padding: '18px 24px',
-                borderLeft: '4px solid var(--gold)',
-                background: 'rgba(201, 168, 96, 0.05)',
-                borderRadius: '0 6px 6px 0',
-                fontStyle: 'italic',
-                color: '#eae2d5',
-                fontSize: 'clamp(17px, 1.3vw, 19px)',
-                lineHeight: 1.7,
-              }}
-            >
-              {renderInline(quoteText)}
-            </blockquote>
-          );
-        }
-
-        // Unordered list
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          const items = trimmed.split('\n').filter((l) => l.trim().startsWith('- ') || l.trim().startsWith('* '));
-          return (
-            <ul
-              key={idx}
-              style={{
-                margin: '8px 0',
-                paddingLeft: 24,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              {items.map((item, itemIdx) => (
-                <li key={itemIdx} style={{ lineHeight: 1.7 }}>
-                  {renderInline(item.replace(/^[-*]\s+/, ''))}
-                </li>
-              ))}
-            </ul>
-          );
-        }
-
-        // Numbered list
-        if (/^\d+\.\s/.test(trimmed)) {
-          const items = trimmed.split('\n').filter((l) => /^\d+\.\s/.test(l.trim()));
-          return (
-            <ol
-              key={idx}
-              style={{
-                margin: '8px 0',
-                paddingLeft: 24,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              {items.map((item, itemIdx) => (
-                <li key={itemIdx} style={{ lineHeight: 1.7 }}>
-                  {renderInline(item.replace(/^\d+\.\s+/, ''))}
-                </li>
-              ))}
-            </ol>
-          );
-        }
-
-        // Standard Paragraph
-        return (
-          <p key={idx} style={{ margin: 0 }}>
-            {renderInline(trimmed)}
-          </p>
-        );
       })}
     </div>
   );
