@@ -198,6 +198,7 @@ export default function BlogArchiveClient({ posts }: Props) {
 
                   {/* Category Badge on image */}
                   <span
+                    className="blog-card-badge"
                     style={{
                       position: 'absolute',
                       top: 12,
@@ -319,9 +320,13 @@ export default function BlogArchiveClient({ posts }: Props) {
                         letterSpacing: '0.1em',
                         fontFamily: 'var(--serif-c, "Cinzel", serif)',
                         fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
                       }}
                     >
-                      READ ESSAY →
+                      <span>READ ESSAY</span>
+                      <span className="blog-card-arrow">→</span>
                     </span>
                   </div>
                 </div>

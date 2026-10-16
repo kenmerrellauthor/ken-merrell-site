@@ -168,6 +168,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
 
         {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
         <div
+          className="blog-featured-frame"
           style={{
             flex: 1,
             minWidth: 0,
