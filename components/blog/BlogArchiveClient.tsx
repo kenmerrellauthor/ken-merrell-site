@@ -11,6 +11,7 @@ interface Props {
 export default function BlogArchiveClient({ posts }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const hasFeatured = posts.some((p) => p.featured);
   const categories = [
@@ -37,7 +38,7 @@ export default function BlogArchiveClient({ posts }: Props) {
 
   return (
     <div>
-      {/* Category Pills & Search */}
+      {/* Category Pills, View Mode & Search */}
       <div
         style={{
           display: 'flex',
@@ -45,12 +46,13 @@ export default function BlogArchiveClient({ posts }: Props) {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 16,
-          marginBottom: 40,
+          marginBottom: 36,
           borderBottom: '1px solid rgba(201, 168, 96, 0.15)',
-          paddingBottom: 24,
+          paddingBottom: 20,
         }}
       >
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {/* Category Pills */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {categories.map((cat) => (
             <button
               key={cat}
@@ -61,7 +63,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                 fontSize: 11,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                padding: '8px 16px',
+                padding: '7px 15px',
                 borderRadius: 20,
                 border: selectedCategory === cat ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.08)',
                 background: selectedCategory === cat ? 'rgba(201, 168, 96, 0.15)' : 'rgba(255,255,255,0.02)',
@@ -75,59 +77,126 @@ export default function BlogArchiveClient({ posts }: Props) {
           ))}
         </div>
 
-        <div style={{ position: 'relative', minWidth: 260 }}>
-          <input
-            type="text"
-            placeholder="Search articles & topics..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+        {/* Right Controls: View Switcher (List vs Grid) + Search Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {/* View Mode Switcher */}
+          <div
             style={{
-              width: '100%',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'rgba(255, 255, 255, 0.03)',
+              padding: '3px 4px',
               borderRadius: 20,
-              padding: '8px 16px 8px 36px',
-              color: 'var(--cream)',
-              fontSize: 13,
-              outline: 'none',
-              transition: 'border-color 0.2s ease',
+              border: '1px solid rgba(201, 168, 96, 0.25)',
             }}
-          />
-          <span
-            style={{
-              position: 'absolute',
-              left: 12,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: 0.5,
-              fontSize: 13,
-              pointerEvents: 'none',
-            }}
+            aria-label="Article layout view mode"
           >
-            🔍
-          </span>
-          {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
+              onClick={() => setViewMode('list')}
+              title="List View"
               style={{
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--muted)',
+                background: viewMode === 'list' ? 'rgba(201, 168, 96, 0.2)' : 'transparent',
+                color: viewMode === 'list' ? 'var(--gold)' : 'var(--muted)',
+                border: viewMode === 'list' ? '1px solid rgba(201, 168, 96, 0.45)' : '1px solid transparent',
+                borderRadius: 16,
+                padding: '4px 10px',
+                fontSize: 11,
+                fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                letterSpacing: '0.08em',
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                transition: 'all 0.2s ease',
+                fontWeight: viewMode === 'list' ? 700 : 500,
               }}
             >
-              ✕
+              <span>☰</span>
+              <span>List</span>
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+              style={{
+                background: viewMode === 'grid' ? 'rgba(201, 168, 96, 0.2)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--gold)' : 'var(--muted)',
+                border: viewMode === 'grid' ? '1px solid rgba(201, 168, 96, 0.45)' : '1px solid transparent',
+                borderRadius: 16,
+                padding: '4px 10px',
+                fontSize: 11,
+                fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                letterSpacing: '0.08em',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                transition: 'all 0.2s ease',
+                fontWeight: viewMode === 'grid' ? 700 : 500,
+              }}
+            >
+              <span>☵</span>
+              <span>Grid</span>
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div style={{ position: 'relative', minWidth: 240 }}>
+            <input
+              type="text"
+              placeholder="Search articles & topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 20,
+                padding: '7px 14px 7px 34px',
+                color: 'var(--cream)',
+                fontSize: 12.5,
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                left: 11,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                opacity: 0.5,
+                fontSize: 12,
+                pointerEvents: 'none',
+              }}
+            >
+              🔍
+            </span>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Grid of Posts */}
+      {/* Posts List or Grid */}
       {filteredPosts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
           <p style={{ fontSize: 18, fontFamily: 'var(--serif, Georgia, serif)', margin: '0 0 8px', color: 'var(--cream)' }}>
@@ -138,15 +207,16 @@ export default function BlogArchiveClient({ posts }: Props) {
       ) : (
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: 32,
+            display: viewMode === 'list' ? 'flex' : 'grid',
+            flexDirection: viewMode === 'list' ? 'column' : undefined,
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(320px, 1fr))' : undefined,
+            gap: viewMode === 'list' ? 24 : 32,
           }}
         >
           {filteredPosts.map((post) => (
             <article
               key={post.id}
-              className="blog-card"
+              className={`blog-card ${viewMode === 'list' ? 'blog-card-list-mode' : ''}`}
               style={{
                 background: 'linear-gradient(180deg, rgba(28, 23, 18, 0.6) 0%, rgba(14, 12, 10, 0.8) 100%)',
                 border: post.featured ? '1px solid rgba(201, 168, 96, 0.5)' : '1px solid rgba(201, 168, 96, 0.18)',
@@ -160,10 +230,26 @@ export default function BlogArchiveClient({ posts }: Props) {
             >
               <Link
                 href={`/blog/${post.slug}`}
-                style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}
+                className={viewMode === 'list' ? 'blog-card-list-link' : undefined}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'flex',
+                  flexDirection: viewMode === 'list' ? 'row' : 'column',
+                  height: '100%',
+                }}
               >
                 {/* Cover Image */}
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', background: '#1c1712' }}>
+                <div
+                  className={viewMode === 'list' ? 'blog-card-list-cover' : undefined}
+                  style={{
+                    position: 'relative',
+                    width: viewMode === 'list' ? undefined : '100%',
+                    aspectRatio: viewMode === 'list' ? undefined : '16/9',
+                    overflow: 'hidden',
+                    background: '#1c1712',
+                  }}
+                >
                   {post.coverImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -174,6 +260,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                         height: '100%',
                         objectFit: 'cover',
                         transition: 'transform 0.5s ease',
+                        display: 'block',
                       }}
                       className="blog-card-img"
                     />
@@ -182,6 +269,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                       style={{
                         width: '100%',
                         height: '100%',
+                        minHeight: 180,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -242,17 +330,32 @@ export default function BlogArchiveClient({ posts }: Props) {
                 </div>
 
                 {/* Card Content */}
-                <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 12 }}>
+                <div
+                  className={viewMode === 'list' ? 'blog-card-list-body' : undefined}
+                  style={{
+                    padding: viewMode === 'list' ? '26px 28px' : '24px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    gap: 12,
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--muted)', letterSpacing: '0.04em' }}>
                     <span>{new Date(post.publishedAt || post.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     <span>•</span>
                     <span>{post.readTimeMinutes} min read</span>
+                    {viewMode === 'list' && post.category && (
+                      <>
+                        <span>•</span>
+                        <span style={{ color: 'var(--gold)' }}>{post.category}</span>
+                      </>
+                    )}
                   </div>
 
                   <h3
                     style={{
                       margin: 0,
-                      fontSize: 19,
+                      fontSize: viewMode === 'list' ? 'clamp(20px, 2.2vw, 24px)' : 19,
                       lineHeight: 1.35,
                       color: 'var(--cream)',
                       fontFamily: 'var(--serif, Georgia, serif)',
@@ -267,11 +370,11 @@ export default function BlogArchiveClient({ posts }: Props) {
                   <p
                     style={{
                       margin: 0,
-                      fontSize: 13,
+                      fontSize: 13.5,
                       lineHeight: 1.6,
                       color: '#b8ad9e',
                       display: '-webkit-box',
-                      WebkitLineClamp: 3,
+                      WebkitLineClamp: viewMode === 'list' ? 3 : 3,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
                       flex: 1,
@@ -280,8 +383,17 @@ export default function BlogArchiveClient({ posts }: Props) {
                     {post.excerpt}
                   </p>
 
-                  {/* Highlights (Takeaways / FAQs pill) */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
+                  {/* Highlights (Takeaways / FAQs pill & Action) */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingTop: 14,
+                      borderTop: '1px solid rgba(255,255,255,0.06)',
+                      marginTop: 'auto',
+                    }}
+                  >
                     <div style={{ display: 'flex', gap: 6 }}>
                       {post.keyTakeaways && post.keyTakeaways.length > 0 && (
                         <span
@@ -308,7 +420,7 @@ export default function BlogArchiveClient({ posts }: Props) {
                             border: '1px solid rgba(92,219,149,0.2)',
                           }}
                         >
-                          Q&A
+                          Q&amp;A
                         </span>
                       )}
                     </div>

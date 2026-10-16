@@ -792,7 +792,7 @@ export async function incrementBlogViews(id: string): Promise<void> {
 
 export async function addBlogComment(
   blogIdOrSlug: string,
-  comment: { authorName: string; authorEmail: string; content: string }
+  comment: { authorName: string; authorEmail?: string; content: string }
 ): Promise<BlogComment> {
   const blogs = await getBlogs();
   const blog = blogs.find((b) => b.id === blogIdOrSlug || b.slug === blogIdOrSlug);
@@ -802,7 +802,7 @@ export async function addBlogComment(
     id: `c-${crypto.randomUUID().slice(0, 8)}`,
     blogId: blog.id,
     authorName: comment.authorName.trim(),
-    authorEmail: comment.authorEmail.trim(),
+    authorEmail: comment.authorEmail ? comment.authorEmail.trim() : undefined,
     content: comment.content.trim(),
     createdAt: new Date().toISOString(),
     approved: true, // published immediately, can be moderated in admin

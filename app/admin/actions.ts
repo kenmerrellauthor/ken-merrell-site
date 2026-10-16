@@ -862,14 +862,15 @@ export async function submitBlogCommentAction(
 
     if (!blogIdOrSlug) return { error: 'Blog post reference is missing.' };
     if (!authorName || authorName.length < 2) return { error: 'Please enter your name.' };
-    if (!authorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(authorEmail)) {
-      return { error: 'Please enter a valid email address.' };
+    // Email is optional for readers; validate format only if provided
+    if (authorEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(authorEmail)) {
+      return { error: 'Please enter a valid email address, or leave it blank.' };
     }
     if (!content || content.length < 3) return { error: 'Please enter your comment.' };
 
     const comment = await addBlogComment(blogIdOrSlug, {
       authorName,
-      authorEmail,
+      authorEmail: authorEmail || undefined,
       content,
     });
 
