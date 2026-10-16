@@ -65,8 +65,8 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  // Editor body view toggle (Write vs Live Preview)
-  const [bodyMode, setBodyMode] = useState<'write' | 'preview'>('write');
+  // Editor body view toggle (Write, Split View, or Full Live Preview)
+  const [bodyMode, setBodyMode] = useState<'write' | 'split' | 'preview'>('split');
   const [statusMessage, setStatusMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   // Word count & read time
@@ -87,15 +87,106 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setSlug(slugify(title));
   };
 
-  const insertFormatting = (prefix: string, suffix: string = '') => {
+  const insertFormatting = (action: 'h2' | 'h3' | 'bold' | 'italic' | 'quote' | 'bullet' | 'list' | 'link') => {
     const textarea = document.getElementById('blog-content-area') as HTMLTextAreaElement | null;
     if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const sel = content.substring(start, end) || 'text';
-    const replacement = `${prefix}${sel}${suffix}`;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const selected = content.substring(start, end);
+
+    let replacement = '';
+    let cursorOffset = 0;
+
+    switch (action) {
+      case 'h2': {
+        const text = selected.trim() || 'Subheading Title';
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        replacement = `${before}## ${text}${after}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'h3': {
+        const text = selected.trim() || 'Minor Section Title';
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        replacement = `${before}### ${text}${after}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'bold': {
+        const text = selected || 'bold text';
+        replacement = `**${text}**`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'italic': {
+        const text = selected || 'italic text';
+        replacement = `*${text}*`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'quote': {
+        const text = selected.trim() || 'Historical quote or key excerpt goes here.';
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        const formattedQuote = text.split('\n').map((l) => `> ${l}`).join('\n');
+        replacement = `${before}${formattedQuote}${after}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'bullet': {
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        if (selected.trim()) {
+          const lines = selected.split('\n').map((l) => `- ${l.replace(/^[-*•]\s*/, '')}`).join('\n');
+          replacement = `${before}${lines}${after}`;
+        } else {
+          replacement = `${before}- Key takeaway point one\n- Key takeaway point two${after}`;
+        }
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'list': {
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        if (selected.trim()) {
+          const lines = selected.split('\n').map((l, idx) => `${idx + 1}. ${l.replace(/^\d+[.)]\s*/, '')}`).join('\n');
+          replacement = `${before}${lines}${after}`;
+        } else {
+          replacement = `${before}1. First chronological event\n2. Second chronological event${after}`;
+        }
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'link': {
+        if (selected.trim()) {
+          replacement = `[${selected.trim()}](https://example.com)`;
+        } else {
+          replacement = `[Link description](https://example.com)`;
+        }
+        cursorOffset = replacement.length;
+        break;
+      }
+    }
+
     const nextContent = content.substring(0, start) + replacement + content.substring(end);
     setContent(nextContent);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
+    }, 15);
   };
 
   // Takeaways
@@ -394,6 +485,14 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setBodyMode('split')}
+                  className={bodyMode === 'split' ? 'on' : ''}
+                  title="Side-by-side editing and live preview"
+                >
+                  Split View
+                </button>
+                <button
+                  type="button"
                   onClick={() => setBodyMode('preview')}
                   className={bodyMode === 'preview' ? 'on' : ''}
                 >
@@ -402,18 +501,90 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
               </div>
             </div>
 
-            {bodyMode === 'write' ? (
+            {/* Split View (Side by Side) */}
+            {bodyMode === 'split' && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                  gap: 16,
+                  alignItems: 'stretch',
+                }}
+              >
+                {/* Editor Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '8px 10px', background: '#120f0d', border: '1px solid #3a332b', borderRadius: 4 }}>
+                    <button type="button" onClick={() => insertFormatting('h2')} className="crm-sm" title="Heading 2 (##)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 600 }}>H2</button>
+                    <button type="button" onClick={() => insertFormatting('h3')} className="crm-sm" title="Heading 3 (###)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 600 }}>H3</button>
+                    <button type="button" onClick={() => insertFormatting('bold')} className="crm-sm" title="Bold (**text**)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 700 }}>B</button>
+                    <button type="button" onClick={() => insertFormatting('italic')} className="crm-sm" title="Italic (*text*)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontStyle: 'italic' }}>I</button>
+                    <button type="button" onClick={() => insertFormatting('quote')} className="crm-sm" title="Blockquote (>)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Quote</button>
+                    <button type="button" onClick={() => insertFormatting('bullet')} className="crm-sm" title="Bullet List (-)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Bullet</button>
+                    <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
+                    <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
+                  </div>
+
+                  <textarea
+                    id="blog-content-area"
+                    className="crm-in"
+                    rows={20}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Start writing your article here..."
+                    style={{
+                      fontFamily: 'var(--serif-b, Georgia, serif)',
+                      fontSize: 15,
+                      lineHeight: 1.75,
+                      minHeight: 460,
+                      resize: 'vertical',
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: 'var(--muted)' }}>
+                    <span><b>{words.toLocaleString()}</b> words · ~<b>{autoReadTime}</b> min read</span>
+                    <span>Markdown &amp; HTML supported</span>
+                  </div>
+                </div>
+
+                {/* Live Preview Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#120f0d', border: '1px solid #3a332b', borderRadius: 4, height: 42 }}>
+                    <span style={{ fontSize: 11, fontFamily: 'var(--serif-c)', letterSpacing: '.1em', color: 'var(--gold)', fontWeight: 600 }}>
+                      REAL-TIME LIVE PREVIEW
+                    </span>
+                    <span style={{ fontSize: 11, color: '#888' }}>Updates as you type</span>
+                  </div>
+
+                  <div
+                    style={{
+                      background: '#0a0908',
+                      border: '1px solid #3a332b',
+                      borderRadius: 4,
+                      padding: '24px 28px',
+                      minHeight: 460,
+                      maxHeight: 650,
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <BlogContentRenderer content={content || '*Type or click formatting buttons on the left to see live styled results here.*'} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Write-only Mode */}
+            {bodyMode === 'write' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Formatting Bar */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '8px 10px', background: '#120f0d', border: '1px solid #3a332b', borderRadius: 4 }}>
-                  <button type="button" onClick={() => insertFormatting('## ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>H2</button>
-                  <button type="button" onClick={() => insertFormatting('### ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>H3</button>
-                  <button type="button" onClick={() => insertFormatting('**', '**')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11, fontWeight: 700 }}>B</button>
-                  <button type="button" onClick={() => insertFormatting('*', '*')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11, fontStyle: 'italic' }}>I</button>
-                  <button type="button" onClick={() => insertFormatting('> ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Quote</button>
-                  <button type="button" onClick={() => insertFormatting('- ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Bullet</button>
-                  <button type="button" onClick={() => insertFormatting('1. ', '\n')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>1. List</button>
-                  <button type="button" onClick={() => insertFormatting('[Link Text](', ')')} className="crm-sm" style={{ height: 32, padding: '0 8px', fontSize: 11 }}>Link</button>
+                  <button type="button" onClick={() => insertFormatting('h2')} className="crm-sm" title="Heading 2 (##)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 600 }}>H2</button>
+                  <button type="button" onClick={() => insertFormatting('h3')} className="crm-sm" title="Heading 3 (###)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 600 }}>H3</button>
+                  <button type="button" onClick={() => insertFormatting('bold')} className="crm-sm" title="Bold (**text**)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontWeight: 700 }}>B</button>
+                  <button type="button" onClick={() => insertFormatting('italic')} className="crm-sm" title="Italic (*text*)" style={{ height: 32, padding: '0 9px', fontSize: 11, fontStyle: 'italic' }}>I</button>
+                  <button type="button" onClick={() => insertFormatting('quote')} className="crm-sm" title="Blockquote (>)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Quote</button>
+                  <button type="button" onClick={() => insertFormatting('bullet')} className="crm-sm" title="Bullet List (-)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Bullet</button>
+                  <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
+                  <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
                 </div>
 
                 <textarea
@@ -437,8 +608,10 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                   <span>Markdown &amp; HTML supported</span>
                 </div>
               </div>
-            ) : (
-              /* Live Preview within the card */
+            )}
+
+            {/* Preview-only Mode */}
+            {bodyMode === 'preview' && (
               <div
                 style={{
                   background: '#0a0908',
