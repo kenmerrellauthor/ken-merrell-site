@@ -10,6 +10,7 @@ import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
 import BlogComments from '@/components/BlogComments';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 import { parseYouTubeId } from '@/lib/youtube';
+import BlogShareBar from '@/components/blog/BlogShareBar';
 
 export const revalidate = 60;
 
@@ -275,6 +276,9 @@ export default async function BlogPostPage({ params }: PageProps) {
                   </>
                 )}
               </div>
+
+              {/* Top Quick Share Bar */}
+              <BlogShareBar title={post.title} slug={post.slug} excerpt={post.excerpt} variant="inline" />
             </header>
 
             {/* Cover Image */}
@@ -430,6 +434,9 @@ export default async function BlogPostPage({ params }: PageProps) {
                 ))}
               </div>
             )}
+
+            {/* Share Card at the End of the Article */}
+            <BlogShareBar title={post.title} slug={post.slug} excerpt={post.excerpt} variant="card" />
 
             {/* FAQ Accordion Section (GEO & User Value) */}
             {post.faqItems && post.faqItems.length > 0 && (
