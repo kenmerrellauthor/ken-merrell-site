@@ -259,7 +259,7 @@ export interface BlogComment {
   id: string;
   blogId: string;
   authorName: string;
-  authorEmail: string;
+  authorEmail?: string;
   content: string;
   createdAt: string;
   approved: boolean;

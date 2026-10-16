@@ -2,20 +2,25 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Ic } from '@/components/admin/AdIcons';
-import type { BlogPost, Book } from '@/lib/types';
+import type { BlogPost, Book, AdSettings } from '@/lib/types';
 import { deleteBlogPostAction, saveBlogPostAction } from '@/app/admin/actions';
+import AdsManagerClient from '@/components/admin/AdsManagerClient';
 
 interface Props {
   initialBlogs: BlogPost[];
   books: Book[];
+  adSettings?: AdSettings;
 }
 
 const COLS = '58px minmax(260px, 1.8fr) 150px 190px 100px 220px';
 
-export default function BlogListClient({ initialBlogs, books }: Props) {
+export default function BlogListClient({ initialBlogs, books, adSettings }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialView = searchParams?.get('tab') === 'ads' ? 'ads' : 'articles';
+  const [view, setView] = useState<'articles' | 'ads'>(initialView);
   const [blogs, setBlogs] = useState<BlogPost[]>(initialBlogs);
   const [tab, setTab] = useState<'all' | 'published' | 'drafts'>('all');
   const [search, setSearch] = useState('');
@@ -103,7 +108,74 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* ── Tabs & Filter Bar ── */}
+      {/* ── Section Subtab Switcher: Articles vs Blog Ads ── */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          borderBottom: '1px solid rgba(201, 168, 96, 0.25)',
+          paddingBottom: 14,
+          flexWrap: 'wrap',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setView('articles')}
+          style={{
+            fontFamily: 'var(--serif-c, "Cinzel", serif)',
+            fontSize: 12,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            padding: '9px 20px',
+            borderRadius: 5,
+            border: view === 'articles' ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.08)',
+            background: view === 'articles' ? 'rgba(201, 168, 96, 0.16)' : 'rgba(255,255,255,0.02)',
+            color: view === 'articles' ? 'var(--gold)' : 'var(--cream)',
+            cursor: 'pointer',
+            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <span>📝</span>
+          <span>Articles &amp; Posts ({blogs.length})</span>
+        </button>
+
+        {adSettings && (
+          <button
+            type="button"
+            onClick={() => setView('ads')}
+            style={{
+              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+              fontSize: 12,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              padding: '9px 20px',
+              borderRadius: 5,
+              border: view === 'ads' ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.08)',
+              background: view === 'ads' ? 'rgba(201, 168, 96, 0.16)' : 'rgba(255,255,255,0.02)',
+              color: view === 'ads' ? 'var(--gold)' : 'var(--cream)',
+              cursor: 'pointer',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>📢</span>
+            <span>Blog Ads &amp; In-Article Banners</span>
+          </button>
+        )}
+      </div>
+
+      {view === 'ads' && adSettings ? (
+        <AdsManagerClient initialSettings={adSettings} books={books} />
+      ) : (
+        <>
+          {/* ── Tabs & Filter Bar ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
         <nav className="crm-tabs" aria-label="Filter blog posts" style={{ margin: 0 }}>
           <button
@@ -453,6 +525,8 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
           })
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

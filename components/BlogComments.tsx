@@ -27,9 +27,9 @@ export default function BlogComments({ blogId, blogSlug, initialComments = [] }:
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !content.trim()) {
+    if (!name.trim() || !content.trim()) {
       setStatus('error');
-      setErrorMessage('Please fill in your name, email, and your comment.');
+      setErrorMessage('Please enter your name and comment.');
       return;
     }
 
@@ -330,7 +330,7 @@ export default function BlogComments({ blogId, blogSlug, initialComments = [] }:
             <input type="text" name="website_hp" tabIndex={-1} autoComplete="off" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          <div className="blog-comment-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
             <div>
               <label
                 htmlFor={nameId}
@@ -381,16 +381,15 @@ export default function BlogComments({ blogId, blogSlug, initialComments = [] }:
                   fontWeight: 600,
                 }}
               >
-                YOUR EMAIL * (PRIVATE)
+                YOUR EMAIL (OPTIONAL &amp; PRIVATE)
               </label>
               <input
                 id={emailId}
                 name="authorEmail"
                 type="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="name@example.com (optional)"
                 className="crm-in"
                 style={{
                   width: '100%',

@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Ic } from '@/components/admin/AdIcons';
-import { getBlogs, getBooks } from '@/lib/store';
+import { getBlogs, getBooks, getAdSettings } from '@/lib/store';
 import BlogListClient from '@/components/admin/BlogListClient';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function AdminBlogsPage() {
-  const [blogs, books] = await Promise.all([getBlogs(), getBooks()]);
+  const [blogs, books, adSettings] = await Promise.all([getBlogs(), getBooks(), getAdSettings()]);
   const published = blogs.filter((b) => b.isPublished);
   const drafts = blogs.filter((b) => !b.isPublished);
   const totalViews = blogs.reduce((acc, b) => acc + (b.views || 0), 0);
@@ -40,7 +40,7 @@ export default async function AdminBlogsPage() {
         <div className="crm-stat"><span>GEO FAQ ENTRIES</span><b>{geoFaqsCount}</b></div>
       </div>
 
-      <BlogListClient initialBlogs={blogs} books={books} />
+      <BlogListClient initialBlogs={blogs} books={books} adSettings={adSettings} />
     </>
   );
 }

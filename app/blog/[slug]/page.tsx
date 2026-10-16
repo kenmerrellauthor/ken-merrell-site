@@ -208,10 +208,10 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         <article
           style={{
-            paddingTop: 140,
-            paddingBottom: 100,
-            paddingLeft: 'max(20px, env(safe-area-inset-left))',
-            paddingRight: 'max(20px, env(safe-area-inset-right))',
+            paddingTop: 'clamp(100px, 12vw, 140px)',
+            paddingBottom: 80,
+            paddingLeft: 'max(16px, env(safe-area-inset-left))',
+            paddingRight: 'max(16px, env(safe-area-inset-right))',
             position: 'relative',
           }}
         >
@@ -468,6 +468,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             {relatedBook && (
               <section
                 aria-label={`Featured Book: ${relatedBook.title}`}
+                className="blog-related-book-card"
                 style={{
                   marginTop: 56,
                   padding: 28,
@@ -475,10 +476,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                   border: '1px solid rgba(201, 168, 96, 0.35)',
                   borderRadius: 8,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
-                  display: 'grid',
-                  gridTemplateColumns: 'auto minmax(0, 1fr)',
-                  gap: 24,
-                  alignItems: 'center',
                 }}
               >
                 <div style={{ position: 'relative', width: 90, height: 135 }}>
@@ -531,16 +528,13 @@ export default async function BlogPostPage({ params }: PageProps) {
 
             {/* Author Bio Box */}
             <section
+              className="blog-author-bio-card"
               style={{
                 marginTop: 48,
                 padding: 24,
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.06)',
                 borderRadius: 8,
-                display: 'flex',
-                gap: 20,
-                alignItems: 'center',
-                flexWrap: 'wrap',
               }}
             >
               <Link
