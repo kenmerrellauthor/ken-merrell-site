@@ -10,11 +10,7 @@ interface Props {
 
 export default function BlogFeaturedSpotlight({ posts }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-
   const total = posts.length;
-  const SLIDE_DURATION = 6000; // 6 seconds auto-swipe
 
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
@@ -23,38 +19,11 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
 
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % total);
-    setProgress(0);
   }, [total]);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + total) % total);
-    setProgress(0);
   }, [total]);
-
-  const goToSlide = (idx: number) => {
-    setCurrentIndex(idx);
-    setProgress(0);
-  };
-
-  // Auto-swipe timer with smooth visual progress bar
-  useEffect(() => {
-    if (total <= 1 || isPaused) return;
-
-    const intervalStep = 50;
-    const stepIncrement = (intervalStep / SLIDE_DURATION) * 100;
-
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          handleNext();
-          return 0;
-        }
-        return prev + stepIncrement;
-      });
-    }, intervalStep);
-
-    return () => clearInterval(timer);
-  }, [total, isPaused, handleNext]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -71,7 +40,6 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.targetTouches[0].clientX;
     touchEndXRef.current = null;
-    setIsPaused(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -89,7 +57,6 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
     }
     touchStartXRef.current = null;
     touchEndXRef.current = null;
-    setIsPaused(false);
   };
 
   // Mouse Drag Swipe Handlers for desktop
@@ -124,8 +91,6 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
         position: 'relative',
       }}
       aria-label="Featured Articles Spotlight Carousel"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
     >
       {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
       <div
@@ -372,33 +337,9 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
 
         {/* Inner arrows removed; placed outside card */}
 
-        {/* Animated Auto-Swipe Progress Bar at the very bottom */}
-        {total > 1 && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              width: '100%',
-              height: 3,
-              background: 'rgba(255, 255, 255, 0.08)',
-              zIndex: 11,
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${progress}%`,
-                background: 'linear-gradient(90deg, var(--gold, #c9a860), #f4deb3)',
-                boxShadow: '0 0 8px rgba(201, 168, 96, 0.7)',
-                transition: isPaused ? 'none' : 'width 0.05s linear',
-              }}
-            />
-          </div>
-        )}
       </div>
 
-      {/* Bottom Manual Swipe / Navigation Bar (When 2 or more featured posts exist) */}
+      {/* Bottom Navigation: Only Previous Article and Next Article buttons */}
       {total > 1 && (
         <div
           className="blog-featured-manual-nav"
@@ -406,12 +347,12 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 14,
+            gap: 16,
             marginTop: 20,
             flexWrap: 'wrap',
           }}
         >
-          {/* Previous Manual Button */}
+          {/* Previous Article Button */}
           <button
             type="button"
             onClick={handlePrev}
@@ -420,12 +361,12 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              padding: '10px 20px',
+              padding: '11px 24px',
               borderRadius: 24,
               background: 'rgba(28, 23, 18, 0.95)',
               border: '1px solid rgba(201, 168, 96, 0.45)',
               color: 'var(--gold, #c9a860)',
-              fontSize: 11,
+              fontSize: 11.5,
               fontFamily: 'var(--serif-c, "Cinzel", serif)',
               fontWeight: 700,
               letterSpacing: '0.12em',
@@ -436,7 +377,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--gold)';
               e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'translateX(-2px)';
+              e.currentTarget.style.transform = 'translateX(-3px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
@@ -445,56 +386,10 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
             }}
           >
             <span>←</span>
-            <span>PREV ARTICLE</span>
+            <span>PREVIOUS ARTICLE</span>
           </button>
 
-          {/* Dot / Slide Indicator Pills */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'rgba(20, 16, 13, 0.9)',
-              padding: '8px 18px',
-              borderRadius: 24,
-              border: '1px solid rgba(201, 168, 96, 0.3)',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
-            }}
-          >
-            {posts.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => goToSlide(i)}
-                aria-label={`Go to featured article ${i + 1}`}
-                style={{
-                  width: currentIndex === i ? 28 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: currentIndex === i ? 'var(--gold, #c9a860)' : 'rgba(255,255,255,0.22)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
-                  padding: 0,
-                }}
-              />
-            ))}
-            <span
-              style={{
-                fontSize: 11,
-                color: 'var(--cream)',
-                fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                letterSpacing: '0.08em',
-                marginLeft: 4,
-                fontWeight: 600,
-                opacity: 0.9,
-              }}
-            >
-              {currentIndex + 1} / {total}
-            </span>
-          </div>
-
-          {/* Next Manual Button */}
+          {/* Next Article Button */}
           <button
             type="button"
             onClick={handleNext}
@@ -503,12 +398,12 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              padding: '10px 20px',
+              padding: '11px 24px',
               borderRadius: 24,
               background: 'rgba(28, 23, 18, 0.95)',
               border: '1px solid rgba(201, 168, 96, 0.45)',
               color: 'var(--gold, #c9a860)',
-              fontSize: 11,
+              fontSize: 11.5,
               fontFamily: 'var(--serif-c, "Cinzel", serif)',
               fontWeight: 700,
               letterSpacing: '0.12em',
@@ -519,7 +414,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--gold)';
               e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'translateX(2px)';
+              e.currentTarget.style.transform = 'translateX(3px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
