@@ -378,23 +378,6 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                   {post.excerpt}
                 </p>
 
-                {/* Highlights / Key Insight */}
-                {post.keyTakeaways && post.keyTakeaways.length > 0 && (
-                  <div
-                    style={{
-                      padding: '10px 14px',
-                      background: 'rgba(201, 168, 96, 0.08)',
-                      borderLeft: '3px solid var(--gold)',
-                      borderRadius: 3,
-                      fontSize: 12.5,
-                      color: '#eae2d5',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <b style={{ color: 'var(--gold)' }}>Key Insight:</b> {post.keyTakeaways[0]}
-                  </div>
-                )}
-
                 {/* CTA Action & Slide Indicators */}
                 <div
                   className="blog-spotlight-cta-row"
