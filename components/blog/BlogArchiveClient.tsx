@@ -593,20 +593,6 @@ export default function BlogArchiveClient({ posts }: Props) {
                     }}
                   >
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {post.keyTakeaways && post.keyTakeaways.length > 0 && (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            color: 'var(--gold)',
-                            background: 'rgba(201,168,96,0.1)',
-                            padding: '2px 6px',
-                            borderRadius: 3,
-                            border: '1px solid rgba(201,168,96,0.2)',
-                          }}
-                        >
-                          ⚡ Key Takeaways
-                        </span>
-                      )}
                       {post.faqItems && post.faqItems.length > 0 && (
                         <span
                           style={{

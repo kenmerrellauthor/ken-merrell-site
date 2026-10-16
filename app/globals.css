@@ -2593,17 +2593,29 @@ button { font: inherit; }
   }
 
   .blog-related-book-card {
-    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
     text-align: center !important;
-    justify-items: center !important;
-    padding: 22px 18px !important;
-    gap: 16px !important;
+    align-items: center !important;
+    padding: 28px 20px !important;
+    gap: 22px !important;
+  }
+
+  .blog-related-book-actions {
+    justify-content: center !important;
+    width: 100% !important;
   }
 
   .blog-author-bio-card {
     flex-direction: column !important;
     text-align: center !important;
-    padding: 22px 18px !important;
+    align-items: center !important;
+    padding: 28px 20px !important;
+    gap: 20px !important;
+  }
+
+  .blog-author-bio-actions {
+    justify-content: center !important;
+    width: 100% !important;
   }
 
   .blog-comment-form-grid {

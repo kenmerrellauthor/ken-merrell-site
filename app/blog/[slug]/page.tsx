@@ -353,72 +353,6 @@ export default async function BlogPostPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* GEO Optimization Block: Key Takeaways */}
-            {post.keyTakeaways && post.keyTakeaways.length > 0 && (
-              <aside
-                aria-label="Key Takeaways"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.85) 0%, rgba(18, 15, 12, 0.95) 100%)',
-                  border: '1px solid rgba(201, 168, 96, 0.4)',
-                  borderLeft: '5px solid var(--gold)',
-                  borderRadius: 6,
-                  padding: '24px 28px',
-                  marginBottom: 36,
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontSize: 12,
-                    fontFamily: 'var(--serif-c, "Cinzel", serif)',
-                    letterSpacing: '0.12em',
-                    fontWeight: 700,
-                    color: 'var(--gold)',
-                    textTransform: 'uppercase',
-                    marginBottom: 12,
-                  }}
-                >
-                  <span>⚡ KEY TAKEAWAYS</span>
-                </div>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: 20,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                    color: '#ded3c1',
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                    fontFamily: 'var(--serif, Georgia, serif)',
-                  }}
-                >
-                  {post.keyTakeaways.map((takeaway, idx) => (
-                    <li key={idx}>{takeaway}</li>
-                  ))}
-                </ul>
-              </aside>
-            )}
-
-            {/* Excerpt Lead Paragraph */}
-            {post.excerpt && (
-              <p
-                style={{
-                  fontSize: 'clamp(18px, 1.4vw, 21px)',
-                  lineHeight: 1.7,
-                  color: '#e2d7c5',
-                  fontStyle: 'italic',
-                  marginBottom: 36,
-                  paddingBottom: 24,
-                  borderBottom: '1px solid rgba(201, 168, 96, 0.15)',
-                }}
-              >
-                {post.excerpt}
-              </p>
-            )}
 
             {/* Featured Video Spotlight */}
             {post.videoUrl && parseYouTubeId(post.videoUrl) && (
@@ -515,61 +449,143 @@ export default async function BlogPostPage({ params }: PageProps) {
               <BlogFaqAccordion faqs={post.faqItems} />
             )}
 
-            {/* Related Book CTA Card (Conversion Driver) */}
+            {/* Featured Book Showcase Card */}
             {relatedBook && (
               <section
-                aria-label={`Featured Book: ${relatedBook.title}`}
+                aria-label={`Featured Novel: ${relatedBook.title}`}
                 className="blog-related-book-card"
                 style={{
-                  marginTop: 56,
-                  padding: 28,
-                  background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.95) 0%, rgba(14, 12, 10, 0.98) 100%)',
-                  border: '1px solid rgba(201, 168, 96, 0.35)',
-                  borderRadius: 8,
-                  boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+                  marginTop: 64,
+                  padding: '36px 32px',
+                  background: 'linear-gradient(135deg, rgba(32, 25, 18, 0.95) 0%, rgba(16, 13, 10, 0.98) 100%)',
+                  border: '1px solid rgba(201, 168, 96, 0.4)',
+                  borderRadius: 12,
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.6), 0 0 24px rgba(201, 168, 96, 0.1)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ position: 'relative', width: 90, height: 135 }}>
-                  <Cover book={relatedBook} w={90} h={135} title={12} author={7} />
+                {/* Subtle top gold accent line */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    background: 'linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%)',
+                  }}
+                />
+
+                {/* Book Cover with 3D Depth & Shadow */}
+                <div
+                  style={{
+                    position: 'relative',
+                    width: 120,
+                    height: 180,
+                    flexShrink: 0,
+                    borderRadius: 6,
+                    overflow: 'hidden',
+                    boxShadow: '0 18px 36px rgba(0,0,0,0.7), 0 0 16px rgba(201, 168, 96, 0.2)',
+                    border: '1px solid rgba(201, 168, 96, 0.45)',
+                    background: '#15120f',
+                  }}
+                >
+                  <Cover book={relatedBook} w={120} h={180} title={13} author={8} />
                   <div className="km-spine abs" />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>
-                    FEATURED NOVEL BY KEN MERRELL
+                {/* Book Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span
+                      style={{
+                        fontSize: 10.5,
+                        fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        color: 'var(--gold)',
+                        fontWeight: 700,
+                        background: 'rgba(201, 168, 96, 0.12)',
+                        border: '1px solid rgba(201, 168, 96, 0.3)',
+                        padding: '3px 10px',
+                        borderRadius: 14,
+                      }}
+                    >
+                      FEATURED NOVEL
+                    </span>
+                    <span style={{ color: 'var(--gold)', fontSize: 13, letterSpacing: 2 }}>★★★★★</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+                      Historical Suspense
+                    </span>
                   </div>
+
                   <h3
                     style={{
                       margin: 0,
                       fontFamily: 'var(--serif, Georgia, serif)',
-                      fontSize: 22,
+                      fontSize: 'clamp(22px, 2.4vw, 28px)',
                       color: 'var(--cream)',
                       lineHeight: 1.25,
+                      letterSpacing: '-0.01em',
                     }}
                   >
                     {relatedBook.title}
                   </h3>
-                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: '#c4b8a5' }}>
-                    {relatedBook.tagline || relatedBook.description?.slice(0, 180) + '...'}
+
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 13.5,
+                      lineHeight: 1.6,
+                      color: '#d4c8b6',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {relatedBook.tagline || relatedBook.description || 'Step into the unforgiving 1880s frontier with Ken Merrell’s signature suspense.'}
                   </p>
 
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+                  {/* Actions Row */}
+                  <div
+                    className="blog-related-book-actions"
+                    style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}
+                  >
                     <Link
                       href={`/books/${relatedBook.slug}`}
                       className="btn pri"
-                      style={{ fontSize: 11, padding: '8px 18px', letterSpacing: '0.1em' }}
+                      style={{
+                        fontSize: 11,
+                        padding: '10px 22px',
+                        letterSpacing: '0.12em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
                     >
-                      EXPLORE THE BOOK
+                      <span>EXPLORE THE NOVEL</span>
+                      <span>→</span>
                     </Link>
+
                     {relatedBook.amazonUrl && (
                       <a
                         href={relatedBook.amazonUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn sec"
-                        style={{ fontSize: 11, padding: '8px 16px', letterSpacing: '0.1em' }}
+                        style={{
+                          fontSize: 11,
+                          padding: '10px 20px',
+                          letterSpacing: '0.12em',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
                       >
-                        BUY ON AMAZON ↗
+                        <span>BUY ON AMAZON</span>
+                        <span>↗</span>
                       </a>
                     )}
                   </div>
@@ -577,33 +593,51 @@ export default async function BlogPostPage({ params }: PageProps) {
               </section>
             )}
 
-            {/* Author Bio Box */}
+            {/* Author Bio Showcase */}
             <section
+              aria-label="About the Author: Ken Merrell"
               className="blog-author-bio-card"
               style={{
                 marginTop: 48,
-                padding: 24,
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderRadius: 8,
+                padding: '32px 30px',
+                background: 'linear-gradient(135deg, rgba(24, 20, 16, 0.95) 0%, rgba(14, 11, 9, 0.98) 100%)',
+                border: '1px solid rgba(201, 168, 96, 0.35)',
+                borderRadius: 12,
+                boxShadow: '0 16px 45px rgba(0,0,0,0.5)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
+              {/* Subtle gold accent indicator */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: 3,
+                  background: 'linear-gradient(180deg, var(--gold) 0%, rgba(201, 168, 96, 0.2) 100%)',
+                }}
+              />
+
+              {/* Author Portrait with Double Gold Ring Frame */}
               <Link
                 href="/author"
-                title="Ken Merrell — About the Author"
+                title="Ken Merrell — Author of Historical Suspense"
                 style={{
-                  width: 68,
-                  height: 68,
+                  width: 86,
+                  height: 86,
                   borderRadius: '50%',
                   border: '2px solid var(--gold)',
+                  boxShadow: '0 0 0 4px rgba(201, 168, 96, 0.15), 0 8px 24px rgba(0,0,0,0.6)',
                   overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: 'radial-gradient(circle, #2a2219 0%, #120f0c 100%)',
                   flexShrink: 0,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
                   position: 'relative',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 }}
               >
                 {site.photo ? (
@@ -624,26 +658,82 @@ export default async function BlogPostPage({ params }: PageProps) {
                       color: 'var(--gold)',
                       fontFamily: 'var(--serif-c, "Cinzel", serif)',
                       fontWeight: 700,
-                      fontSize: 18,
+                      fontSize: 22,
                     }}
                   >
                     KM
                   </span>
                 )}
               </Link>
-              <div style={{ flex: 1, minWidth: 240 }}>
-                <div style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  About the Author
+
+              {/* Author Bio Content */}
+              <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      color: 'var(--gold)',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    ABOUT THE AUTHOR
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+                    Utah, United States
+                  </span>
                 </div>
-                <h4 style={{ margin: '2px 0 6px', color: 'var(--cream)', fontSize: 16, fontFamily: 'var(--serif, Georgia, serif)' }}>
+
+                <h4
+                  style={{
+                    margin: 0,
+                    color: 'var(--cream)',
+                    fontSize: 20,
+                    fontFamily: 'var(--serif, Georgia, serif)',
+                    lineHeight: 1.25,
+                  }}
+                >
                   Ken Merrell
                 </h4>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: '#b8ad9e' }}>
-                  Ken Merrell is an author of historical suspense fiction based in Utah, bringing authentic frontier records and gripping human drama to life.
+
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#c4b9a7' }}>
+                  Ken Merrell is an author of historical suspense fiction based in Utah. Drawing from authentic 19th-century territorial court records, journals, and forgotten voices, he crafts gripping human drama where every decision carries life-or-death consequences.
                 </p>
-                <div style={{ marginTop: 8 }}>
-                  <Link href="/author" style={{ color: 'var(--gold)', fontSize: 12, textDecoration: 'underline' }}>
-                    Read Ken&apos;s Full Story →
+
+                <div className="blog-author-bio-actions" style={{ marginTop: 6, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Link
+                    href="/author"
+                    style={{
+                      color: 'var(--gold)',
+                      fontSize: 12,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      letterSpacing: '0.08em',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <span>Read Ken&apos;s Full Story</span>
+                    <span>→</span>
+                  </Link>
+
+                  <Link
+                    href="/books"
+                    style={{
+                      color: 'var(--cream)',
+                      fontSize: 11.5,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      letterSpacing: '0.08em',
+                      opacity: 0.8,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Explore Novels & Archives
                   </Link>
                 </div>
               </div>
