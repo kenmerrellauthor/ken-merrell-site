@@ -229,7 +229,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <Link
-                      href={`/admin/blogs/${post.id}`}
+                      href={`/admin/blogs/${post.slug || post.id}`}
                       prefetch={true}
                       className="crm-title"
                       style={{
@@ -278,7 +278,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                     )}
                     <span>·</span>
                     <Link
-                      href={`/admin/blogs/${post.id}#comments`}
+                      href={`/admin/blogs/${post.slug || post.id}#comments`}
                       style={{
                         color: commentsCount > 0 ? 'var(--gold)' : 'var(--muted)',
                         fontWeight: commentsCount > 0 ? 600 : 400,
@@ -430,7 +430,7 @@ export default function BlogListClient({ initialBlogs, books }: Props) {
                     </a>
                   )}
                   <Link
-                    href={`/admin/blogs/${post.id}`}
+                    href={`/admin/blogs/${post.slug || post.id}`}
                     prefetch={true}
                     className="crm-sm"
                     style={{ height: 36, padding: '0 12px', fontSize: 12 }}

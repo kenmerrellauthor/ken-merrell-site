@@ -259,8 +259,10 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
             type: 'ok',
             text: willBePublished ? 'Article saved and published live!' : 'Article saved as draft successfully.',
           });
-          if (isNew && res.id) {
-            router.push(`/admin/blogs/${res.id}`);
+          if (isNew && (res.slug || res.id)) {
+            router.push(`/admin/blogs/${res.slug || res.id}`);
+          } else if (res.slug && slug !== res.slug) {
+            router.push(`/admin/blogs/${res.slug}`);
           } else {
             router.refresh();
           }

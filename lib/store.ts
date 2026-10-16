@@ -642,11 +642,12 @@ export const getCrmNotifications = cache(async (limit?: number): Promise<{ notif
         subtitle: `${c.authorEmail} · ${c.approved ? 'Approved' : 'Pending'}`,
         detail: c.content,
         createdAt: c.createdAt,
-        href: `/admin/blogs/${blog.id}#comments`,
+        href: `/admin/blogs/${blog.slug || blog.id}#comments`,
         unread: isUnread,
         metadata: {
           blogTitle: blog.title,
           blogId: blog.id,
+          blogSlug: blog.slug,
           readerName: c.authorName,
           email: c.authorEmail,
         }
@@ -710,17 +711,21 @@ export const getPublishedBlogs = cache(async (): Promise<BlogPost[]> => {
   return allPosts.filter((b) => b.isPublished);
 });
 
-export const getBlog = cache(async (id: string): Promise<BlogPost | null> => {
-  if (!id || id === 'new') return null;
+export const getBlog = cache(async (idOrSlug: string): Promise<BlogPost | null> => {
+  if (!idOrSlug || idOrSlug === 'new') return null;
   const cachedBlogs = getCached<BlogPost[]>('table:blogs');
   if (cachedBlogs) {
-    const found = cachedBlogs.find((x) => x.id === id);
+    const found = cachedBlogs.find((x) => x.id === idOrSlug || x.slug === idOrSlug);
     if (found) return sanitizeBlog(found);
   }
   const db = supabase();
   if (db && !missingTables.has('blogs')) {
     try {
-      const { data, error } = await db.from('blogs').select('id, data').eq('id', id).maybeSingle();
+      const { data, error } = await db
+        .from('blogs')
+        .select('id, data')
+        .or(`id.eq.${idOrSlug},data->>slug.eq.${idOrSlug}`)
+        .maybeSingle();
       if (!error && data?.data) {
         return sanitizeBlog(data.data as BlogPost);
       }
@@ -732,7 +737,7 @@ export const getBlog = cache(async (id: string): Promise<BlogPost | null> => {
     }
   }
   const blogs = await getBlogs();
-  const b = blogs.find((x) => x.id === id) ?? null;
+  const b = blogs.find((x) => x.id === idOrSlug || x.slug === idOrSlug) ?? null;
   return b ? sanitizeBlog(b) : null;
 });
 

@@ -806,6 +806,7 @@ export async function saveBlogPostAction(_p: BlogAdminState, form: FormData): Pr
       }
       revalidatePath('/admin/blogs', 'page');
       revalidatePath(`/admin/blogs/${id}`, 'page');
+      if (slug) revalidatePath(`/admin/blogs/${slug}`, 'page');
       revalidatePath('/sitemap.xml');
     } catch {
       /* ignore */
