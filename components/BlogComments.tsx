@@ -448,18 +448,42 @@ export default function BlogComments({ blogId, blogSlug, initialComments = [] }:
             <button
               type="submit"
               disabled={isPending}
-              className="btn pri"
+              className="btn btn-gold"
               style={{
                 fontSize: 12,
-                padding: '12px 28px',
+                padding: '13px 30px',
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
+                background: 'linear-gradient(135deg, #c9a860 0%, #e2c98d 50%, #b8934a 100%)',
+                color: '#15120f',
+                border: '1px solid #e2c98d',
+                borderRadius: 4,
+                boxShadow: '0 8px 24px rgba(201, 168, 96, 0.35)',
                 cursor: isPending ? 'not-allowed' : 'pointer',
                 opacity: isPending ? 0.7 : 1,
+                transition: 'all 0.25s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+              onMouseEnter={(e) => {
+                if (!isPending) {
+                  e.currentTarget.style.filter = 'brightness(1.12)';
+                  e.currentTarget.style.boxShadow = '0 10px 28px rgba(201, 168, 96, 0.55)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isPending) {
+                  e.currentTarget.style.filter = 'brightness(1)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(201, 168, 96, 0.35)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
-              {isPending ? 'POSTING COMMENT…' : 'POST COMMENT'}
+              <span>✍</span>
+              <span>{isPending ? 'POSTING COMMENT…' : 'POST COMMENT'}</span>
             </button>
           </div>
         </form>
