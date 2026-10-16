@@ -119,7 +119,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
         paddingLeft: 'var(--pad)',
         paddingRight: 'var(--pad)',
         paddingBottom: 40,
-        maxWidth: 1200,
+        maxWidth: 1300,
         margin: '0 auto',
         position: 'relative',
       }}
@@ -127,24 +127,65 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.96) 0%, rgba(14, 12, 10, 0.98) 100%)',
-          border: '1px solid rgba(201, 168, 96, 0.35)',
-          borderRadius: 12,
-          overflow: 'hidden',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(201, 168, 96, 0.15)',
-          position: 'relative',
-          userSelect: 'none',
-          cursor: total > 1 ? 'grab' : 'default',
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
+        {/* Outside Left Navigation Arrow */}
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous article slide"
+            style={{
+              flexShrink: 0,
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(28, 23, 18, 0.95)',
+              border: '1px solid rgba(201, 168, 96, 0.45)',
+              color: 'var(--gold, #c9a860)',
+              fontSize: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              transition: 'all 0.2s ease',
+              zIndex: 10,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gold)';
+              e.currentTarget.style.color = '#15120f';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
+              e.currentTarget.style.color = 'var(--gold, #c9a860)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ‹
+          </button>
+        )}
+
+        {/* Outer Slider Frame with Rounded Border & Luxury Gold Trim */}
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            background: 'linear-gradient(135deg, rgba(28, 23, 18, 0.96) 0%, rgba(14, 12, 10, 0.98) 100%)',
+            border: '1px solid rgba(201, 168, 96, 0.35)',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(201, 168, 96, 0.15)',
+            position: 'relative',
+            userSelect: 'none',
+            cursor: total > 1 ? 'grab' : 'default',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+        >
         {/* Decorative Vintage Gold Corner Accents */}
         <span style={{ position: 'absolute', top: 4, left: 4, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderLeft: '2px solid var(--gold, #c9a860)', zIndex: 12 }} />
         <span style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderTop: '2px solid var(--gold, #c9a860)', borderRight: '2px solid var(--gold, #c9a860)', zIndex: 12 }} />
@@ -262,7 +303,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
                         letterSpacing: '0.08em',
                       }}
                     >
-                      {idx + 1} / {total}
+                      {`${idx + 1} of ${total}`}
                     </span>
                   )}
                 </div>
@@ -418,88 +459,7 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
           ))}
         </div>
 
-        {/* Floating Manual Navigation Chevrons (Left & Right) */}
-        {total > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={handlePrev}
-              aria-label="Previous article slide"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 14,
-                transform: 'translateY(-50%)',
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                background: 'rgba(18, 14, 10, 0.85)',
-                border: '1px solid rgba(201, 168, 96, 0.4)',
-                color: 'var(--gold, #c9a860)',
-                fontSize: 22,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(8px)',
-                transition: 'all 0.2s ease',
-                zIndex: 10,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--gold)';
-                e.currentTarget.style.color = '#15120f';
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(18, 14, 10, 0.85)';
-                e.currentTarget.style.color = 'var(--gold, #c9a860)';
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-              }}
-            >
-              ‹
-            </button>
-
-            <button
-              type="button"
-              onClick={handleNext}
-              aria-label="Next article slide"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: 14,
-                transform: 'translateY(-50%)',
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                background: 'rgba(18, 14, 10, 0.85)',
-                border: '1px solid rgba(201, 168, 96, 0.4)',
-                color: 'var(--gold, #c9a860)',
-                fontSize: 22,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(8px)',
-                transition: 'all 0.2s ease',
-                zIndex: 10,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--gold)';
-                e.currentTarget.style.color = '#15120f';
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(18, 14, 10, 0.85)';
-                e.currentTarget.style.color = 'var(--gold, #c9a860)';
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-              }}
-            >
-              ›
-            </button>
-          </>
-        )}
+        {/* Inner arrows removed; placed outside card */}
 
         {/* Animated Auto-Swipe Progress Bar at the very bottom */}
         {total > 1 && (
@@ -524,6 +484,45 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
               }}
             />
           </div>
+        )}
+      </div>
+
+        {/* Outside Right Navigation Arrow */}
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next article slide"
+            style={{
+              flexShrink: 0,
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(28, 23, 18, 0.95)',
+              border: '1px solid rgba(201, 168, 96, 0.45)',
+              color: 'var(--gold, #c9a860)',
+              fontSize: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              transition: 'all 0.2s ease',
+              zIndex: 10,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gold)';
+              e.currentTarget.style.color = '#15120f';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
+              e.currentTarget.style.color = 'var(--gold, #c9a860)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ›
+          </button>
         )}
       </div>
     </section>
