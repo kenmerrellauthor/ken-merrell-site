@@ -2516,6 +2516,29 @@ button { font: inherit; }
   background: #15120f;
 }
 
+.in-article-banner-portrait {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 96, 0.18), 0 8px 24px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #2a2219 0%, #120f0c 100%);
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 680px) {
+  .in-article-banner-portrait {
+    width: 64px;
+    height: 64px;
+  }
+}
+
 .in-article-banner-content {
   flex: 1;
   min-width: 0;
@@ -2667,8 +2690,10 @@ button { font: inherit; }
     gap: 12px !important;
   }
 
-  .blog-viewmode-switcher {
-    align-self: flex-start !important;
+  /* Remove grid option on mobile */
+  .blog-viewmode-switcher,
+  .blog-viewmode-grid-btn {
+    display: none !important;
   }
 
   .blog-search-box-wrap {

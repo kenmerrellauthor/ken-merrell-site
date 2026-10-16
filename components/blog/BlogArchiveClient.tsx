@@ -45,6 +45,19 @@ export default function BlogArchiveClient({ posts }: Props) {
     }
   }, []);
 
+  // On mobile view, automatically keep list view mode
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => {
+      if (window.innerWidth <= 768 && viewMode !== 'list') {
+        setViewMode('list');
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [viewMode]);
+
   const handleCategorySelect = (cat: string) => {
     setSelectedCategory(cat);
     if (typeof window !== 'undefined') {
