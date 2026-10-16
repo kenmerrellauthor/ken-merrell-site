@@ -8,7 +8,6 @@ import { getBlogBySlug, getBooks, getPublishedBlogs, getSite, getAdSettings, inc
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
 import BlogComments from '@/components/BlogComments';
-import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 import { parseYouTubeId } from '@/lib/youtube';
 import BlogShareBar from '@/components/blog/BlogShareBar';
 import MoreArticlesSection from '@/components/blog/MoreArticlesSection';
@@ -100,9 +99,6 @@ export default async function BlogPostPage({ params }: PageProps) {
   const relatedBook = post.relatedBookSlug
     ? books.find((b) => b.slug === post.relatedBookSlug)
     : null;
-
-  const leftBook = books[0] || null;
-  const rightBook = books.find((b) => b.slug !== leftBook?.slug && b.slug !== relatedBook?.slug) || books[1] || books[0] || null;
 
   const rawBase =
     (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
@@ -217,12 +213,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         >
           <div className="km-grain abs" style={{ opacity: 0.35 }} />
 
-          <div className="blog-reader-layout">
-            {/* Left Sidebar Ad Space */}
-            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={adSettings.leftAd} />
-
-            {/* Central Article Column */}
-            <div className="blog-reader-main">
+          <div className="blog-reader-main" style={{ maxWidth: 840, margin: '0 auto' }}>
             {/* Breadcrumb Navigation */}
             <nav
               aria-label="Breadcrumb"
@@ -624,10 +615,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                 ← Back to All Articles
               </Link>
             </div>
-            </div>
-
-            {/* Right Sidebar Ad Space */}
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
           </div>
         </article>
 
