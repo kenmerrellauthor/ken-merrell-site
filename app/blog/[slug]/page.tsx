@@ -11,6 +11,7 @@ import BlogComments from '@/components/BlogComments';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 import { parseYouTubeId } from '@/lib/youtube';
 import BlogShareBar from '@/components/blog/BlogShareBar';
+import MoreArticlesSection from '@/components/blog/MoreArticlesSection';
 
 export const revalidate = 60;
 
@@ -62,16 +63,36 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const [post, site, books, adSettings] = await Promise.all([
+  const [post, site, books, adSettings, allPosts] = await Promise.all([
     getBlogBySlug(slug),
     getSite(),
     getBooks(),
     getAdSettings(),
+    getPublishedBlogs(),
   ]);
 
   if (!post || !post.isPublished) {
     notFound();
   }
+
+  // Related and more articles recommendation
+  const otherPosts = allPosts.filter((p) => p.id !== post.id && p.slug !== post.slug);
+  const currentTags = new Set(post.tags || []);
+  const morePosts = [...otherPosts]
+    .sort((a, b) => {
+      const aCat = a.category === post.category ? 1 : 0;
+      const bCat = b.category === post.category ? 1 : 0;
+      if (aCat !== bCat) return bCat - aCat;
+
+      const aTags = (a.tags || []).filter((t) => currentTags.has(t)).length;
+      const bTags = (b.tags || []).filter((t) => currentTags.has(t)).length;
+      if (aTags !== bTags) return bTags - aTags;
+
+      const tA = new Date(a.publishedAt || a.updatedAt).getTime();
+      const tB = new Date(b.publishedAt || b.updatedAt).getTime();
+      return tB - tA;
+    })
+    .slice(0, 3);
 
   // Increment views in background (non-blocking)
   incrementBlogViews(post.id).catch(() => {});
@@ -582,6 +603,9 @@ export default async function BlogPostPage({ params }: PageProps) {
                 </div>
               </div>
             </section>
+
+            {/* More Articles & Related Dispatches */}
+            <MoreArticlesSection posts={morePosts} currentCategory={post.category} />
 
             {/* Reader Comments & Reflections Section */}
             <BlogComments
