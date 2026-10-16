@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Eyebrow } from '@/components/Bits';
-import { getPublishedBlogs, getSite, getBooks } from '@/lib/store';
+import { getPublishedBlogs, getSite, getBooks, getAdSettings } from '@/lib/store';
 import BlogArchiveClient from '@/components/blog/BlogArchiveClient';
 import BlogFeaturedSpotlight from '@/components/blog/BlogFeaturedSpotlight';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const [site, posts, books] = await Promise.all([getSite(), getPublishedBlogs(), getBooks()]);
+  const [site, posts, books, adSettings] = await Promise.all([getSite(), getPublishedBlogs(), getBooks(), getAdSettings()]);
   const spotlightPosts = posts.filter((p) => p.featured);
   const leftBook = books[0] || null;
   const rightBook = books[1] || books[0] || null;
@@ -118,11 +118,11 @@ export default async function BlogIndexPage() {
           }}
         >
           <div className="blog-archive-layout">
-            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" adConfig={site.adSettings?.leftAd} />
+            <SidebarAdSlot position="left" book={leftBook} label="FEATURED NOVEL" adConfig={adSettings.leftAd} />
             <div className="blog-archive-main">
               <BlogArchiveClient posts={posts} />
             </div>
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={site.adSettings?.rightAd} />
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
           </div>
         </main>
 

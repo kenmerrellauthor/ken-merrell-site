@@ -89,7 +89,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
     setSlug(slugify(title));
   };
 
-  const insertFormatting = (action: 'h2' | 'h3' | 'bold' | 'italic' | 'quote' | 'bullet' | 'list' | 'link' | 'video') => {
+  const insertFormatting = (action: 'h2' | 'h3' | 'bold' | 'italic' | 'quote' | 'bullet' | 'list' | 'link' | 'video' | 'ad') => {
     const textarea = document.getElementById('blog-content-area') as HTMLTextAreaElement | null;
     if (!textarea) return;
     const start = textarea.selectionStart ?? 0;
@@ -191,6 +191,15 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
         const after = !content.slice(end).startsWith('\n\n')
           ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
         replacement = `${before}${inputUrl.trim()}${after}`;
+        cursorOffset = replacement.length;
+        break;
+      }
+      case 'ad': {
+        const before = start > 0 && !content.slice(0, start).endsWith('\n\n')
+          ? (content.slice(0, start).endsWith('\n') ? '\n' : '\n\n') : '';
+        const after = !content.slice(end).startsWith('\n\n')
+          ? (content.slice(end).startsWith('\n') ? '\n' : '\n\n') : '';
+        replacement = `${before}[ad]${after}`;
         cursorOffset = replacement.length;
         break;
       }
@@ -542,6 +551,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                     <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
                     <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
                     <button type="button" onClick={() => insertFormatting('video')} className="crm-sm" title="Insert YouTube Video Player" style={{ height: 32, padding: '0 9px', fontSize: 11, color: '#e69138', fontWeight: 600 }}>▶ Video</button>
+                    <button type="button" onClick={() => insertFormatting('ad')} className="crm-sm" title="Insert In-Article Ad Slot ([ad])" style={{ height: 32, padding: '0 9px', fontSize: 11, color: 'var(--gold)', fontWeight: 600 }}>🏷 [Ad]</button>
                   </div>
 
                   <textarea
@@ -606,6 +616,7 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                   <button type="button" onClick={() => insertFormatting('list')} className="crm-sm" title="Numbered List (1.)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>1. List</button>
                   <button type="button" onClick={() => insertFormatting('link')} className="crm-sm" title="Link [text](url)" style={{ height: 32, padding: '0 9px', fontSize: 11 }}>Link</button>
                   <button type="button" onClick={() => insertFormatting('video')} className="crm-sm" title="Insert YouTube Video Player" style={{ height: 32, padding: '0 9px', fontSize: 11, color: '#e69138', fontWeight: 600 }}>▶ Video</button>
+                  <button type="button" onClick={() => insertFormatting('ad')} className="crm-sm" title="Insert In-Article Ad Slot ([ad])" style={{ height: 32, padding: '0 9px', fontSize: 11, color: 'var(--gold)', fontWeight: 600 }}>🏷 [Ad]</button>
                 </div>
 
                 <textarea

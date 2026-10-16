@@ -1,7 +1,10 @@
 import React from 'react';
+import InArticleAdSlot from '@/components/ads/InArticleAdSlot';
+import type { InArticleAdItem } from '@/lib/types';
 
 interface Props {
   content: string;
+  inArticleAd?: InArticleAdItem | null;
 }
 
 function renderInline(text: string): React.ReactNode {
@@ -182,6 +185,7 @@ type ParsedBlock =
   | { type: 'ul'; items: string[] }
   | { type: 'ol'; items: string[] }
   | { type: 'hr' }
+  | { type: 'ad' }
   | { type: 'p'; lines: string[] };
 
 function parseMarkdownBlocks(content: string): ParsedBlock[] {
@@ -195,6 +199,13 @@ function parseMarkdownBlocks(content: string): ParsedBlock[] {
 
     // Blank line
     if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // In-Article Ad shortcode: [ad], [advertisement], or [sponsored]
+    if (/^\[(ad|advertisement|sponsored)\]$/i.test(trimmed)) {
+      blocks.push({ type: 'ad' });
       i++;
       continue;
     }
@@ -304,10 +315,42 @@ function parseMarkdownBlocks(content: string): ParsedBlock[] {
   return blocks;
 }
 
-export default function BlogContentRenderer({ content }: Props) {
+export default function BlogContentRenderer({ content, inArticleAd }: Props) {
   if (!content) return null;
 
-  const blocks = parseMarkdownBlocks(content);
+  const rawBlocks = parseMarkdownBlocks(content);
+  const blocks = [...rawBlocks];
+
+  // If in-article ad is enabled and no explicit [ad] block was typed, automatically inject
+  // after reading paragraph N (default: 2, or after the 2nd paragraph)
+  const isAdEnabled = inArticleAd ? inArticleAd.enabled !== false : true;
+  const hasManualAd = blocks.some((b) => b.type === 'ad');
+
+  if (isAdEnabled && !hasManualAd) {
+    const targetParagraph = Math.max(1, inArticleAd?.insertAfterParagraph ?? 2);
+    let pCount = 0;
+    let insertIdx = -1;
+
+    for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+      if (blocks[bIdx].type === 'p') {
+        pCount++;
+        if (pCount === targetParagraph) {
+          insertIdx = bIdx + 1;
+          break;
+        }
+      }
+    }
+
+    // If the article has fewer paragraphs than targetParagraph, inject after the last paragraph
+    if (insertIdx === -1 && blocks.length > 0) {
+      const lastPIdx = blocks.map((b) => b.type).lastIndexOf('p');
+      insertIdx = lastPIdx !== -1 ? lastPIdx + 1 : blocks.length;
+    }
+
+    if (insertIdx !== -1) {
+      blocks.splice(insertIdx, 0, { type: 'ad' });
+    }
+  }
 
   return (
     <div
@@ -516,6 +559,9 @@ export default function BlogContentRenderer({ content }: Props) {
                 }}
               />
             );
+
+          case 'ad':
+            return <InArticleAdSlot key={idx} adConfig={inArticleAd} />;
 
           case 'p':
           default:
