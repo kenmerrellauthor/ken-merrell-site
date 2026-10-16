@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Eyebrow, Cover } from '@/components/Bits';
-import { getBlogBySlug, getBooks, getPublishedBlogs, getSite, incrementBlogViews } from '@/lib/store';
+import { getBlogBySlug, getBooks, getPublishedBlogs, getSite, getAdSettings, incrementBlogViews } from '@/lib/store';
 import BlogContentRenderer from '@/components/blog/BlogContentRenderer';
 import BlogFaqAccordion from '@/components/blog/BlogFaqAccordion';
 import BlogComments from '@/components/BlogComments';
@@ -61,10 +61,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const [post, site, books] = await Promise.all([
+  const [post, site, books, adSettings] = await Promise.all([
     getBlogBySlug(slug),
     getSite(),
     getBooks(),
+    getAdSettings(),
   ]);
 
   if (!post || !post.isPublished) {
@@ -196,7 +197,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           <div className="blog-reader-layout">
             {/* Left Sidebar Ad Space */}
-            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={site.adSettings?.leftAd} />
+            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={adSettings.leftAd} />
 
             {/* Central Article Column */}
             <div className="blog-reader-main">
@@ -394,7 +395,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             )}
 
             {/* Main Article Body */}
-            <BlogContentRenderer content={post.content} />
+            <BlogContentRenderer content={post.content} inArticleAd={adSettings.inArticleAd} />
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
@@ -601,7 +602,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
 
             {/* Right Sidebar Ad Space */}
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={site.adSettings?.rightAd} />
+            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
           </div>
         </article>
 

@@ -119,9 +119,27 @@ export interface SidebarAdItem {
   customHtml?: string; // for custom scripts or external ad tags
 }
 
+export interface InArticleAdItem {
+  enabled: boolean;
+  insertAfterParagraph: number; // default: 2 (or after 2nd paragraph)
+  label?: string; // e.g. "SPONSORED RECOMMENDATION", "FEATURED NOVEL"
+  badge?: string; // e.g. "★ BESTSELLER", "⚡ HISTORICAL SUSPENSE"
+  bookSlug?: string;
+  title?: string;
+  coverImage?: string;
+  tagline?: string;
+  ratingStars?: number; // 1-5
+  primaryBtnText?: string;
+  primaryBtnUrl?: string;
+  secondaryBtnText?: string;
+  secondaryBtnUrl?: string;
+  customHtml?: string; // for custom scripts or external ad tags
+}
+
 export interface AdSettings {
   leftAd: SidebarAdItem;
   rightAd: SidebarAdItem;
+  inArticleAd?: InArticleAdItem;
 }
 
 export interface Reader {
