@@ -11,23 +11,23 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: 'Blog & Historical Essays · Behind the Frontier | Ken Merrell',
+  title: 'The Author’s Blog · Dispatches from the Desk | Ken Merrell',
   description:
-    'Explore in-depth historical essays, frontier archives, character studies, and writing craft notes by historical suspense author Ken Merrell.',
+    'Step into the stories behind 19th-century suspense. Authentic frontier research, secret inspirations, forgotten historical archives, and writing craft essays directly from Ken Merrell.',
   alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Blog & Historical Essays · Ken Merrell',
+    title: 'The Author’s Blog · Ken Merrell',
     description:
-      'Explore in-depth historical essays, frontier archives, character studies, and writing craft notes by historical suspense author Ken Merrell.',
+      'Step into the stories behind 19th-century suspense. Authentic frontier research, secret inspirations, forgotten historical archives, and writing craft essays directly from Ken Merrell.',
     url: '/blog',
     type: 'website',
     images: [{ url: '/img/banners/ash.jpg', width: 1200, height: 630, alt: 'Ken Merrell Historical Blog' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Blog & Historical Essays · Ken Merrell',
+    title: 'The Author’s Blog · Ken Merrell',
     description:
-      'Explore in-depth historical essays, frontier archives, character studies, and writing craft notes by historical suspense author Ken Merrell.',
+      'Step into the stories behind 19th-century suspense. Authentic frontier research, secret inspirations, forgotten historical archives, and writing craft essays directly from Ken Merrell.',
     images: ['/img/banners/ash.jpg'],
   },
 };
@@ -69,7 +69,7 @@ export default async function BlogIndexPage() {
               gap: 16,
             }}
           >
-            <Eyebrow text="AUTHOR ARCHIVES & ESSAYS" />
+            <Eyebrow text="THE OFFICIAL AUTHOR BLOG" />
             <h1
               style={{
                 fontFamily: 'var(--serif, Georgia, serif)',
@@ -81,19 +81,19 @@ export default async function BlogIndexPage() {
                 maxWidth: 820,
               }}
             >
-              Behind the Frontier
+              Dispatches from the Author’s Desk
             </h1>
             <p
               style={{
                 fontSize: 'clamp(15px, 1.8vw, 18px)',
                 lineHeight: 1.6,
                 color: '#c4b8a5',
-                maxWidth: 680,
+                maxWidth: 720,
                 margin: 0,
                 fontStyle: 'italic',
               }}
             >
-              Archival research, historical mysteries, character dilemmas, and writing craft behind the historical novels of Ken Merrell.
+              Step into the stories behind the suspense. Explore authentic 19th-century frontier research, secret inspirations, forgotten historical archives, and writing craft essays directly from Ken Merrell.
             </p>
           </div>
         </section>

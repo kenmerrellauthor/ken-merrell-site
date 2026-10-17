@@ -59,6 +59,21 @@ export async function POST(req: Request) {
       country: country,
     });
 
+    // If this is an article pageview, increment the blog's real reader count
+    if (body.eventType === 'pageview' && typeof body.pagePath === 'string' && body.pagePath.startsWith('/blog/')) {
+      const slug = body.pagePath.replace(/^\/blog\//, '').split('?')[0].split('#')[0].trim();
+      if (slug && slug !== 'blog') {
+        const { getBlogBySlug, incrementBlogViews } = await import('@/lib/store');
+        getBlogBySlug(slug)
+          .then((blog) => {
+            if (blog?.id) {
+              return incrementBlogViews(blog.id);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
     return NextResponse.json({ ok: true, ...result });
   } catch (err: any) {
     console.error('Analytics tracking request failed:', err);

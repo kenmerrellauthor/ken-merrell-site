@@ -339,13 +339,9 @@ export default async function BlogPostPage({ params }: PageProps) {
                   })}
                 </time>
                 <span>•</span>
-                <span>{post.readTimeMinutes} min read</span>
-                {post.views !== undefined && post.views > 5 && (
-                  <>
-                    <span>•</span>
-                    <span>{post.views.toLocaleString()} readers</span>
-                  </>
-                )}
+                <span>{post.readTimeMinutes || 2} min read</span>
+                <span>•</span>
+                <span>{(post.views || 0).toLocaleString()} {(post.views || 0) === 1 ? 'reader' : 'readers'}</span>
               </div>
 
               {/* Top Quick Share Bar */}
