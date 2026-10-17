@@ -123,6 +123,7 @@ export interface SidebarAdItem {
 export interface InArticleAdItem {
   enabled: boolean;
   insertAfterParagraph: number; // default: 2 (or after 2nd paragraph)
+  placement?: 'start' | 'mid' | 'end'; // 'start' | 'mid' | 'end' of article
   label?: string; // e.g. "SPONSORED RECOMMENDATION", "FEATURED NOVEL"
   badge?: string; // e.g. "★ BESTSELLER", "⚡ HISTORICAL SUSPENSE"
   bookSlug?: string;

@@ -322,29 +322,36 @@ export default function BlogContentRenderer({ content, inArticleAd }: Props) {
   const blocks = [...rawBlocks];
 
   // If in-article ad is enabled and no explicit [ad] block was typed, automatically inject
-  // after reading paragraph N (default: 2, or after the 2nd paragraph)
+  // at start, mid, or end of article (default: mid)
   const isAdEnabled = inArticleAd ? inArticleAd.enabled !== false : true;
   const hasManualAd = blocks.some((b) => b.type === 'ad');
 
   if (isAdEnabled && !hasManualAd) {
-    const targetParagraph = Math.max(1, inArticleAd?.insertAfterParagraph ?? 2);
-    let pCount = 0;
+    const pIndices: number[] = [];
+    blocks.forEach((b, idx) => {
+      if (b.type === 'p') pIndices.push(idx);
+    });
+
+    const totalParagraphs = pIndices.length;
     let insertIdx = -1;
 
-    for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
-      if (blocks[bIdx].type === 'p') {
-        pCount++;
-        if (pCount === targetParagraph) {
-          insertIdx = bIdx + 1;
-          break;
-        }
-      }
-    }
+    const placement = inArticleAd?.placement || 
+      (inArticleAd?.insertAfterParagraph === 1 ? 'start' :
+       inArticleAd?.insertAfterParagraph && inArticleAd.insertAfterParagraph >= 4 ? 'end' : 'mid');
 
-    // If the article has fewer paragraphs than targetParagraph, inject after the last paragraph
-    if (insertIdx === -1 && blocks.length > 0) {
-      const lastPIdx = blocks.map((b) => b.type).lastIndexOf('p');
-      insertIdx = lastPIdx !== -1 ? lastPIdx + 1 : blocks.length;
+    if (totalParagraphs > 0) {
+      if (placement === 'start') {
+        // Start of article: after paragraph 1
+        insertIdx = pIndices[0] + 1;
+      } else if (placement === 'end') {
+        // End of article: before conclusion / after second-to-last paragraph
+        const targetP = totalParagraphs > 2 ? totalParagraphs - 1 : totalParagraphs;
+        insertIdx = pIndices[targetP - 1] + 1;
+      } else {
+        // Mid of article (Recommended): right in the middle
+        const midP = Math.max(1, Math.ceil(totalParagraphs / 2));
+        insertIdx = pIndices[midP - 1] + 1;
+      }
     }
 
     if (insertIdx !== -1) {
