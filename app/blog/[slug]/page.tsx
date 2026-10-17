@@ -14,7 +14,8 @@ import MoreArticlesSection from '@/components/blog/MoreArticlesSection';
 import SidebarAdSlot from '@/components/ads/SidebarAdSlot';
 import { SocialIcon } from '@/components/icons';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -116,6 +117,22 @@ export default async function BlogPostPage({ params }: PageProps) {
     }
     return true;
   };
+
+  // Resolve in-article ad specifically for this post
+  let inArticleAdForPost = null as typeof adSettings.inArticleAd | null;
+  if (adSettings.inArticleAd && isAdAllowedForPost(adSettings.inArticleAd)) {
+    const resolvedAd = { ...adSettings.inArticleAd };
+    // If the ad is configured to match related novel dynamically (or if bookSlug is 'auto'),
+    // adapt banner, title, tagline and URL to the current blog post's related novel:
+    if (adSettings.inArticleAd.bookSlug === 'auto' && relatedBook) {
+      resolvedAd.title = relatedBook.title;
+      resolvedAd.bookSlug = relatedBook.slug;
+      resolvedAd.bannerImage = relatedBook.banner || resolvedAd.bannerImage || '/img/banners/ash.jpg';
+      resolvedAd.primaryBtnUrl = relatedBook.amazonUrl || `/books/${relatedBook.slug}`;
+      if (relatedBook.tagline) resolvedAd.tagline = relatedBook.tagline;
+    }
+    inArticleAdForPost = resolvedAd;
+  }
 
   const rawBase =
     (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
@@ -416,7 +433,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             {/* Main Article Body */}
             <BlogContentRenderer
               content={post.content}
-              inArticleAd={isAdAllowedForPost(adSettings.inArticleAd) ? adSettings.inArticleAd : null}
+              inArticleAd={inArticleAdForPost}
             />
 
             {/* Tags */}
