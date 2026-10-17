@@ -172,7 +172,7 @@ export default function BlogListClient({ initialBlogs, books, adSettings }: Prop
       </div>
 
       {view === 'ads' && adSettings ? (
-        <AdsManagerClient initialSettings={adSettings} books={books} />
+        <AdsManagerClient initialSettings={adSettings} books={books} blogs={blogs} />
       ) : (
         <>
           {/* ── Tabs & Filter Bar ── */}

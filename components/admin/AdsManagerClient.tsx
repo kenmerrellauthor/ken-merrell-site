@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import type { AdSettings, Book, SidebarAdItem, InArticleAdItem } from '@/lib/types';
+import type { AdSettings, Book, BlogPost, SidebarAdItem, InArticleAdItem } from '@/lib/types';
 import { defaultInArticleAd } from '@/lib/adConstants';
 import { Ic } from './AdIcons';
 import { saveAdSettingsAction } from '@/app/admin/actions';
@@ -11,9 +11,10 @@ import InArticleAdSlot from '@/components/ads/InArticleAdSlot';
 interface Props {
   initialSettings: AdSettings;
   books: Book[];
+  blogs?: BlogPost[];
 }
 
-export default function AdsManagerClient({ initialSettings, books }: Props) {
+export default function AdsManagerClient({ initialSettings, books, blogs = [] }: Props) {
   const [settings, setSettings] = useState<AdSettings>({
     ...initialSettings,
     inArticleAd: initialSettings.inArticleAd || defaultInArticleAd,
@@ -349,6 +350,248 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
                   </span>
                 </div>
               )}
+
+              {/* Blog Visibility: Choose Which Blogs Show This Ad */}
+              <div
+                style={{
+                  padding: '16px',
+                  background: 'rgba(201,168,96,0.05)',
+                  border: '1px solid rgba(201,168,96,0.25)',
+                  borderRadius: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <label className="crm-label" style={{ color: 'var(--gold)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>🎯</span>
+                    <span>SHOW ON WHICH BLOG POSTS?</span>
+                  </label>
+                  {Array.isArray(currentAd.targetBlogSlugs) && (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => updateCurrentAd({ targetBlogSlugs: (blogs || []).map((b) => b.slug) })}
+                        className="crm-sm"
+                        style={{ height: 26, padding: '0 10px', fontSize: 10.5, letterSpacing: '0.05em' }}
+                        title="Enable for all blog posts"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateCurrentAd({ targetBlogSlugs: [] })}
+                        className="crm-sm"
+                        style={{ height: 26, padding: '0 10px', fontSize: 10.5, letterSpacing: '0.05em' }}
+                        title="Deselect all blog posts"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mode Selector: All Blogs vs Specific Blogs */}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                      padding: '8px 14px',
+                      borderRadius: 4,
+                      background: !currentAd.targetBlogSlugs ? 'rgba(201,168,96,0.15)' : '#120f0c',
+                      border: !currentAd.targetBlogSlugs ? '1px solid var(--gold)' : '1px solid #3a332b',
+                      color: !currentAd.targetBlogSlugs ? 'var(--gold)' : 'var(--cream-2)',
+                      fontSize: 12,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      fontWeight: 600,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name={`ad-target-mode-${activeTab}`}
+                      checked={!currentAd.targetBlogSlugs}
+                      onChange={() => updateCurrentAd({ targetBlogSlugs: undefined, excludedBlogSlugs: undefined })}
+                      style={{ accentColor: 'var(--gold)' }}
+                    />
+                    <span>Show on ALL Blog Posts</span>
+                  </label>
+
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                      padding: '8px 14px',
+                      borderRadius: 4,
+                      background: Array.isArray(currentAd.targetBlogSlugs) ? 'rgba(201,168,96,0.15)' : '#120f0c',
+                      border: Array.isArray(currentAd.targetBlogSlugs) ? '1px solid var(--gold)' : '1px solid #3a332b',
+                      color: Array.isArray(currentAd.targetBlogSlugs) ? 'var(--gold)' : 'var(--cream-2)',
+                      fontSize: 12,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      fontWeight: 600,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name={`ad-target-mode-${activeTab}`}
+                      checked={Array.isArray(currentAd.targetBlogSlugs)}
+                      onChange={() =>
+                        updateCurrentAd({
+                          targetBlogSlugs: currentAd.targetBlogSlugs || (blogs || []).map((b) => b.slug),
+                        })
+                      }
+                      style={{ accentColor: 'var(--gold)' }}
+                    />
+                    <span>Choose Specific Blog Posts</span>
+                  </label>
+                </div>
+
+                {/* Specific Blogs Checkbox / Toggle List */}
+                {Array.isArray(currentAd.targetBlogSlugs) && (
+                  <div style={{ marginTop: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--muted)',
+                        marginBottom: 8,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <span>Click any article to toggle its ad on or off:</span>
+                      <span>
+                        Active on <b>{currentAd.targetBlogSlugs.length}</b> of <b>{(blogs || []).length}</b> articles
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                        maxHeight: 260,
+                        overflowY: 'auto',
+                        paddingRight: 4,
+                      }}
+                    >
+                      {(blogs || []).map((blog) => {
+                        const isEnabled = (currentAd.targetBlogSlugs ?? []).includes(blog.slug);
+                        return (
+                          <div
+                            key={blog.id}
+                            onClick={() => {
+                              const currentList = currentAd.targetBlogSlugs || [];
+                              const nextList = currentList.includes(blog.slug)
+                                ? currentList.filter((s) => s !== blog.slug)
+                                : [...currentList, blog.slug];
+                              updateCurrentAd({ targetBlogSlugs: nextList });
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '10px 14px',
+                              borderRadius: 4,
+                              background: isEnabled ? 'rgba(201, 168, 96, 0.08)' : '#0f0d0b',
+                              border: isEnabled ? '1px solid rgba(201, 168, 96, 0.38)' : '1px solid #29221b',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                              <span
+                                style={{
+                                  width: 18,
+                                  height: 18,
+                                  borderRadius: 3,
+                                  border: isEnabled ? '1px solid var(--gold)' : '1px solid #4a3e33',
+                                  background: isEnabled ? 'var(--gold)' : 'transparent',
+                                  color: '#15120f',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {isEnabled ? '✓' : ''}
+                              </span>
+                              <div style={{ minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    color: isEnabled ? 'var(--cream)' : 'var(--muted)',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  }}
+                                  title={blog.title}
+                                >
+                                  {blog.title}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#6e6457', marginTop: 2 }}>
+                                  {blog.category} • /blog/{blog.slug}
+                                </div>
+                              </div>
+                            </div>
+
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                                fontWeight: 700,
+                                letterSpacing: '0.1em',
+                                padding: '3px 8px',
+                                borderRadius: 3,
+                                background: isEnabled ? 'rgba(201, 168, 96, 0.2)' : 'rgba(255,255,255,0.04)',
+                                color: isEnabled ? 'var(--gold)' : '#6e6457',
+                                whiteSpace: 'nowrap',
+                                marginLeft: 12,
+                              }}
+                            >
+                              {isEnabled ? '● SHOW AD' : '○ HIDE AD'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick copy to all other ads button */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                    Targeting for: <strong style={{ color: 'var(--gold)' }}>{activeTab === 'inArticle' ? 'In-Article Banner' : activeTab === 'left' ? 'Left Skyscraper' : 'Right Skyscraper'}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const targets = currentAd.targetBlogSlugs;
+                      setSettings((prev) => ({
+                        ...prev,
+                        leftAd: { ...prev.leftAd, targetBlogSlugs: targets },
+                        rightAd: { ...prev.rightAd, targetBlogSlugs: targets },
+                        inArticleAd: { ...(prev.inArticleAd || defaultInArticleAd), targetBlogSlugs: targets },
+                      }));
+                      setStatusMsg({ type: 'ok', text: 'Blog targeting copied to Left, Right, and In-Article ads.' });
+                    }}
+                    className="crm-sm"
+                    style={{ height: 28, fontSize: 11 }}
+                    title="Apply this exact blog visibility rule to all three ads"
+                  >
+                    Apply rule to ALL 3 ads
+                  </button>
+                </div>
+              </div>
 
               {/* 1-Click Fill From Book */}
               <div className="crm-field">
