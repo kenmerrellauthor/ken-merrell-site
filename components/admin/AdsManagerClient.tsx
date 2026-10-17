@@ -281,32 +281,71 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
                 </button>
               </div>
 
-              {/* In-Article Specific: Paragraph Placement Setting */}
+              {/* In-Article Specific: Ad Placement Setting */}
               {activeTab === 'inArticle' && (
-                <div style={{ padding: '14px 16px', background: 'rgba(201,168,96,0.06)', border: '1px solid rgba(201,168,96,0.25)', borderRadius: 6 }}>
-                  <label className="crm-label" htmlFor="insert-para" style={{ color: 'var(--gold)', marginBottom: 6 }}>
-                    📖 INSERT AUTOMATICALLY AFTER PARAGRAPH
-                  </label>
+                <div style={{ padding: '16px', background: 'rgba(201,168,96,0.06)', border: '1px solid rgba(201,168,96,0.25)', borderRadius: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                    <label className="crm-label" htmlFor="insert-position" style={{ color: 'var(--gold)', margin: 0 }}>
+                      📖 AUTOMATIC AD POSITION
+                    </label>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--serif-c)' }}>
+                      Selected: <strong style={{ color: 'var(--gold)' }}>{((currentAd as InArticleAdItem).placement || 'mid').toUpperCase()}</strong>
+                    </span>
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <select
-                      id="insert-para"
-                      className="crm-in"
-                      style={{ width: 190 }}
-                      value={(currentAd as InArticleAdItem).insertAfterParagraph ?? 2}
-                      onChange={(e) => updateCurrentAd({ insertAfterParagraph: parseInt(e.target.value, 10) || 2 })}
-                    >
-                      <option value={1}>After paragraph 1</option>
-                      <option value={2}>After paragraph 2 (Recommended)</option>
-                      <option value={3}>After paragraph 3</option>
-                      <option value={4}>After paragraph 4</option>
-                      <option value={5}>After paragraph 5</option>
-                    </select>
-                    <span style={{ fontSize: 13, color: 'var(--cream-2)' }}>
+                    {/* 3 Placement Options: Start, Mid, End */}
+                    <div style={{ display: 'inline-flex', background: '#120f0c', border: '1px solid #3a332b', borderRadius: 4, padding: 3, gap: 4 }}>
+                      {[
+                        { id: 'start' as const, label: 'Start', hint: 'After intro (Para 1)' },
+                        { id: 'mid' as const, label: 'Mid (Recommended)', hint: 'Center of article' },
+                        { id: 'end' as const, label: 'End', hint: 'Before conclusion' },
+                      ].map((opt) => {
+                        const currentPlacement = (currentAd as InArticleAdItem).placement || 
+                          ((currentAd as InArticleAdItem).insertAfterParagraph === 1 ? 'start' :
+                           (currentAd as InArticleAdItem).insertAfterParagraph >= 4 ? 'end' : 'mid');
+                        const isSelected = currentPlacement === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              updateCurrentAd({
+                                placement: opt.id,
+                                insertAfterParagraph: opt.id === 'start' ? 1 : opt.id === 'end' ? 5 : 2,
+                              })
+                            }
+                            style={{
+                              padding: '8px 16px',
+                              borderRadius: 3,
+                              border: isSelected ? '1px solid var(--gold)' : '1px solid transparent',
+                              background: isSelected ? 'rgba(201,168,96,0.18)' : 'transparent',
+                              color: isSelected ? 'var(--gold)' : 'var(--cream-2)',
+                              fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? 700 : 500,
+                              letterSpacing: '0.08em',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                            }}
+                          >
+                            {isSelected && <span style={{ fontSize: 9 }}>●</span>}
+                            <span>{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <span style={{ fontSize: 12.5, color: 'var(--cream-2)' }}>
                       Only <b>1 ad</b> will appear inside each blog post.
                     </span>
                   </div>
-                  <span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 8, display: 'block' }}>
-                    💡 <b>Pro Tip:</b> You can also type <code>[ad]</code> on its own line in any blog post to manually position the ad wherever you want.
+
+                  <span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10, display: 'block' }}>
+                    💡 <b>Pro Tip:</b> You can also type <code>[ad]</code> on its own line anywhere inside a blog post to manually position the ad exactly where you want.
                   </span>
                 </div>
               )}
@@ -570,7 +609,7 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
                 LIVE IN-ARTICLE PREVIEW (INSIDE BLOG POST)
               </span>
               <span style={{ fontSize: 11, color: currentAd.enabled ? '#6dbf78' : 'var(--muted)' }}>
-                ● IN-ARTICLE AFTER PARAGRAPH {(currentAd as InArticleAdItem).insertAfterParagraph ?? 2}
+                ● POSITION: {((currentAd as InArticleAdItem).placement || 'mid').toUpperCase()} OF ARTICLE
               </span>
             </div>
 
@@ -602,7 +641,7 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
             </div>
 
             <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}>
-              Appears automatically inside every <b>/blog/[slug]</b> article after paragraph {(currentAd as InArticleAdItem).insertAfterParagraph ?? 2}.
+              Appears automatically inside every <b>/blog/[slug]</b> article at the <b>{((currentAd as InArticleAdItem).placement || 'mid').toUpperCase()}</b> of the post.
             </div>
           </div>
         ) : (

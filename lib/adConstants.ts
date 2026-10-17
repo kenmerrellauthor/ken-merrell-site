@@ -32,6 +32,7 @@ export const defaultRightAd: SidebarAdItem = {
 
 export const defaultInArticleAd: InArticleAdItem = {
   enabled: true,
+  placement: 'mid',
   insertAfterParagraph: 2,
   label: 'RECOMMENDED NOVEL',
   badge: '★ HISTORICAL SUSPENSE',
