@@ -118,6 +118,8 @@ export interface SidebarAdItem {
   secondaryBtnText?: string;
   secondaryBtnUrl?: string;
   customHtml?: string; // for custom scripts or external ad tags
+  targetBlogSlugs?: string[]; // If undefined, displays on all blog posts. If array, only displays on these blog slugs/IDs.
+  excludedBlogSlugs?: string[]; // Slugs to explicitly exclude
 }
 
 export interface InArticleAdItem {
@@ -137,6 +139,8 @@ export interface InArticleAdItem {
   secondaryBtnText?: string;
   secondaryBtnUrl?: string;
   customHtml?: string; // for custom scripts or external ad tags
+  targetBlogSlugs?: string[]; // If undefined, displays on all blog posts. If array, only displays on these blog slugs/IDs.
+  excludedBlogSlugs?: string[]; // Slugs to explicitly exclude
 }
 
 export interface AdSettings {

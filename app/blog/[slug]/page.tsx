@@ -105,6 +105,18 @@ export default async function BlogPostPage({ params }: PageProps) {
   const leftBook = books[0] || null;
   const rightBook = books.find((b) => b.slug !== leftBook?.slug && b.slug !== relatedBook?.slug) || books[1] || books[0] || null;
 
+  // Check if an ad is allowed to show on this specific blog post
+  const isAdAllowedForPost = (adConfig?: typeof adSettings.leftAd | typeof adSettings.inArticleAd | null) => {
+    if (!adConfig || adConfig.enabled === false) return false;
+    if (Array.isArray(adConfig.targetBlogSlugs)) {
+      return adConfig.targetBlogSlugs.includes(post.slug) || adConfig.targetBlogSlugs.includes(post.id);
+    }
+    if (Array.isArray(adConfig.excludedBlogSlugs)) {
+      return !adConfig.excludedBlogSlugs.includes(post.slug) && !adConfig.excludedBlogSlugs.includes(post.id);
+    }
+    return true;
+  };
+
   const rawBase =
     (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kenmerrell.com')?.trim();
   const siteUrl = rawBase.startsWith('http') ? rawBase : `https://${rawBase}`;
@@ -220,7 +232,9 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           <div className="blog-reader-layout">
             {/* Left Sidebar Ad Rail */}
-            <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={adSettings.leftAd} />
+            {isAdAllowedForPost(adSettings.leftAd) && (
+              <SidebarAdSlot position="left" book={leftBook} label="SPONSORED" adConfig={adSettings.leftAd} />
+            )}
 
             {/* Central Article Column */}
             <div className="blog-reader-main">
@@ -400,7 +414,10 @@ export default async function BlogPostPage({ params }: PageProps) {
             )}
 
             {/* Main Article Body */}
-            <BlogContentRenderer content={post.content} inArticleAd={adSettings.inArticleAd} />
+            <BlogContentRenderer
+              content={post.content}
+              inArticleAd={isAdAllowedForPost(adSettings.inArticleAd) ? adSettings.inArticleAd : null}
+            />
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
@@ -845,7 +862,9 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
 
             {/* Right Sidebar Ad Rail */}
-            <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
+            {isAdAllowedForPost(adSettings.rightAd) && (
+              <SidebarAdSlot position="right" book={rightBook} label="ADVERTISEMENT" adConfig={adSettings.rightAd} />
+            )}
           </div>
         </article>
 
