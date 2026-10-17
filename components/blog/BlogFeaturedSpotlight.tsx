@@ -341,51 +341,15 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
 
       {/* Bottom Navigation: Only Previous Article and Next Article buttons */}
       {total > 1 && (
-        <div
-          className="blog-featured-manual-nav"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 16,
-            marginTop: 20,
-            flexWrap: 'wrap',
-          }}
-        >
+        <div className="blog-featured-manual-nav">
           {/* Previous Article Button */}
           <button
             type="button"
             onClick={handlePrev}
+            className="blog-featured-manual-btn"
             aria-label="Previous featured article"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '11px 24px',
-              borderRadius: 24,
-              background: 'rgba(28, 23, 18, 0.95)',
-              border: '1px solid rgba(201, 168, 96, 0.45)',
-              color: 'var(--gold, #c9a860)',
-              fontSize: 11.5,
-              fontFamily: 'var(--serif-c, "Cinzel", serif)',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--gold)';
-              e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'translateX(-3px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
-              e.currentTarget.style.color = 'var(--gold, #c9a860)';
-              e.currentTarget.style.transform = 'translateX(0)';
-            }}
           >
-            <span>←</span>
+            <span style={{ fontSize: 13, lineHeight: 1 }}>←</span>
             <span>PREVIOUS ARTICLE</span>
           </button>
 
@@ -393,37 +357,11 @@ export default function BlogFeaturedSpotlight({ posts }: Props) {
           <button
             type="button"
             onClick={handleNext}
+            className="blog-featured-manual-btn"
             aria-label="Next featured article"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '11px 24px',
-              borderRadius: 24,
-              background: 'rgba(28, 23, 18, 0.95)',
-              border: '1px solid rgba(201, 168, 96, 0.45)',
-              color: 'var(--gold, #c9a860)',
-              fontSize: 11.5,
-              fontFamily: 'var(--serif-c, "Cinzel", serif)',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--gold)';
-              e.currentTarget.style.color = '#15120f';
-              e.currentTarget.style.transform = 'translateX(3px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(28, 23, 18, 0.95)';
-              e.currentTarget.style.color = 'var(--gold, #c9a860)';
-              e.currentTarget.style.transform = 'translateX(0)';
-            }}
           >
             <span>NEXT ARTICLE</span>
-            <span>→</span>
+            <span style={{ fontSize: 13, lineHeight: 1 }}>→</span>
           </button>
         </div>
       )}
