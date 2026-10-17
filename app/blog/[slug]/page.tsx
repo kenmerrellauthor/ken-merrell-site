@@ -262,14 +262,8 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <span
                   style={{
                     color: 'var(--gold)',
-                    maxWidth: 340,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'inline-block',
-                    verticalAlign: 'bottom',
+                    lineHeight: 1.5,
                   }}
-                  title={post.title}
                 >
                   {post.title}
                 </span>

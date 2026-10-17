@@ -2977,3 +2977,59 @@ button { font: inherit; }
   }
 }
 
+/* ============ Featured Articles Prev/Next Manual Nav ============ */
+.blog-featured-manual-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin: 22px auto 0;
+  box-sizing: border-box;
+}
+
+.blog-featured-manual-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 24px;
+  background: rgba(28, 23, 18, 0.95);
+  border: 1px solid rgba(201, 168, 96, 0.45);
+  color: var(--gold, #c9a860);
+  font-size: clamp(10px, 2.7vw, 11.5px);
+  font-family: var(--serif-c, "Cinzel", serif);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.blog-featured-manual-btn:hover {
+  background: var(--gold);
+  color: #15120f;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201, 168, 96, 0.35);
+}
+
+@media (max-width: 480px) {
+  .blog-featured-manual-nav {
+    gap: 8px;
+    padding: 0 4px;
+  }
+  .blog-featured-manual-btn {
+    padding: 10px 8px;
+    gap: 5px;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+}
+
