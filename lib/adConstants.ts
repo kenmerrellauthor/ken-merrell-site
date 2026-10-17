@@ -38,6 +38,7 @@ export const defaultInArticleAd: InArticleAdItem = {
   bookSlug: 'petticoats-and-ash',
   title: 'Petticoats and Ash',
   coverImage: '/img/covers/petticoats-and-ash.jpg',
+  bannerImage: '/img/banners/ash.jpg',
   tagline: 'She survived the war—but what she did to survive haunted her for twenty-five years.',
   ratingStars: 5,
   primaryBtnText: 'BUY ON AMAZON ↗',
