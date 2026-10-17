@@ -545,65 +545,6 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                     />
                   </div>
                 )}
-
-                {/* Quick-select luxury text pill tags */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
-                  <span style={{ fontSize: 10.5, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 2 }}>
-                    Quick presets:
-                  </span>
-                  {CATEGORY_PRESETS.map((preset) => {
-                    const isSelected = category === preset;
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => {
-                          setCategory(preset);
-                          setCustomCategory('');
-                        }}
-                        style={{
-                          background: isSelected ? 'rgba(201, 168, 96, 0.22)' : 'rgba(255, 255, 255, 0.03)',
-                          border: isSelected ? '1px solid var(--gold)' : '1px solid #332b22',
-                          color: isSelected ? 'var(--gold)' : 'var(--cream-2)',
-                          borderRadius: 14,
-                          padding: '4px 12px',
-                          fontSize: 11,
-                          fontFamily: 'inherit',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          fontWeight: isSelected ? 700 : 400,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                        }}
-                      >
-                        {isSelected && <span style={{ fontSize: 10 }}>✓</span>}
-                        <span>{preset}</span>
-                      </button>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => setCategory('Custom')}
-                    style={{
-                      background: category === 'Custom' ? 'rgba(201, 168, 96, 0.22)' : 'rgba(255, 255, 255, 0.03)',
-                      border: category === 'Custom' ? '1px solid var(--gold)' : '1px dashed #3a332b',
-                      color: category === 'Custom' ? 'var(--gold)' : 'var(--muted)',
-                      borderRadius: 14,
-                      padding: '4px 12px',
-                      fontSize: 11,
-                      fontFamily: 'inherit',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      fontWeight: category === 'Custom' ? 700 : 400,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <span>+ Custom</span>
-                  </button>
-                </div>
               </div>
             </div>
 
