@@ -681,6 +681,19 @@ export const getCrmNotifications = cache(async (limit?: number): Promise<{ notif
 
 /* --- Blog Posts --- */
 
+/**
+ * Calculates authentic reading time in minutes based on total word count.
+ * Uses standard average adult reading speed for web prose: 200 words per minute.
+ */
+export function calculateReadTime(content: string = '', excerpt: string = ''): number {
+  const plainText = `${excerpt} ${content}`
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[#*`_~>[\]]/g, ' ');
+  const words = plainText.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 function sanitizeBlog(post: BlogPost): BlogPost {
   return {
     ...post,
@@ -692,7 +705,7 @@ function sanitizeBlog(post: BlogPost): BlogPost {
     coverImage: post.coverImage || null,
     category: (post.category || 'Historical Fiction Insights').trim(),
     tags: Array.isArray(post.tags) ? post.tags.map((t) => t.trim()).filter(Boolean) : [],
-    readTimeMinutes: Math.max(1, Math.round((post.content || '').split(/\s+/).length / 200)),
+    readTimeMinutes: calculateReadTime(post.content, post.excerpt),
     authorName: (post.authorName || 'Ken Merrell').trim(),
     publishedAt: post.publishedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
