@@ -30,6 +30,9 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
       ? settings.leftAd
       : settings.rightAd;
 
+  // Only target published blog posts that are live on the site (currently 2 live articles)
+  const liveBlogs = (blogs || []).filter((b) => b.isPublished !== false);
+
   const updateCurrentAd = (patch: Partial<SidebarAdItem & InArticleAdItem>) => {
     setSettings((prev) => {
       if (activeTab === 'inArticle') {
@@ -364,20 +367,25 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  <label className="crm-label" style={{ color: 'var(--gold)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>🎯</span>
-                    <span>SHOW ON WHICH BLOG POSTS?</span>
-                  </label>
+                  <div>
+                    <label className="crm-label" style={{ color: 'var(--gold)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>🎯</span>
+                      <span>SHOW ON WHICH BLOG POSTS?</span>
+                    </label>
+                    <span style={{ fontSize: 11, color: '#8c7d6b', display: 'block', marginTop: 2 }}>
+                      {liveBlogs.length} published blog {liveBlogs.length === 1 ? 'post' : 'posts'} currently live on your site
+                    </span>
+                  </div>
                   {Array.isArray(currentAd.targetBlogSlugs) && (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button
                         type="button"
-                        onClick={() => updateCurrentAd({ targetBlogSlugs: (blogs || []).map((b) => b.slug) })}
+                        onClick={() => updateCurrentAd({ targetBlogSlugs: liveBlogs.map((b) => b.slug) })}
                         className="crm-sm"
                         style={{ height: 26, padding: '0 10px', fontSize: 10.5, letterSpacing: '0.05em' }}
-                        title="Enable for all blog posts"
+                        title="Enable for all live blog posts"
                       >
-                        Select All
+                        Select All ({liveBlogs.length})
                       </button>
                       <button
                         type="button"
@@ -418,7 +426,7 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                       onChange={() => updateCurrentAd({ targetBlogSlugs: undefined, excludedBlogSlugs: undefined })}
                       style={{ accentColor: 'var(--gold)' }}
                     />
-                    <span>Show on ALL Blog Posts</span>
+                    <span>Show on ALL {liveBlogs.length} Blog Posts (Default)</span>
                   </label>
 
                   <label
@@ -444,7 +452,7 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                       checked={Array.isArray(currentAd.targetBlogSlugs)}
                       onChange={() =>
                         updateCurrentAd({
-                          targetBlogSlugs: currentAd.targetBlogSlugs || (blogs || []).map((b) => b.slug),
+                          targetBlogSlugs: currentAd.targetBlogSlugs || liveBlogs.map((b) => b.slug),
                         })
                       }
                       style={{ accentColor: 'var(--gold)' }}
@@ -467,7 +475,7 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                     >
                       <span>Click any article to toggle its ad on or off:</span>
                       <span>
-                        Active on <b>{currentAd.targetBlogSlugs.length}</b> of <b>{(blogs || []).length}</b> articles
+                        Active on <b>{(currentAd.targetBlogSlugs ?? []).filter((s) => liveBlogs.some((b) => b.slug === s)).length}</b> of <b>{liveBlogs.length}</b> live articles
                       </span>
                     </div>
 
@@ -481,7 +489,7 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                         paddingRight: 4,
                       }}
                     >
-                      {(blogs || []).map((blog) => {
+                      {liveBlogs.map((blog) => {
                         const isEnabled = (currentAd.targetBlogSlugs ?? []).includes(blog.slug);
                         return (
                           <div
@@ -567,29 +575,34 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                   </div>
                 )}
 
-                {/* Quick copy to all other ads button */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    Targeting for: <strong style={{ color: 'var(--gold)' }}>{activeTab === 'inArticle' ? 'In-Article Banner' : activeTab === 'left' ? 'Left Skyscraper' : 'Right Skyscraper'}</strong>
+                {/* Sync rule to all 3 ad placements (Banner, Left, Right) */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                      Currently configuring: <strong style={{ color: 'var(--gold)' }}>{activeTab === 'inArticle' ? 'In-Article Banner' : activeTab === 'left' ? 'Left Skyscraper' : 'Right Skyscraper'}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targets = currentAd.targetBlogSlugs;
+                        setSettings((prev) => ({
+                          ...prev,
+                          leftAd: { ...prev.leftAd, targetBlogSlugs: targets },
+                          rightAd: { ...prev.rightAd, targetBlogSlugs: targets },
+                          inArticleAd: { ...(prev.inArticleAd || defaultInArticleAd), targetBlogSlugs: targets },
+                        }));
+                        setStatusMsg({ type: 'ok', text: 'Blog visibility rule synced across all 3 ad placements (Banner, Left, Right).' });
+                      }}
+                      className="crm-sm"
+                      style={{ height: 28, fontSize: 11, padding: '0 12px' }}
+                      title="Sync this blog post selection across all 3 ad placements (In-Article Banner, Left Skyscraper, Right Skyscraper)"
+                    >
+                      🔄 Sync this rule to all 3 ad slots (Banner, Left &amp; Right)
+                    </button>
+                  </div>
+                  <span style={{ fontSize: 10.5, color: '#6e6457' }}>
+                    Note: Ken&apos;s site has 3 ad slots (In-Article Banner, Left Skyscraper, Right Skyscraper) across your {liveBlogs.length} published blog posts. This button copies your article selection so all 3 ad slots match.
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const targets = currentAd.targetBlogSlugs;
-                      setSettings((prev) => ({
-                        ...prev,
-                        leftAd: { ...prev.leftAd, targetBlogSlugs: targets },
-                        rightAd: { ...prev.rightAd, targetBlogSlugs: targets },
-                        inArticleAd: { ...(prev.inArticleAd || defaultInArticleAd), targetBlogSlugs: targets },
-                      }));
-                      setStatusMsg({ type: 'ok', text: 'Blog targeting copied to Left, Right, and In-Article ads.' });
-                    }}
-                    className="crm-sm"
-                    style={{ height: 28, fontSize: 11 }}
-                    title="Apply this exact blog visibility rule to all three ads"
-                  >
-                    Apply rule to ALL 3 ads
-                  </button>
                 </div>
               </div>
 
