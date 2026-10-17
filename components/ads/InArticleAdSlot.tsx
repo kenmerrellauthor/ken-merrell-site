@@ -10,8 +10,8 @@ interface Props {
 }
 
 export default function InArticleAdSlot({ adConfig, slotId = 'ad-slot-in-article' }: Props) {
-  // If explicitly disabled in admin settings, do not render
-  if (adConfig && adConfig.enabled === false) {
+  // If explicitly disabled in admin settings or not configured for this post, do not render
+  if (!adConfig || adConfig.enabled === false) {
     return null;
   }
 

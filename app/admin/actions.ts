@@ -947,8 +947,10 @@ export async function saveAdSettingsAction(data: AdSettings): Promise<{ ok?: boo
     });
     try {
       revalidatePath('/', 'layout');
-      revalidatePath('/blog', 'page');
+      revalidatePath('/blog', 'layout');
+      revalidatePath('/blog/[slug]', 'page');
       revalidatePath('/admin/ads', 'page');
+      revalidatePath('/admin/blogs', 'page');
     } catch {
       /* ignore */
     }

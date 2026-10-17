@@ -55,6 +55,20 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
   };
 
   const handleApplyBook = (bookId: string) => {
+    if (bookId === 'auto') {
+      updateCurrentAd({
+        bookSlug: 'auto',
+        title: 'Dynamic (Each Blog’s Featured Novel)',
+        coverImage: '/img/banners/ash.jpg',
+        bannerImage: '/img/banners/ash.jpg',
+        tagline: 'Automatically features the novel connected to whichever blog post the reader is viewing.',
+        badge: '★ FEATURED NOVEL',
+        label: 'RECOMMENDED NOVEL',
+        primaryBtnText: 'BUY ON AMAZON ↗',
+        secondaryBtnText: 'READ SAMPLE',
+      });
+      return;
+    }
     const selected = books.find((b) => b.id === bookId || b.slug === bookId);
     if (!selected) return;
     const bannerImg = selected.banner || '/img/banners/ash.jpg';
@@ -620,6 +634,7 @@ export default function AdsManagerClient({ initialSettings, books, blogs = [] }:
                     style={{ flex: 1 }}
                   >
                     <option value="">Select a book to populate fields automatically...</option>
+                    <option value="auto">⚡ Dynamic: Automatically feature each article&apos;s related novel</option>
                     {books.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.title} {b.status === 'coming' ? '(Upcoming)' : ''}

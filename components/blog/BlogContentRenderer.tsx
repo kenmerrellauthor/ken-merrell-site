@@ -323,7 +323,7 @@ export default function BlogContentRenderer({ content, inArticleAd }: Props) {
 
   // If in-article ad is enabled and no explicit [ad] block was typed, automatically inject
   // at start, mid, or end of article (default: mid)
-  const isAdEnabled = inArticleAd ? inArticleAd.enabled !== false : true;
+  const isAdEnabled = Boolean(inArticleAd && inArticleAd.enabled !== false);
   const hasManualAd = blocks.some((b) => b.type === 'ad');
 
   if (isAdEnabled && !hasManualAd) {
@@ -568,6 +568,7 @@ export default function BlogContentRenderer({ content, inArticleAd }: Props) {
             );
 
           case 'ad':
+            if (!isAdEnabled || !inArticleAd) return null;
             return <InArticleAdSlot key={idx} adConfig={inArticleAd} />;
 
           case 'p':
