@@ -436,14 +436,37 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
               </div>
 
               <div className="crm-field">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
                   <label className="crm-label" htmlFor="blog-category" style={{ margin: 0 }}>CATEGORY</label>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.04em' }}>
-                    Article topic / classification
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'var(--serif-c, "Cinzel", serif)',
+                      letterSpacing: '0.08em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ color: 'var(--muted)', fontSize: 10.5, textTransform: 'uppercase' }}>Selected:</span>
+                    <strong
+                      style={{
+                        color: 'var(--gold, #c9a860)',
+                        background: 'rgba(201, 168, 96, 0.12)',
+                        border: '1px solid rgba(201, 168, 96, 0.35)',
+                        padding: '2px 9px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {category === 'Custom' ? (customCategory.trim() || 'Custom (please specify)') : category}
+                    </strong>
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative' }}>
                   <select
                     id="blog-category"
                     className="crm-in"
@@ -458,22 +481,61 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                         setCustomCategory('');
                       }
                     }}
-                    style={{ flex: '1 1 220px', minWidth: 200 }}
+                    style={{
+                      width: '100%',
+                      height: 46,
+                      fontSize: 13.5,
+                      fontWeight: 600,
+                      color: 'var(--cream)',
+                      background: '#15120f',
+                      border: '1px solid rgba(201, 168, 96, 0.38)',
+                      borderRadius: 6,
+                      padding: '0 14px',
+                      cursor: 'pointer',
+                    }}
                   >
-                    {CATEGORY_PRESETS.map((preset) => (
-                      <option key={preset} value={preset}>
-                        {preset}
-                      </option>
-                    ))}
-                    <option value="Custom">+ Custom Category...</option>
+                    <optgroup label="Preset Topics">
+                      {CATEGORY_PRESETS.map((preset) => (
+                        <option key={preset} value={preset}>
+                          {preset}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Custom Option">
+                      <option value="Custom">+ Custom Category (Type your own topic)...</option>
+                    </optgroup>
                   </select>
+                </div>
 
-                  {(category === 'Custom' || !CATEGORY_PRESETS.includes(category)) && (
+                {/* Custom Category Input if Custom is active */}
+                {(category === 'Custom' || !CATEGORY_PRESETS.includes(category)) && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '8px 12px',
+                      background: 'rgba(201, 168, 96, 0.05)',
+                      border: '1px solid rgba(201, 168, 96, 0.3)',
+                      borderRadius: 6,
+                    }}
+                  >
+                    <span style={{ color: 'var(--gold)', fontSize: 11, fontFamily: 'var(--serif-c, "Cinzel", serif)', fontWeight: 700, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+                      CUSTOM TOPIC:
+                    </span>
                     <input
                       type="text"
                       className="crm-in"
-                      style={{ flex: '1.5 1 260px' }}
-                      placeholder="Enter custom category name..."
+                      style={{
+                        flex: 1,
+                        height: 38,
+                        background: '#110e0c',
+                        border: '1px solid rgba(201, 168, 96, 0.25)',
+                        fontSize: 13,
+                        color: 'var(--cream)',
+                      }}
+                      placeholder="Type custom category name (e.g. Victorian Mysteries, Frontier Law)..."
                       value={customCategory}
                       onChange={(e) => {
                         setCustomCategory(e.target.value);
@@ -481,13 +543,13 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                       }}
                       autoFocus
                     />
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Quick-select luxury text pill tags */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 2 }}>
-                    Presets:
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
+                  <span style={{ fontSize: 10.5, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 2 }}>
+                    Quick presets:
                   </span>
                   {CATEGORY_PRESETS.map((preset) => {
                     const isSelected = category === preset;
@@ -504,18 +566,43 @@ export default function BlogEditorClient({ initialBlog, isNew, books }: Props) {
                           border: isSelected ? '1px solid var(--gold)' : '1px solid #332b22',
                           color: isSelected ? 'var(--gold)' : 'var(--cream-2)',
                           borderRadius: 14,
-                          padding: '4px 11px',
+                          padding: '4px 12px',
                           fontSize: 11,
                           fontFamily: 'inherit',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
-                          fontWeight: isSelected ? 600 : 400,
+                          fontWeight: isSelected ? 700 : 400,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
                         }}
                       >
-                        {preset}
+                        {isSelected && <span style={{ fontSize: 10 }}>✓</span>}
+                        <span>{preset}</span>
                       </button>
                     );
                   })}
+                  <button
+                    type="button"
+                    onClick={() => setCategory('Custom')}
+                    style={{
+                      background: category === 'Custom' ? 'rgba(201, 168, 96, 0.22)' : 'rgba(255, 255, 255, 0.03)',
+                      border: category === 'Custom' ? '1px solid var(--gold)' : '1px dashed #3a332b',
+                      color: category === 'Custom' ? 'var(--gold)' : 'var(--muted)',
+                      borderRadius: 14,
+                      padding: '4px 12px',
+                      fontSize: 11,
+                      fontFamily: 'inherit',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      fontWeight: category === 'Custom' ? 700 : 400,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span>+ Custom</span>
+                  </button>
                 </div>
               </div>
             </div>
