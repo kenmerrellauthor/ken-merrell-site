@@ -53,11 +53,12 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
   const handleApplyBook = (bookId: string) => {
     const selected = books.find((b) => b.id === bookId || b.slug === bookId);
     if (!selected) return;
-
+    const bannerImg = selected.banner || '/img/banners/ash.jpg';
     updateCurrentAd({
       bookSlug: selected.slug,
       title: selected.title,
-      coverImage: selected.cover || '',
+      coverImage: activeTab === 'inArticle' ? bannerImg : (selected.cover || ''),
+      bannerImage: bannerImg,
       tagline: selected.tagline || (selected.description ? selected.description.slice(0, 90) + '...' : ''),
       badge:
         activeTab === 'left'
@@ -85,7 +86,11 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        updateCurrentAd({ coverImage: reader.result });
+        if (activeTab === 'inArticle') {
+          updateCurrentAd({ coverImage: reader.result, bannerImage: reader.result });
+        } else {
+          updateCurrentAd({ coverImage: reader.result });
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -408,19 +413,27 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
 
               {/* Cover / Creative Image */}
               <div className="crm-field">
-                <label className="crm-label" htmlFor="ad-cover">COVER / CREATIVE IMAGE URL</label>
+                <label className="crm-label" htmlFor="ad-cover">
+                  {activeTab === 'inArticle' ? 'CLICKABLE BANNER IMAGE URL' : 'COVER / CREATIVE IMAGE URL'}
+                </label>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <input
                     id="ad-cover"
                     type="text"
                     className="crm-in"
-                    value={currentAd.coverImage || ''}
-                    onChange={(e) => updateCurrentAd({ coverImage: e.target.value })}
-                    placeholder="/img/covers/petticoats-and-ash.jpg or https://..."
+                    value={activeTab === 'inArticle' ? (currentAd.bannerImage || currentAd.coverImage || '') : (currentAd.coverImage || '')}
+                    onChange={(e) => {
+                      if (activeTab === 'inArticle') {
+                        updateCurrentAd({ bannerImage: e.target.value, coverImage: e.target.value });
+                      } else {
+                        updateCurrentAd({ coverImage: e.target.value });
+                      }
+                    }}
+                    placeholder={activeTab === 'inArticle' ? '/img/banners/ash.jpg or https://...' : '/img/covers/petticoats-and-ash.jpg or https://...'}
                     style={{ flex: 1 }}
                   />
                   <label className="crm-btn" style={{ cursor: 'pointer' }}>
-                    <Ic k="upload" s={14} /> UPLOAD IMAGE
+                    <Ic k="upload" s={14} /> {activeTab === 'inArticle' ? 'UPLOAD BANNER' : 'UPLOAD IMAGE'}
                     <input
                       type="file"
                       accept="image/*"
@@ -429,6 +442,38 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
                     />
                   </label>
                 </div>
+                {activeTab === 'inArticle' && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Preset Banners:
+                    </span>
+                    {books.filter((b) => b.banner).map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => updateCurrentAd({
+                          bannerImage: b.banner || '',
+                          coverImage: b.banner || '',
+                          bookSlug: b.slug,
+                          primaryBtnUrl: b.amazonUrl || `/books/${b.slug}`,
+                          title: b.title,
+                        })}
+                        style={{
+                          background: (currentAd.bannerImage === b.banner || currentAd.coverImage === b.banner) ? 'rgba(201, 168, 96, 0.22)' : 'rgba(255, 255, 255, 0.03)',
+                          border: (currentAd.bannerImage === b.banner || currentAd.coverImage === b.banner) ? '1px solid var(--gold)' : '1px solid #332b22',
+                          color: (currentAd.bannerImage === b.banner || currentAd.coverImage === b.banner) ? 'var(--gold)' : 'var(--cream-2)',
+                          borderRadius: 14,
+                          padding: '3px 10px',
+                          fontSize: 11,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {b.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -439,25 +484,35 @@ export default function AdsManagerClient({ initialSettings, books }: Props) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="crm-grid2">
                 <div className="crm-field">
-                  <label className="crm-label" htmlFor="ad-p-text">PRIMARY BUTTON TEXT</label>
+                  <label className="crm-label" htmlFor="ad-p-text">
+                    {activeTab === 'inArticle' ? 'AD TITLE / HOVER TOOLTIP' : 'PRIMARY BUTTON TEXT'}
+                  </label>
                   <input
                     id="ad-p-text"
                     type="text"
                     className="crm-in"
-                    value={currentAd.primaryBtnText || ''}
-                    onChange={(e) => updateCurrentAd({ primaryBtnText: e.target.value })}
-                    placeholder="e.g. BUY ON AMAZON ↗"
+                    value={activeTab === 'inArticle' ? (currentAd.title || currentAd.primaryBtnText || '') : (currentAd.primaryBtnText || '')}
+                    onChange={(e) => {
+                      if (activeTab === 'inArticle') {
+                        updateCurrentAd({ title: e.target.value, primaryBtnText: e.target.value });
+                      } else {
+                        updateCurrentAd({ primaryBtnText: e.target.value });
+                      }
+                    }}
+                    placeholder={activeTab === 'inArticle' ? 'e.g. Read Petticoats and Ash' : 'e.g. BUY ON AMAZON ↗'}
                   />
                 </div>
                 <div className="crm-field">
-                  <label className="crm-label" htmlFor="ad-p-url">PRIMARY DESTINATION URL (AMAZON / STORE)</label>
+                  <label className="crm-label" htmlFor="ad-p-url">
+                    {activeTab === 'inArticle' ? 'CLICK DESTINATION URL (AMAZON / BOOK STORE)' : 'PRIMARY DESTINATION URL (AMAZON / STORE)'}
+                  </label>
                   <input
                     id="ad-p-url"
                     type="text"
                     className="crm-in"
                     value={currentAd.primaryBtnUrl || ''}
                     onChange={(e) => updateCurrentAd({ primaryBtnUrl: e.target.value })}
-                    placeholder="https://www.amazon.com/dp/..."
+                    placeholder="https://www.amazon.com/dp/... or /books/..."
                   />
                 </div>
               </div>

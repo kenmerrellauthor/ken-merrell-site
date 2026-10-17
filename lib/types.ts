@@ -110,6 +110,7 @@ export interface SidebarAdItem {
   bookSlug?: string; // auto-populate from an existing book
   title?: string;
   coverImage?: string;
+  bannerImage?: string;
   tagline?: string;
   ratingStars?: number; // 1-5
   primaryBtnText?: string;
@@ -127,6 +128,7 @@ export interface InArticleAdItem {
   bookSlug?: string;
   title?: string;
   coverImage?: string;
+  bannerImage?: string; // Clickable horizontal banner image
   tagline?: string;
   ratingStars?: number; // 1-5
   primaryBtnText?: string;
