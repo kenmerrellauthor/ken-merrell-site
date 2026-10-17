@@ -53,91 +53,59 @@ export default function InArticleAdSlot({ adConfig, slotId = 'ad-slot-in-article
       ? `/books/${adConfig.bookSlug}`
       : 'https://www.amazon.com/Petticoats-Ash-Ken-Merrell/dp/B0HHQKCWZM');
 
-  const adTitle = adConfig?.title?.trim() || 'Ken Merrell Historical Suspense';
+  const adTitle = adConfig?.title?.trim() || 'Petticoats and Ash';
+  const adLabel = adConfig?.label?.trim() || 'SPONSORED NOVEL';
+  const adBadge = adConfig?.badge?.trim() || '★ HISTORICAL SUSPENSE';
+  const ctaText = adConfig?.primaryBtnText?.trim() || 'EXPLORE NOVEL';
   const isExternal = destinationUrl.startsWith('http://') || destinationUrl.startsWith('https://');
 
-  const BannerImageElement = (
-    <div
-      className="in-article-banner-frame"
-      style={{
-        position: 'relative',
-        width: '100%',
-        borderRadius: 8,
-        overflow: 'hidden',
-        border: '1px solid rgba(201, 168, 96, 0.45)',
-        boxShadow: '0 14px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(201, 168, 96, 0.25)',
-        background: '#120f0c',
-        cursor: 'pointer',
-      }}
-    >
-      {/* 4 Decorative vintage gold corner accents */}
-      <span
-        style={{
-          position: 'absolute',
-          top: 3,
-          left: 3,
-          width: 8,
-          height: 8,
-          borderTop: '2px solid var(--gold, #c9a860)',
-          borderLeft: '2px solid var(--gold, #c9a860)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
-      <span
-        style={{
-          position: 'absolute',
-          top: 3,
-          right: 3,
-          width: 8,
-          height: 8,
-          borderTop: '2px solid var(--gold, #c9a860)',
-          borderRight: '2px solid var(--gold, #c9a860)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
-      <span
-        style={{
-          position: 'absolute',
-          bottom: 3,
-          left: 3,
-          width: 8,
-          height: 8,
-          borderBottom: '2px solid var(--gold, #c9a860)',
-          borderLeft: '2px solid var(--gold, #c9a860)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
-      <span
-        style={{
-          position: 'absolute',
-          bottom: 3,
-          right: 3,
-          width: 8,
-          height: 8,
-          borderBottom: '2px solid var(--gold, #c9a860)',
-          borderRight: '2px solid var(--gold, #c9a860)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
+  const BannerContent = (
+    <div className="in-article-ad-card">
+      {/* Top Sponsored Ad Disclosure Header */}
+      <div className="in-article-ad-header">
+        <div className="in-article-ad-sponsor">
+          <span className="in-article-ad-dot" />
+          <span>SPONSORED ADVERTISEMENT</span>
+        </div>
+        <div className="in-article-ad-tag">
+          <span>{adLabel}</span>
+        </div>
+      </div>
 
-      {/* Pure Clickable Banner Image */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={bannerSrc}
-        alt={adTitle}
-        style={{
-          width: '100%',
-          height: 'auto',
-          maxHeight: 280,
-          objectFit: 'cover',
-          display: 'block',
-          transition: 'transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
-        }}
-      />
+      {/* Main Clickable Banner Frame */}
+      <div className="in-article-banner-frame">
+        {/* 4 Decorative vintage gold corner accents */}
+        <span className="corner-accent corner-tl" />
+        <span className="corner-accent corner-tr" />
+        <span className="corner-accent corner-bl" />
+        <span className="corner-accent corner-br" />
+
+        {/* Top-Right Sponsored Badge */}
+        <div className="in-article-ad-pill">
+          <span className="pill-dot">✦</span>
+          <span>SPONSORED</span>
+        </div>
+
+        {/* Banner Image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={bannerSrc}
+          alt={adTitle}
+          className="in-article-ad-img"
+        />
+
+        {/* Bottom Ad Action Bar Overlay */}
+        <div className="in-article-ad-overlay">
+          <div className="in-article-ad-info">
+            <span className="in-article-ad-badge-text">{adBadge}</span>
+            <strong className="in-article-ad-title">{adTitle}</strong>
+          </div>
+          <span className="in-article-ad-cta">
+            <span>{ctaText}</span>
+            <span className="in-article-ad-arrow">↗</span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 
@@ -145,11 +113,7 @@ export default function InArticleAdSlot({ adConfig, slotId = 'ad-slot-in-article
     <aside
       id={slotId}
       className="in-article-banner-wrap"
-      aria-label={`Advertisement: ${adTitle}`}
-      style={{
-        margin: '36px 0',
-        width: '100%',
-      }}
+      aria-label={`Sponsored Advertisement: ${adTitle}`}
     >
       {isExternal ? (
         <a
@@ -157,19 +121,17 @@ export default function InArticleAdSlot({ adConfig, slotId = 'ad-slot-in-article
           target="_blank"
           rel="noopener noreferrer"
           className="in-article-banner-link"
-          style={{ display: 'block', textDecoration: 'none' }}
           title={`Click to view: ${adTitle}`}
         >
-          {BannerImageElement}
+          {BannerContent}
         </a>
       ) : (
         <Link
           href={destinationUrl}
           className="in-article-banner-link"
-          style={{ display: 'block', textDecoration: 'none' }}
           title={`Click to view: ${adTitle}`}
         >
-          {BannerImageElement}
+          {BannerContent}
         </Link>
       )}
     </aside>
